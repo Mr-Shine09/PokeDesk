@@ -142,10 +142,55 @@ def validate_atlas(atlas_path: Path, contract: dict, errors: list[str]) -> None:
                     fail(f"{row['state']} frame {column} crosses the opaque guard: {bounds}", errors)
 
 
+def validate_frame_rows(frames_root: Path, states: list[str], contract: dict, errors: list[str]) -> None:
+    specs = {row["state"]: row for row in contract["rows"]}
+    allowed_palette = {parse_hex(value) for value in contract["pixel_rules"]["palette_hex"]}
+    allowed_alpha = set(contract["pixel_rules"]["alpha_values"])
+    transparent_rgb = tuple(contract["pixel_rules"]["transparent_rgb"])
+    cell_size = tuple(contract["atlas"]["cell_pixel_size"])
+    left, top, right, bottom = contract["bounds"]["opaque_guard_inclusive"]
+    baseline_y = contract["anchor"]["baseline_y"]
+    grounded_states = {"idle", "working", "ideating", "waiting", "success", "failure", "sleeping", "paused", "walk-right", "walk-left"}
+    for state in states:
+        spec = specs.get(state)
+        if spec is None:
+            fail(f"unknown frame state: {state}", errors)
+            continue
+        directory = frames_root / state
+        expected_paths = [directory / f"{state}-{index:02d}.png" for index in range(spec["frames"])]
+        for index, path in enumerate(expected_paths):
+            if not path.exists():
+                fail(f"missing {state} frame {index}: {path}", errors)
+                continue
+            image = Image.open(path).convert("RGBA")
+            if image.size != cell_size:
+                fail(f"{state} frame {index} size mismatch: {image.size}", errors)
+                continue
+            pixels = list(image.get_flattened_data())
+            alpha_values = {pixel[3] for pixel in pixels}
+            if not alpha_values <= allowed_alpha:
+                fail(f"{state} frame {index} contains unsupported alpha", errors)
+            if {pixel[:3] for pixel in pixels if pixel[3] == 255} - allowed_palette:
+                fail(f"{state} frame {index} contains colors outside the frozen palette", errors)
+            if any(pixel[:3] != transparent_rgb for pixel in pixels if pixel[3] == 0):
+                fail(f"{state} frame {index} retains RGB under transparency", errors)
+            bounds = image.getchannel("A").getbbox()
+            if bounds is None:
+                fail(f"{state} frame {index} is empty", errors)
+                continue
+            cell_left, cell_top, cell_right, cell_bottom = bounds
+            if cell_left < left or cell_top < top or cell_right - 1 > right or cell_bottom - 1 > bottom:
+                fail(f"{state} frame {index} crosses the opaque guard: {bounds}", errors)
+            if state in grounded_states and cell_bottom - 1 != baseline_y:
+                fail(f"{state} frame {index} misses baseline y={baseline_y}: {bounds}", errors)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--contract", type=Path, default=Path("art/animation/atlas-contract.json"))
     parser.add_argument("--atlas", type=Path, help="optional assembled atlas PNG")
+    parser.add_argument("--frames-root", type=Path, help="optional root containing normalized state frame folders")
+    parser.add_argument("--states", nargs="+", help="states to validate under --frames-root")
     parser.add_argument("--contract-only", action="store_true", help="validate metadata and frozen base only")
     args = parser.parse_args()
 
@@ -155,14 +200,24 @@ def main() -> int:
         validate_source_base(contract_path, contract, errors)
     if args.atlas and not args.contract_only and contract:
         validate_atlas(args.atlas.resolve(), contract, errors)
-    elif not args.contract_only and not args.atlas:
-        fail("pass --atlas or use --contract-only", errors)
+    if args.frames_root and contract:
+        if not args.states:
+            fail("pass --states with --frames-root", errors)
+        else:
+            validate_frame_rows(args.frames_root.resolve(), args.states, contract, errors)
+    if not args.contract_only and not args.atlas and not args.frames_root:
+        fail("pass --atlas, pass --frames-root with --states, or use --contract-only", errors)
 
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
-    mode = "contract" if args.contract_only or not args.atlas else "contract and atlas"
+    validated = ["contract"]
+    if args.atlas:
+        validated.append("atlas")
+    if args.frames_root:
+        validated.append("frame rows")
+    mode = ", ".join(validated)
     print(f"OK: {mode} validated")
     return 0
 

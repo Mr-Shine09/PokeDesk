@@ -1,0 +1,8 @@
+{
+  "state": "walk-left",
+  "derivation": "per-frame-horizontal-mirror",
+  "source_state": "walk-right",
+  "frame_order_preserved": true,
+  "identity_safe_confirmed": true,
+  "decision_note": "The character has no side-specific logo or prop; per-frame mirroring preserves the approved right-row identity and gait while the independently generated left row failed cross-row identity QA."
+}

@@ -10,7 +10,7 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Phase 1 animation contract frozen and validated; native state-frame production is next |
+| Status | Directional walk rows normalized and internally approved; idle production is blocked on identity-preserving art |
 | Current gate | Produce and visually approve the state frames, contact sheets, and motion previews in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) before app scaffolding |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
@@ -458,6 +458,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Issue backlog | Every implementation phase mapped to an issue | Passed 2026-07-28: [issues #1–#13](https://github.com/Mr-Shine09/desktop-mascot/issues) |
 | Sprite readability | 1x light/dark review and owner approval | Passed 2026-07-28: secondary chibi explicitly selected and frozen at 80x80 `@2x` |
 | Atlas contract | Geometry, rows, timing, anchor, palette, alpha, and QA rules validate before frame production | Passed 2026-07-28: `python3 tools/validate_animation_atlas.py --contract-only` |
+| Directional walk candidate | Six frames each direction, shared baseline, frozen palette, light/dark contact sheet, and motion previews | Internal QA passed 2026-07-28; owner review pending |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Not started |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
@@ -480,6 +481,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Multiple sessions thrash visible state | Medium | Per-session registry, priority reducer, debounce, bounded reactions | Open |
 | Cursor-following annoys or obstructs | Medium | Defer; require explicit opt-in and dedicated tests | Deferred |
 | Idle animation wastes battery | Medium | Event-driven updates, suspend timers, measurable energy budget | Open |
+| Generated state frames drift from the frozen identity | High | Ground every job in the frozen base, normalize deterministically, reject drift, and use native pixel editing only with explicit owner approval | Walk candidate constrained; idle blocked after two failed generation rounds |
 | Personal likeness ships before review | Medium | Private repository until owner changes visibility | Mitigated for foundation |
 
 ## Decision log
@@ -526,6 +528,9 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Freeze the version 0.1 animation atlas at 8 columns by 11 rows with 96x112-pixel `@2x` cells, a shared `(48, 102)` anchor/baseline, the exact 12-color base palette, binary alpha, transparent unused cells, and explicit playback timings in `art/animation/atlas-contract.json`.
 - Include the approved `ideating` row even though issue #3's original state list omitted it; the later product contract is authoritative.
 - Keep the 80x80 body canvas at 40x40 points inside a 48x56-point panel cell so the thought cloud and wider poses have bounded space without scaling the mascot.
+- Accept the right-walk row as an owner-review candidate after deterministic chroma removal, shared-scale normalization, frozen-palette reduction, structural validation, and visual QA.
+- Derive `walk-left` by mirroring each approved right-walk frame in place without reversing frame order. This character has no side-specific logo or prop, and the independent left-row generation failed cross-row identity QA.
+- Reject both generated idle rows and the single blink repair because they changed the approved face, glasses, hair, pose, or baseline. Do not promote them to production.
 
 ## Session log
 
@@ -764,11 +769,30 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: frame art, contact sheets, motion previews, owner visual review, and the dedicated `@1x` strategy remain open. Full visual generation will require a separately bounded art-production run.
 - Next: commit the contract, then begin with the anchor fixture plus `idle`, `walk-right`, and `walk-left` rows. Do not scaffold the app before owner review of issue #3 outputs.
 
+### 2026-07-28 — Directional walk production candidate
+
+- Objective: begin issue #3 frame production with the anchor, idle, and directional walk rows.
+- Completed:
+  - Added the exact frozen base as `art/animation/frames/idle/idle-00.png` at cell offset `(8, 25)`; its opaque bounds end on baseline `y=102`.
+  - Generated a six-frame right-walk source grounded in the frozen chibi, then removed the variable green background, applied one shared row scale, reduced every opaque pixel to the frozen 12-color palette, and aligned every frame to the shared anchor.
+  - Rejected an independently generated left row because its face and hair language drifted from the right row.
+  - Derived the left row by mirroring each right frame individually while preserving temporal order.
+  - Added deterministic frame preparation, safe mirror derivation, partial-row validation, contact-sheet rendering, silhouette rendering, and GIF preview tools.
+  - Produced light/dark directional contact sheets, silhouette QA, and both motion previews under `art/animation/qa/`.
+- Decisions: the directional rows are owner-review candidates, not final atlas approval. Generated chroma variation is acceptable only when deterministic border-connected removal produces clean binary alpha and the resulting art passes visual QA.
+- Verification:
+  - `python3 tools/validate_animation_atlas.py --frames-root art/animation/frames --states walk-right walk-left` passes.
+  - All twelve directional frames are `96x112`, use only the frozen palette, have alpha values `0` or `255`, contain zero RGB under transparency, stay inside the four-pixel guard, and end on baseline `y=102`.
+  - Independent visual QA passed both rows for identity, scale, alternating-foot cadence, correct facing, clipping, effects, and light/dark readability.
+  - `python3 tools/validate_animation_atlas.py --contract-only` and `git diff --check` pass.
+- Risks or blockers: built-in image generation failed two idle-row attempts and one single-blink repair because it redesigned the face, glasses, hair, pose, or baseline. Those outputs were rejected and are not present in the project. Finishing idle now requires either explicit owner approval for native pixel-level editing or a different approved identity-preserving visual workflow.
+- Next: obtain owner review of the directional candidate and direction on native idle-frame editing. Do not generate the remaining state rows or scaffold the app until this art boundary is resolved.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
-3. Produce the anchor fixture plus `idle`, `walk-right`, and `walk-left` rows in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3), then render the required contact sheets and motion previews; do not scaffold the app before owner visual review.
+3. Review the directional candidate in `art/animation/qa/contact-sheet-candidate.png` and the two GIF previews. If approved, explicitly authorize native pixel-level idle editing or choose another identity-preserving workflow; do not scaffold the app before issue #3 owner review.
 4. Update this ledger before ending the session.
 
 ## Documentation sources
