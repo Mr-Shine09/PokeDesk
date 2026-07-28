@@ -10,8 +10,8 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Product contract locked; every native tall treatment rejected; secondary chibi restored as the sole production candidate |
-| Current gate | Confirm `mascot-base-owner-chibi-40pt-at2x-80px-v2.png` for the 40x40-point Dock footprint in [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2), then freeze its baseline and build the animation specification in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) |
+| Status | Product contract and 40-point secondary-chibi base frozen; Phase 1 animation specification is next |
+| Current gate | Specify the shared baseline, anchors, frame geometry, timing, and state contact sheets in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) before app scaffolding |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -126,7 +126,7 @@ Remove garment texture, zipper detail below one pixel, belt detail, hand anatomy
 - On-screen footprint: initially `40x40` macOS points.
 - Retina production asset: `80x80` pixels at `@2x`, mapping one source pixel to one backing pixel on a 2x display.
 - Non-Retina behavior remains a required experiment: test a deliberately authored `40x40` `@1x` fallback versus a larger point footprint; never silently resample the Retina asset with smoothing.
-- The current native candidate is the exact owner-selected secondary chibi reduced to 80x80. All native tall variants are rejected evidence and must not enter the atlas or app.
+- The approved base is `mascot-base-chibi-40pt-at2x-80px-final.png`, an exact copy of the owner-selected secondary chibi reduction. All native tall variants are rejected evidence and must not enter the atlas or app.
 - Production rendering uses nearest-neighbor interpolation and integer backing-pixel alignment.
 - Palette target: 12 colors or fewer, plus transparency.
 - Alpha: binary edges for production frames; no magenta spill or semitransparent fringe.
@@ -365,7 +365,7 @@ Acceptance: all artifacts exist, custom skills validate, repository URL resolves
 4. Approve one native grid, palette, identity hierarchy, and baseline.
 5. Write animation frame and atlas specification.
 
-Progress on 2026-07-28: steps 2 and 3 complete; owner selected a 40-point footprint, rejected every native tall treatment, and explicitly ordered the secondary chibi fallback. Step 4 now awaits final confirmation of `mascot-base-owner-chibi-40pt-at2x-80px-v2.png`; no more tall-face experiments are in scope.
+Progress on 2026-07-28: steps 2–4 complete. The owner selected a 40-point footprint, rejected every native tall treatment, and explicitly ordered the secondary chibi fallback. `mascot-base-chibi-40pt-at2x-80px-final.png` is frozen as the base. Step 5—the animation frame and atlas specification—is next.
 
 Acceptance: owner selects one concept; chosen sprite is recognizable at 1x; palette and frame geometry are frozen for 0.1.
 
@@ -434,7 +434,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Issue | Phase | Status |
 | --- | --- | --- |
 | [#1 Lock the 0.1 product contract with grill-me](https://github.com/Mr-Shine09/desktop-mascot/issues/1) | 1 | Closed as completed on 2026-07-28 |
-| [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | In progress; native tall rejected, secondary chibi confirmation pending |
+| [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | Closed as completed on 2026-07-28; secondary chibi frozen |
 | [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open |
 | [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Open |
 | [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | Open |
@@ -455,7 +455,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Reference understanding | Instagram third card and supplied images reviewed | Passed 2026-07-28 |
 | Repository | URL resolves under owner account | Passed 2026-07-28: [private repository](https://github.com/Mr-Shine09/desktop-mascot) |
 | Issue backlog | Every implementation phase mapped to an issue | Passed 2026-07-28: [issues #1–#13](https://github.com/Mr-Shine09/desktop-mascot/issues) |
-| Sprite readability | 1x light/dark review and owner approval | Every native tall treatment rejected; 80x80 `@2x` secondary chibi restored for final confirmation |
+| Sprite readability | 1x light/dark review and owner approval | Passed 2026-07-28: secondary chibi explicitly selected and frozen at 80x80 `@2x` |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Not started |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
@@ -518,6 +518,8 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Owner rejected `mascot-base-approved-tall-40pt-at2x-80px-v3.png` as visually unacceptable and explicitly ordered the secondary chibi fallback.
 - The source-level tall-face approval did not survive native-size QA and is not a production approval. Retain it only as historical evidence.
 - Restore `mascot-base-owner-chibi-40pt-at2x-80px-v2.png` as the sole current candidate. Do not spend another bounded attempt on the tall face in 0.1.
+- Treat the explicit instruction to fall back to the secondary chibi as final selection of the already-reviewed native reduction; do not require a duplicate approval round.
+- Freeze the identical promoted copy `mascot-base-chibi-40pt-at2x-80px-final.png` as the production base and close issue #2.
 
 ## Session log
 
@@ -668,16 +670,28 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
   - Prohibited further tall-face repairs for version 0.1.
 - Decisions: the secondary chibi supersedes both the preferred tall concept and the later source-face approval for production use. Historical tall sources remain in the repository only to explain the decision trail.
 - Verification: the restored chibi is 80x80 with alpha; its existing verification recorded 12 subject colors and binary alpha values only (`0` or `255`).
-- Risks or blockers: final confirmation of the restored chibi QA sheet is still required before issue #2 closes.
-- Next: present `art/production/mascot-base-owner-chibi-40pt-at2x-v2-review-8x.png` once for confirmation. If accepted, close issue #2 and begin issue #3 without any additional base-character redesign.
+- Risks or blockers: none for the base-character gate. Non-Retina behavior remains a later technical experiment.
+- Next: close issue #2 and begin the animation-frame and atlas specification in issue #3 without any additional base-character redesign.
+
+### 2026-07-28 — Chibi baseline freeze
+
+- Objective: convert the explicit fallback instruction into a final, unambiguous production baseline.
+- Completed:
+  - Promoted the already-reviewed chibi reduction to `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` without changing any pixels.
+  - Promoted its identical light/dark QA sheet to `art/production/mascot-base-chibi-40pt-at2x-final-review-8x.png`.
+  - Froze the 40-point footprint, 80x80 `@2x` backing grid, 12-color palette, binary alpha, and secondary-chibi identity hierarchy.
+  - Closed issue #2 as completed.
+- Decisions: the explicit fallback instruction is final approval of the previously presented chibi reduction. No duplicate approval is required.
+- Verification: SHA-256 hashes of the promoted native asset and QA sheet exactly match their previously reviewed v2 sources.
+- Risks or blockers: none for issue #2. The dedicated `@1x` strategy remains an open implementation experiment.
+- Next: write the animation atlas specification in issue #3, then begin state-frame production.
 
 ## Next-session handoff
 
 1. Read this file in full.
-2. Present `art/production/mascot-base-owner-chibi-40pt-at2x-v2-review-8x.png` from [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2) for final confirmation; never present another native tall variant as viable.
-3. If approved, close issue #2 and freeze the chibi 40-point/80-pixel-`@2x` identity hierarchy, palette, and baseline.
-4. Write the animation atlas specification and begin state-frame work in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3); do not scaffold the app before owner review.
-5. Update this ledger before ending the session.
+2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
+3. Write the animation atlas specification and begin state-frame work in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3); do not scaffold the app before the atlas contract exists.
+4. Update this ledger before ending the session.
 
 ## Documentation sources
 

@@ -9,13 +9,13 @@ Owner direction reviewed on 2026-07-28:
 
 The owner liked the tall face at source scale but rejected its final native treatment as visually unacceptable. The explicit final direction is the secondary chibi. No further tall-face repair is permitted for version 0.1.
 
-## Current QA candidate
+## Approved production base
 
 - `../references/owner-selected-fallback-chibi-transparent-clean.png`: cleaned transparent copy of the exact owner-selected secondary chibi.
-- `mascot-base-owner-chibi-40pt-at2x-80px-v2.png`: sole current 80x80 Retina candidate for a 40x40-point window.
-- `mascot-base-owner-chibi-40pt-at2x-v2-review-8x.png`: current light/dark QA sheet.
+- `mascot-base-chibi-40pt-at2x-80px-final.png`: frozen 80x80 Retina base for a 40x40-point window.
+- `mascot-base-chibi-40pt-at2x-final-review-8x.png`: frozen light/dark QA sheet.
 
-This candidate uses binary alpha and the project's 12-color palette. It is derived from the exact owner-selected secondary chibi, not a new redraw. It remains pending one final owner confirmation before the baseline is frozen.
+This base uses binary alpha and the project's 12-color palette. It is byte-for-byte identical to the previously presented v2 reduction derived from the exact owner-selected secondary chibi. The owner's explicit fallback instruction is the final selection; issue #2 is complete.
 
 ## Tall-direction attempts rejected by owner QA
 
@@ -73,8 +73,8 @@ swift tools/keep_largest_alpha_component.swift \
 
 swift tools/prepare_pixel_concept.swift \
   art/references/owner-selected-fallback-chibi-transparent-clean.png 80 \
-  art/production/mascot-base-owner-chibi-40pt-at2x-80px-v2.png \
-  art/production/mascot-base-owner-chibi-40pt-at2x-v2-review-8x.png
+  art/production/mascot-base-chibi-40pt-at2x-80px-final.png \
+  art/production/mascot-base-chibi-40pt-at2x-final-review-8x.png
 ```
 
 `tools/keep_largest_alpha_component.swift` removes isolated non-character pixels left by chroma-key cleanup before bounding-box fitting. The tall-only tools remain in the repository for reproducibility but are not part of the production path.
