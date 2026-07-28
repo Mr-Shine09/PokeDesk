@@ -10,8 +10,8 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Product contract and 40x40 tall art direction locked; hand-cleaned native base awaiting owner QA |
-| Current gate | Approve the 40x40 native base in [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2), then freeze its baseline and build the animation specification in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) |
+| Status | Product contract and tall art direction locked; failed 40-source-pixel draft rejected; corrected Retina base awaiting QA |
+| Current gate | Approve the 80x80 `@2x` art for a 40x40-point Dock footprint in [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2), then freeze its baseline and build the animation specification in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -52,7 +52,7 @@ The reference work is inspiration only. Do not copy Claude's mascot body, palett
 | macOS 14+ initial target | Keeps the first release small while covering modern SwiftUI/AppKit APIs; revisit based on tester demand. |
 | Dock-edge behavior first | Lower interruption and accessibility risk than cursor-following. |
 | Cursor-following deferred and opt-in | It needs separate pointer-obstruction, speed, distance, and multi-display testing. |
-| 40x40 native production grid | Owner selected 40x40 after side-by-side review; 32x32 collapses the glasses and leaves too little room for emotional poses. |
+| 40x40-point on-screen footprint | Owner selected the apparent 40x40 size. On Retina this requires an 80x80-pixel `@2x` asset; 40 source pixels are insufficient for the selected tall design. |
 | Tall miniature is the primary body style | Owner ranked the taller first 40x40 concept above the compact chibi. Preserve adult/tall proportions; borrow only high-contrast facial construction from the chibi fallback. |
 | No readable Chelsea crest or other logo | It will not survive at native size and creates unnecessary trademark/detail noise. Preserve navy/white color blocking instead. |
 | No briefcase in the base identity | Reserve props for unmistakable action states; keep the default silhouette clean. |
@@ -123,8 +123,11 @@ Remove garment texture, zipper detail below one pixel, belt detail, hand anatomy
 
 ### Technical sprite specification
 
-- Production canvas: `40x40` logical pixels. The character uses the tall owner-selected silhouette; the compact 40x40 chibi is the fallback only if a specific animation fails native-size QA.
-- Production scale: integer-only nearest-neighbor rendering, expected 2x on Retina.
+- On-screen footprint: initially `40x40` macOS points.
+- Retina production asset: `80x80` pixels at `@2x`, mapping one source pixel to one backing pixel on a 2x display.
+- Non-Retina behavior remains a required experiment: test a deliberately authored `40x40` `@1x` fallback versus a larger point footprint; never silently resample the Retina asset with smoothing.
+- The character uses the tall owner-selected silhouette; the compact chibi is fallback only if a specific animation fails Retina/native-size QA.
+- Production rendering uses nearest-neighbor interpolation and integer backing-pixel alignment.
 - Palette target: 12 colors or fewer, plus transparency.
 - Alpha: binary edges for production frames; no magenta spill or semitransparent fringe.
 - Shared baseline and anchor point across every frame.
@@ -145,7 +148,7 @@ Remove garment texture, zipper detail below one pixel, belt detail, hand anatomy
 | Sleeping | Inactive during 23:00–06:00 local time | 4 | Sleep under a blanket; wake immediately for activity |
 | Paused | User disabled automatic behavior | 2 | Still pose |
 
-Detached effects should be sparse. Prefer posture and expression; do not rely on readable text or tiny UI props. Implement the ideating cloud as a small effect layer above the character: two rising pixels lead into a compact cloud, which changes once, fades, and repeats. This keeps the 40x40 body readable while allowing the panel to reserve a slightly taller effect area.
+Detached effects should be sparse. Prefer posture and expression; do not rely on readable text or tiny UI props. Implement the ideating cloud as a small effect layer above the character: two rising pixels lead into a compact cloud, which changes once, fades, and repeats. This keeps the 40-point body readable while allowing the panel to reserve a slightly taller effect area.
 
 ## System architecture
 
@@ -362,7 +365,7 @@ Acceptance: all artifacts exist, custom skills validate, repository URL resolves
 4. Approve one native grid, palette, identity hierarchy, and baseline.
 5. Write animation frame and atlas specification.
 
-Progress on 2026-07-28: steps 2 and 3 complete; owner selected a 40x40 grid with the tall first concept as primary and the compact chibi as fallback. Step 4 awaits approval of the hand-cleaned native base and baseline.
+Progress on 2026-07-28: steps 2 and 3 complete; owner selected a 40-point footprint with the tall first concept as primary and the compact chibi as fallback. A mistaken 40-source-pixel draft failed owner QA and was rejected. Step 4 now awaits approval of the corrected 80x80 `@2x` Retina base and baseline.
 
 Acceptance: owner selects one concept; chosen sprite is recognizable at 1x; palette and frame geometry are frozen for 0.1.
 
@@ -431,7 +434,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Issue | Phase | Status |
 | --- | --- | --- |
 | [#1 Lock the 0.1 product contract with grill-me](https://github.com/Mr-Shine09/desktop-mascot/issues/1) | 1 | Closed as completed on 2026-07-28 |
-| [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | In progress; 40x40 tall direction selected, native-base QA pending |
+| [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | In progress; tall/40-point direction selected, corrected Retina-base QA pending |
 | [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open |
 | [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Open |
 | [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | Open |
@@ -452,7 +455,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Reference understanding | Instagram third card and supplied images reviewed | Passed 2026-07-28 |
 | Repository | URL resolves under owner account | Passed 2026-07-28: [private repository](https://github.com/Mr-Shine09/desktop-mascot) |
 | Issue backlog | Every implementation phase mapped to an issue | Passed 2026-07-28: [issues #1–#13](https://github.com/Mr-Shine09/desktop-mascot/issues) |
-| Sprite readability | 1x light/dark review and owner approval | 40x40 tall direction selected; hand-cleaned base QA pending |
+| Sprite readability | 1x light/dark review and owner approval | 40-source-pixel draft failed; corrected 80x80 `@2x` candidate ready for QA |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Not started |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
@@ -465,7 +468,8 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 
 | Risk | Impact | Mitigation | Status |
 | --- | --- | --- | --- |
-| Tall 40x40 sprite loses facial identity | High | Enlarge head modestly, hand-clean two separate square glasses/lens pixels, validate every frame at 1x | Open; base draft ready |
+| Point size is confused with backing-pixel dimensions | High | Specify points and `@1x`/`@2x` assets separately; validate on real Retina/non-Retina scale factors | 40-pixel failure recorded; corrected Retina draft ready |
+| Tall mascot loses facial identity on non-Retina output | High | Use 80x80 `@2x` as authoritative; prototype a dedicated `@1x` fallback rather than smoothing | Open experiment |
 | Provider hooks change over time | High | Version adapters, validate on install, link official docs, keep wrapper fallback | Open |
 | Ordinary Claude/ChatGPT conversations lack a documented external lifecycle signal | High | Manual ideating control in 0.1; automatic detection deferred; no content/accessibility/private-API scraping | Constrained for 0.1 |
 | “Completed” is mistaken for “successful” | Medium | Treat Codex Stop as completion reaction, not proof every command passed | Mitigated in design |
@@ -486,7 +490,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Use explicit Codex and Claude Code lifecycle hooks as the primary signal source.
 - Transmit only coarse normalized event metadata.
 - Start with Dock-edge behavior; defer cursor-following.
-- Prototype both 32x32 and 40x40; owner selected 40x40 for production.
+- Prototype both apparent 32x32 and 40x40 sizes; owner selected a 40x40-point footprint. Correct interpretation is an 80x80-pixel `@2x` Retina asset.
 - Preserve identity through hair, glasses, and navy/white color blocking; omit the tiny crest and briefcase.
 - Keep the GitHub repository private until the owner reviews release visibility.
 - Chilling is a daytime Dock-edge stroll; working is seated typing at a tiny computer; failure is a confused/dizzy reaction.
@@ -502,7 +506,8 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Offer previewed one-click Codex/Claude Code hook installation with backup, verification, and ownership-safe uninstall.
 - Product-grill verdict: `ready with experiments`.
 - Use the owner-ranked tall first concept as the primary 40x40 body style; keep the compact chibi as fallback only.
-- Preserve tall proportions through hand-cleaned native pixel work rather than automatic downscaling; simplify the face to two separate square glasses with isolated light lens/eye pixels.
+- Reject the 40-source-pixel hand-cleaned draft shown on 2026-07-28; it failed the identity and quality bar.
+- Preserve the tall design with an 80x80-pixel `@2x` Retina asset displayed at 40x40 points. Do not confuse UI points with source/backing pixels again.
 
 ## Session log
 
@@ -600,11 +605,25 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: the tall proportions leave only a small facial area. The base now has separate square frames and lens pixels, but owner visual approval is still required before the baseline is frozen.
 - Next: review the hand-cleaned 40x40 QA sheet. If approved, close issue #2, freeze the base/baseline, and begin the animation atlas specification in issue #3.
 
+### 2026-07-28 — Failed native draft rejection and Retina correction
+
+- Objective: respond to owner QA, reject the malformed sprite, identify the dimensional error, and restore the selected tall design.
+- Completed:
+  - Owner rejected `art/production/mascot-base-tall-40-review-8x-final.png` as visually unacceptable.
+  - Marked every 40-source-pixel hand-clean artifact and `tools/hand_clean_tall_base.swift` as rejected evidence; none may enter the app or animation atlas.
+  - Identified the root cause: the implementation treated a desired 40x40-point on-screen footprint as only 40x40 source pixels.
+  - Corrected the asset contract: an 80x80-pixel `@2x` source maps exactly to a 40x40-point window on a Retina display.
+  - Rebuilt directly from the owner-selected tall concept as `art/production/mascot-base-tall-40pt-at2x-80px.png` and generated a light/dark QA sheet.
+- Decisions: the malformed sprite is rejected. The tall concept remains selected; the correction changes backing resolution, not the owner's chosen appearance or screen footprint.
+- Verification: corrected asset is 80x80 pixels with alpha; Retina mapping is 1 source pixel per backing pixel at a 40-point footprint. Non-Retina behavior is not yet approved.
+- Risks or blockers: owner QA of the corrected Retina candidate is required. A dedicated non-Retina strategy must be tested later.
+- Next: review the corrected Retina QA sheet. Do not close issue #2 or start animation frames until it is approved.
+
 ## Next-session handoff
 
 1. Read this file in full.
-2. Present `art/production/mascot-base-tall-40-review-8x-final.png` from [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2) for owner QA.
-3. If approved, close issue #2 and freeze the 40x40 identity hierarchy, palette, and baseline.
+2. Present `art/production/mascot-base-tall-40pt-at2x-review-8x.png` from [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2) for owner QA; never present the rejected 40-source-pixel draft as viable.
+3. If approved, close issue #2 and freeze the 40-point/80-pixel-`@2x` identity hierarchy, palette, and baseline.
 4. Write the animation atlas specification and begin state-frame work in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3); do not scaffold the app before owner review.
 5. Update this ledger before ending the session.
 
