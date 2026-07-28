@@ -47,6 +47,34 @@ def render_contact_sheet(rows: list[tuple[dict, list[Image.Image]]], output: Pat
     sheet.save(output)
 
 
+def render_contract_sheet(
+    rows: list[tuple[dict, list[Image.Image]]],
+    output: Path,
+    scale: int,
+    background: tuple[int, int, int, int],
+    columns: int,
+) -> None:
+    cell_width, cell_height = rows[0][1][0].size
+    label_width = 120
+    sheet = Image.new(
+        "RGBA",
+        (label_width + columns * cell_width * scale, len(rows) * cell_height * scale),
+        background,
+    )
+    draw = ImageDraw.Draw(sheet)
+    label_color = (20, 20, 20, 255) if background == LIGHT else (245, 245, 245, 255)
+    for row_index, (spec, frames) in enumerate(rows):
+        y = row_index * cell_height * scale
+        draw.text((8, y + 8), spec["state"], fill=label_color)
+        for column, frame in enumerate(frames):
+            sheet.alpha_composite(
+                composite(frame, background, scale),
+                (label_width + column * cell_width * scale, y),
+            )
+    output.parent.mkdir(parents=True, exist_ok=True)
+    sheet.save(output)
+
+
 def render_silhouettes(rows: list[tuple[dict, list[Image.Image]]], output: Path, scale: int) -> None:
     cell_width, cell_height = rows[0][1][0].size
     columns = max(len(frames) for _, frames in rows)
@@ -84,6 +112,7 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, default=Path("art/animation/qa"))
     parser.add_argument("--states", nargs="+", required=True)
     parser.add_argument("--scale", type=int, default=4)
+    parser.add_argument("--full-contract", action="store_true")
     args = parser.parse_args()
 
     contract = json.loads(args.contract.read_text())
@@ -95,10 +124,29 @@ def main() -> int:
     render_contact_sheet(rows, args.output_dir / "contact-sheet-candidate.png", args.scale)
     render_silhouettes(rows, args.output_dir / "silhouette-sheet-candidate.png", args.scale)
     render_previews(rows, args.output_dir / "previews", args.scale)
+    if args.full_contract:
+        expected_states = [row["state"] for row in contract["rows"]]
+        if args.states != expected_states:
+            parser.error("--full-contract requires every state in contract row order")
+        columns = contract["atlas"]["columns"]
+        for background_name, background in (("light", LIGHT), ("dark", DARK)):
+            render_contract_sheet(
+                rows,
+                args.output_dir / f"contact-sheet-backing-1x-{background_name}.png",
+                1,
+                background,
+                columns,
+            )
+            render_contract_sheet(
+                rows,
+                args.output_dir / f"contact-sheet-inspection-8x-{background_name}.png",
+                8,
+                background,
+                columns,
+            )
     print(f"rendered QA for {', '.join(args.states)}")
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

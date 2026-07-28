@@ -1,0 +1,11 @@
+{
+  "state": "success",
+  "method": "freeze-generated-pump-peak",
+  "source_peak": "success-03.png",
+  "source_peak_sha256": "21052959b1f602e1cdc031802c8fd23fc5546ac8380e757dad1e507cb79d78c0",
+  "replaced_frames": [
+    "success-04.png",
+    "success-05.png"
+  ],
+  "reason": "prevent a down-up motion from reading as a second fist pump"
+}

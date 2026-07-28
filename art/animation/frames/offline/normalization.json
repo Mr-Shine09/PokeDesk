@@ -1,0 +1,23 @@
+{
+  "state": "offline",
+  "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/offline-row.png",
+  "frames": 2,
+  "source_slot_bounds": [
+    [
+      479,
+      109,
+      750,
+      702
+    ],
+    [
+      133,
+      108,
+      404,
+      701
+    ]
+  ],
+  "shared_scale": 0.1315345699831366,
+  "bounds_mode": "normal",
+  "minimum_component_ratio": 0.005,
+  "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/offline"
+}

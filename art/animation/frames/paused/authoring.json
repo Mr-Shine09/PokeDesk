@@ -1,0 +1,10 @@
+{
+  "state": "paused",
+  "method": "approved-idle-cell-reuse",
+  "source_base_sha256": "954f4b19cf352808e89c2e197849c16e58409f107a4b5dfd681aa9dac432abc6",
+  "frame_count": 2,
+  "frame_notes": [
+    "approved idle half-blink settles the pose",
+    "exact approved idle neutral frame is held with the timer stopped"
+  ]
+}

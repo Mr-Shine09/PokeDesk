@@ -1,0 +1,35 @@
+{
+  "state": "sleeping",
+  "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/sleeping-row.png",
+  "frames": 4,
+  "source_slot_bounds": [
+    [
+      57,
+      270,
+      496,
+      470
+    ],
+    [
+      65,
+      272,
+      489,
+      470
+    ],
+    [
+      53,
+      270,
+      481,
+      470
+    ],
+    [
+      32,
+      270,
+      470,
+      470
+    ]
+  ],
+  "shared_scale": 0.18223234624145787,
+  "bounds_mode": "normal",
+  "minimum_component_ratio": 0.005,
+  "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/sleeping"
+}

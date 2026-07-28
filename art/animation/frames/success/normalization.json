@@ -1,0 +1,47 @@
+{
+  "state": "success",
+  "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/success-row.png",
+  "frames": 6,
+  "source_slot_bounds": [
+    [
+      110,
+      140,
+      311,
+      567
+    ],
+    [
+      103,
+      140,
+      302,
+      567
+    ],
+    [
+      94,
+      140,
+      295,
+      567
+    ],
+    [
+      79,
+      140,
+      305,
+      567
+    ],
+    [
+      72,
+      140,
+      299,
+      567
+    ],
+    [
+      50,
+      140,
+      278,
+      567
+    ]
+  ],
+  "shared_scale": 0.18266978922716628,
+  "bounds_mode": "normal",
+  "minimum_component_ratio": 0.005,
+  "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/success"
+}
