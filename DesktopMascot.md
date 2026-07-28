@@ -10,8 +10,8 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Idle and directional walk rows are owner-approved; working, ideating, and waiting are next |
-| Current gate | Produce and visually approve the remaining state frames, contact sheets, and motion previews in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) before app scaffolding |
+| Status | Idle and directional walk rows are owner-approved; working, ideating, and waiting are produced and await owner review |
+| Current gate | Owner-review the working, ideating, and waiting candidates, then produce the final five state rows in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) before app scaffolding |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -436,7 +436,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | --- | --- | --- |
 | [#1 Lock the 0.1 product contract with grill-me](https://github.com/Mr-Shine09/desktop-mascot/issues/1) | 1 | Closed as completed on 2026-07-28 |
 | [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | Closed as completed on 2026-07-28; secondary chibi frozen |
-| [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open; contract plus idle and directional rows approved, remaining rows pending |
+| [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open; contract plus idle and directional rows approved; working, ideating, and waiting await owner review |
 | [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Open |
 | [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | Open |
 | [#6 Implement the mascot state model and reducer](https://github.com/Mr-Shine09/desktop-mascot/issues/6) | 3 | Open |
@@ -460,6 +460,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Atlas contract | Geometry, rows, timing, anchor, palette, alpha, and QA rules validate before frame production | Passed 2026-07-28: `python3 tools/validate_animation_atlas.py --contract-only` |
 | Directional walk rows | Six frames each direction, shared baseline, frozen palette, light/dark contact sheet, and motion previews | Passed internal QA and owner review on 2026-07-28 |
 | Idle row | Four native frames preserve the base silhouette and change only lens interiors for a half/full blink | Passed deterministic, internal visual, and owner review on 2026-07-28 |
+| Working, ideating, waiting rows | Contract frame counts, shared baseline, frozen palette, light/dark contact sheet, silhouettes, and motion previews | Passed deterministic and internal visual QA on 2026-07-28; owner review pending |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Not started |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
@@ -482,7 +483,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Multiple sessions thrash visible state | Medium | Per-session registry, priority reducer, debounce, bounded reactions | Open |
 | Cursor-following annoys or obstructs | Medium | Defer; require explicit opt-in and dedicated tests | Deferred |
 | Idle animation wastes battery | Medium | Event-driven updates, suspend timers, measurable energy budget | Open |
-| Generated state frames drift from the frozen identity | High | Ground every job in the frozen base, normalize deterministically, reject drift, and use native pixel editing only with explicit owner approval | Native idle resolved and approved; generated prop/action rows remain at risk |
+| Generated state frames drift from the frozen identity | High | Ground every job in the frozen base, normalize deterministically, reject drift, and use native pixel editing only with explicit owner approval | Working, ideating, and waiting passed internal QA but remain owner-review candidates; later action rows remain at risk |
 | Personal likeness ships before review | Medium | Private repository until owner changes visibility | Mitigated for foundation |
 
 ## Decision log
@@ -826,11 +827,27 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: remaining generated action and prop rows may drift from the frozen identity. The dedicated `@1x` asset strategy also remains an open experiment. Neither changes the approved rows.
 - Next: begin the next session with `working`, `ideating`, and `waiting` as one bounded issue #3 production group. Do not scaffold the app before the complete atlas passes owner review.
 
+### 2026-07-28 — Working, ideating, and waiting candidates
+
+- Objective: produce the next bounded issue #3 state group without changing the frozen base or approved rows.
+- Completed:
+  - Generated separate grounded source strips for six-frame `working`, six-frame `ideating`, and four-frame `waiting` rows.
+  - Extended `tools/prepare_animation_frames.py` with explicit normal-versus-guard bounds and a configurable detached-component threshold so the ideating cloud can use its contracted effect area without weakening normal body-row cleanup.
+  - Normalized all frames to the frozen 12-color palette, binary alpha, clean transparent RGB, shared anchor, and baseline.
+  - Regenerated the combined light/dark contact sheet, silhouette sheet, and contract-timed previews for every approved and candidate row.
+- Decisions: admit the three rows only as owner-review candidates. Preserve idle and both directional rows unchanged; do not start the last five rows or app scaffold until the owner reviews this bounded group.
+- Verification:
+  - `python3 tools/validate_animation_atlas.py --frames-root art/animation/frames --states idle working ideating waiting walk-right walk-left` passes.
+  - `python3 -m py_compile tools/prepare_animation_frames.py` and `git diff --check` pass.
+  - Internal native-size review confirms seated typing, the prescribed cloud lifecycle, a one-way raised-hand intro/hold, stable ground contact, and light/dark readability.
+- Risks or blockers: owner visual approval is pending. The generated poses necessarily change posture and props, so the owner remains the authority on likeness before these rows are frozen.
+- Next: present the three motion previews for approval. If accepted, freeze them and produce `success`, `failure`, `sleeping`, `offline`, and `paused` as the final bounded state group.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
-3. Produce `working`, `ideating`, and `waiting` as the next bounded issue #3 state group. Preserve the approved idle and directional rows unchanged; do not scaffold the app before the complete atlas passes owner review.
+3. Obtain owner review of the produced `working`, `ideating`, and `waiting` candidates. If accepted, freeze them and produce `success`, `failure`, `sleeping`, `offline`, and `paused`; do not scaffold the app before the complete atlas passes owner review.
 4. Update this ledger before ending the session.
 
 ## Documentation sources

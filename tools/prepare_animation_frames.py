@@ -80,7 +80,7 @@ def remove_border_key(image: Image.Image, tolerance: int) -> Image.Image:
     return image_from_pixels(rgb.size, pixels)
 
 
-def keep_significant_components(image: Image.Image) -> Image.Image:
+def keep_significant_components(image: Image.Image, minimum_component_ratio: float) -> Image.Image:
     rgba = image.convert("RGBA")
     width, height = rgba.size
     alpha = rgba.getchannel("A")
@@ -106,7 +106,7 @@ def keep_significant_components(image: Image.Image) -> Image.Image:
     if not components:
         raise ValueError("frame contains no foreground component")
     largest_size = max(len(component) for component in components)
-    minimum_size = max(4, round(largest_size * 0.005))
+    minimum_size = max(1, round(largest_size * minimum_component_ratio))
     retained = {
         point
         for component in components
@@ -141,7 +141,16 @@ def create_anchor(contract: dict, contract_path: Path, output: Path) -> None:
     cell.save(output)
 
 
-def process_strip(contract: dict, strip_path: Path, state: str, frame_count: int, output_root: Path, tolerance: int) -> None:
+def process_strip(
+    contract: dict,
+    strip_path: Path,
+    state: str,
+    frame_count: int,
+    output_root: Path,
+    tolerance: int,
+    bounds_mode: str,
+    minimum_component_ratio: float,
+) -> None:
     source = Image.open(strip_path).convert("RGB")
     slot_width = source.width / frame_count
     extracted: list[Image.Image] = []
@@ -150,16 +159,21 @@ def process_strip(contract: dict, strip_path: Path, state: str, frame_count: int
         left = round(index * slot_width)
         right = round((index + 1) * slot_width)
         slot = source.crop((left, 0, right, source.height))
-        keyed = keep_significant_components(remove_border_key(slot, tolerance))
+        keyed = keep_significant_components(
+            remove_border_key(slot, tolerance),
+            minimum_component_ratio,
+        )
         bbox = keyed.getchannel("A").getbbox()
         if bbox is None:
             raise ValueError(f"{state} frame {index} is empty after key removal")
         extracted.append(keyed.crop(bbox))
         bounds.append(bbox)
 
-    normal_left, normal_top, normal_right, normal_bottom = contract["bounds"]["normal_body_inclusive"]
-    maximum_width = normal_right - normal_left + 1
-    maximum_height = normal_bottom - normal_top + 1
+    bounds_key = "normal_body_inclusive" if bounds_mode == "normal" else "opaque_guard_inclusive"
+    left, top, right, bottom = contract["bounds"][bounds_key]
+    maximum_width = right - left + 1
+    baseline_y = contract["anchor"]["baseline_y"]
+    maximum_height = min(bottom, baseline_y) - top + 1
     scale = min(
         maximum_width / max(image.width for image in extracted),
         maximum_height / max(image.height for image in extracted),
@@ -169,7 +183,6 @@ def process_strip(contract: dict, strip_path: Path, state: str, frame_count: int
 
     palette = [rgb_from_hex(value) for value in contract["pixel_rules"]["palette_hex"]]
     anchor_x = contract["anchor"]["x"]
-    baseline_y = contract["anchor"]["baseline_y"]
     cell_size = tuple(contract["atlas"]["cell_pixel_size"])
     destination = output_root / state
     destination.mkdir(parents=True, exist_ok=True)
@@ -191,6 +204,8 @@ def process_strip(contract: dict, strip_path: Path, state: str, frame_count: int
         "frames": frame_count,
         "source_slot_bounds": bounds,
         "shared_scale": scale,
+        "bounds_mode": bounds_mode,
+        "minimum_component_ratio": minimum_component_ratio,
         "output_root": str(destination.resolve()),
     }
     (destination / "normalization.json").write_text(json.dumps(report, indent=2) + "\n")
@@ -205,6 +220,8 @@ def main() -> int:
     parser.add_argument("--frames", type=int)
     parser.add_argument("--output-root", type=Path, default=Path("art/animation/frames"))
     parser.add_argument("--key-tolerance", type=int, default=48)
+    parser.add_argument("--bounds-mode", choices=("normal", "guard"), default="normal")
+    parser.add_argument("--minimum-component-ratio", type=float, default=0.005)
     args = parser.parse_args()
 
     contract_path = args.contract.resolve()
@@ -220,7 +237,18 @@ def main() -> int:
         parser.error(f"state is not in the contract: {args.state}")
     if row["frames"] != args.frames:
         parser.error(f"frame count does not match contract: expected {row['frames']}")
-    process_strip(contract, args.strip.resolve(), args.state, args.frames, args.output_root.resolve(), args.key_tolerance)
+    if not 0 <= args.minimum_component_ratio <= 1:
+        parser.error("--minimum-component-ratio must be between 0 and 1")
+    process_strip(
+        contract,
+        args.strip.resolve(),
+        args.state,
+        args.frames,
+        args.output_root.resolve(),
+        args.key_tolerance,
+        args.bounds_mode,
+        args.minimum_component_ratio,
+    )
     print(f"wrote {args.frames} normalized {args.state} frames")
     return 0
 

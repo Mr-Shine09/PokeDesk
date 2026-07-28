@@ -1,0 +1,35 @@
+{
+  "state": "waiting",
+  "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/waiting-row.png",
+  "frames": 4,
+  "source_slot_bounds": [
+    [
+      178,
+      93,
+      410,
+      594
+    ],
+    [
+      141,
+      97,
+      407,
+      594
+    ],
+    [
+      117,
+      93,
+      369,
+      594
+    ],
+    [
+      98,
+      93,
+      365,
+      594
+    ]
+  ],
+  "shared_scale": 0.15568862275449102,
+  "bounds_mode": "normal",
+  "minimum_component_ratio": 0.005,
+  "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/waiting"
+}

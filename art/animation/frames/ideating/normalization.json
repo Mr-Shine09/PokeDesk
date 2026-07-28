@@ -1,0 +1,47 @@
+{
+  "state": "ideating",
+  "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/ideating-row.png",
+  "frames": 6,
+  "source_slot_bounds": [
+    [
+      93,
+      260,
+      301,
+      616
+    ],
+    [
+      67,
+      194,
+      274,
+      616
+    ],
+    [
+      39,
+      94,
+      290,
+      616
+    ],
+    [
+      43,
+      114,
+      283,
+      616
+    ],
+    [
+      44,
+      195,
+      251,
+      616
+    ],
+    [
+      61,
+      264,
+      268,
+      620
+    ]
+  ],
+  "shared_scale": 0.1896551724137931,
+  "bounds_mode": "guard",
+  "minimum_component_ratio": 0.001,
+  "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/ideating"
+}
