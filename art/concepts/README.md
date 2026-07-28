@@ -25,11 +25,11 @@ QA concern: the square glasses collapse into a broad horizontal light band at na
 
 Strengths: retains the compact chibi silhouette while preserving separate glasses/eyes, hair asymmetry, white garment panels, and limb gaps. The eight extra pixels materially improve the planned emotional poses.
 
-Recommendation: select 40x40 v2 for the 0.1 production grid. Render at integer scale only.
+Earlier recommendation: select 40x40 v2 for the 0.1 production grid. The owner later chose the taller first 40x40 direction as the primary style and retained this compact chibi as the fallback. See `../production/README.md`.
 
-## Rejected experiment
+## Tall experiment, later revived by owner selection
 
-The first 40x40 direction (`mascot-40-concept-chroma.png`, `mascot-40-concept.png`, `mascot-40-native.png`, and `mascot-40-review-8x.png`) became tall and human-proportioned. It is retained as evidence but excluded from owner selection because it did not compare grid size while holding proportions constant.
+The first 40x40 direction (`mascot-40-concept-chroma.png`, `mascot-40-concept.png`, `mascot-40-native.png`, and `mascot-40-review-8x.png`) became tall and human-proportioned. It was initially excluded from the grid comparison because it did not hold proportions constant, but the owner explicitly ranked this aesthetic first on 2026-07-28. It is now the primary production direction; the compact 40x40 v2 remains the fallback.
 
 ## Final generation prompts
 

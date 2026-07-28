@@ -10,8 +10,8 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Product contract complete; 32x32/40x40 art comparison awaiting owner selection |
-| Current gate | Select the production grid from [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2), then freeze the base mascot and animation specification |
+| Status | Product contract and 40x40 tall art direction locked; hand-cleaned native base awaiting owner QA |
+| Current gate | Approve the 40x40 native base in [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2), then freeze its baseline and build the animation specification in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -52,7 +52,8 @@ The reference work is inspiration only. Do not copy Claude's mascot body, palett
 | macOS 14+ initial target | Keeps the first release small while covering modern SwiftUI/AppKit APIs; revisit based on tester demand. |
 | Dock-edge behavior first | Lower interruption and accessibility risk than cursor-following. |
 | Cursor-following deferred and opt-in | It needs separate pointer-obstruction, speed, distance, and multi-display testing. |
-| 32x32 logical sprite target, rendered at integer scale | Small enough to read as pixel art near the Dock; a 40x40 fallback experiment is allowed if glasses and hair collapse at 32x32. |
+| 40x40 native production grid | Owner selected 40x40 after side-by-side review; 32x32 collapses the glasses and leaves too little room for emotional poses. |
+| Tall miniature is the primary body style | Owner ranked the taller first 40x40 concept above the compact chibi. Preserve adult/tall proportions; borrow only high-contrast facial construction from the chibi fallback. |
 | No readable Chelsea crest or other logo | It will not survive at native size and creates unnecessary trademark/detail noise. Preserve navy/white color blocking instead. |
 | No briefcase in the base identity | Reserve props for unmistakable action states; keep the default silhouette clean. |
 | Explicit hooks before process fallback | Hooks provide reliable lifecycle meaning without inspecting private content. |
@@ -76,7 +77,6 @@ Grill verdict on 2026-07-28: `ready with experiments`. The 0.1 contract is ready
 ### Questions to resolve before feature freeze
 
 - Final product name and mascot name.
-- Whether the owner prefers the 32x32 or 40x40 concept after side-by-side 1x review.
 - Whether the first public release should remain private, become public source, or ship only as a notarized binary.
 - Whether Claude Code and Codex deserve distinct visual accents when both are active.
 
@@ -123,7 +123,7 @@ Remove garment texture, zipper detail below one pixel, belt detail, hand anatomy
 
 ### Technical sprite specification
 
-- Prototype canvases: `32x32` and, only if needed, `40x40` logical pixels.
+- Production canvas: `40x40` logical pixels. The character uses the tall owner-selected silhouette; the compact 40x40 chibi is the fallback only if a specific animation fails native-size QA.
 - Production scale: integer-only nearest-neighbor rendering, expected 2x on Retina.
 - Palette target: 12 colors or fewer, plus transparency.
 - Alpha: binary edges for production frames; no magenta spill or semitransparent fringe.
@@ -145,7 +145,7 @@ Remove garment texture, zipper detail below one pixel, belt detail, hand anatomy
 | Sleeping | Inactive during 23:00–06:00 local time | 4 | Sleep under a blanket; wake immediately for activity |
 | Paused | User disabled automatic behavior | 2 | Still pose |
 
-Detached effects should be sparse. Prefer posture and expression; do not rely on readable text or tiny UI props. Implement the ideating cloud as a small effect layer above the character: two rising pixels lead into a compact cloud, which changes once, fades, and repeats. This keeps the 32x32 body readable while allowing the panel to reserve a slightly taller effect area.
+Detached effects should be sparse. Prefer posture and expression; do not rely on readable text or tiny UI props. Implement the ideating cloud as a small effect layer above the character: two rising pixels lead into a compact cloud, which changes once, fades, and repeats. This keeps the 40x40 body readable while allowing the panel to reserve a slightly taller effect area.
 
 ## System architecture
 
@@ -362,6 +362,8 @@ Acceptance: all artifacts exist, custom skills validate, repository URL resolves
 4. Approve one native grid, palette, identity hierarchy, and baseline.
 5. Write animation frame and atlas specification.
 
+Progress on 2026-07-28: steps 2 and 3 complete; owner selected a 40x40 grid with the tall first concept as primary and the compact chibi as fallback. Step 4 awaits approval of the hand-cleaned native base and baseline.
+
 Acceptance: owner selects one concept; chosen sprite is recognizable at 1x; palette and frame geometry are frozen for 0.1.
 
 ### Phase 2 — Native app skeleton (2026-07-31 to 2026-08-02)
@@ -429,7 +431,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Issue | Phase | Status |
 | --- | --- | --- |
 | [#1 Lock the 0.1 product contract with grill-me](https://github.com/Mr-Shine09/desktop-mascot/issues/1) | 1 | Closed as completed on 2026-07-28 |
-| [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | In progress; owner selection pending |
+| [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | In progress; 40x40 tall direction selected, native-base QA pending |
 | [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open |
 | [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Open |
 | [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | Open |
@@ -450,7 +452,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Reference understanding | Instagram third card and supplied images reviewed | Passed 2026-07-28 |
 | Repository | URL resolves under owner account | Passed 2026-07-28: [private repository](https://github.com/Mr-Shine09/desktop-mascot) |
 | Issue backlog | Every implementation phase mapped to an issue | Passed 2026-07-28: [issues #1–#13](https://github.com/Mr-Shine09/desktop-mascot/issues) |
-| Sprite readability | 1x light/dark review and owner approval | Concepts and QA sheets ready; owner selection pending |
+| Sprite readability | 1x light/dark review and owner approval | 40x40 tall direction selected; hand-cleaned base QA pending |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Not started |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
@@ -463,7 +465,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 
 | Risk | Impact | Mitigation | Status |
 | --- | --- | --- | --- |
-| Tiny sprite loses the owner's identity | High | Compare 32x32/40x40 at 1x; prioritize hair, glasses, and garment blocks | Open |
+| Tall 40x40 sprite loses facial identity | High | Enlarge head modestly, hand-clean two separate square glasses/lens pixels, validate every frame at 1x | Open; base draft ready |
 | Provider hooks change over time | High | Version adapters, validate on install, link official docs, keep wrapper fallback | Open |
 | Ordinary Claude/ChatGPT conversations lack a documented external lifecycle signal | High | Manual ideating control in 0.1; automatic detection deferred; no content/accessibility/private-API scraping | Constrained for 0.1 |
 | “Completed” is mistaken for “successful” | Medium | Treat Codex Stop as completion reaction, not proof every command passed | Mitigated in design |
@@ -484,7 +486,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Use explicit Codex and Claude Code lifecycle hooks as the primary signal source.
 - Transmit only coarse normalized event metadata.
 - Start with Dock-edge behavior; defer cursor-following.
-- Prototype both 32x32 and 40x40, with 32x32 as the preferred target.
+- Prototype both 32x32 and 40x40; owner selected 40x40 for production.
 - Preserve identity through hair, glasses, and navy/white color blocking; omit the tiny crest and briefcase.
 - Keep the GitHub repository private until the owner reviews release visibility.
 - Chilling is a daytime Dock-edge stroll; working is seated typing at a tiny computer; failure is a confused/dizzy reaction.
@@ -499,6 +501,8 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Keep the mascot click-through by default and allow dragging only through a temporary menu-bar unlock mode.
 - Offer previewed one-click Codex/Claude Code hook installation with backup, verification, and ownership-safe uninstall.
 - Product-grill verdict: `ready with experiments`.
+- Use the owner-ranked tall first concept as the primary 40x40 body style; keep the compact chibi as fallback only.
+- Preserve tall proportions through hand-cleaned native pixel work rather than automatic downscaling; simplify the face to two separate square glasses with isolated light lens/eye pixels.
 
 ## Session log
 
@@ -580,12 +584,28 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: the 32x32 glasses collapse into a horizontal band. The 40x40 v2 is clearer but still requires owner selection and a hand-cleaned base frame before animation.
 - Next: owner selects 32x32 or 40x40 v2. Then freeze the chosen grid, hand-clean the base sprite, and write the atlas specification in issue #3.
 
+### 2026-07-28 — Owner art selection and tall-base refinement
+
+- Objective: record the owner's ranked aesthetic choice and turn it into a feasible native-grid production base.
+- Completed:
+  - Owner ranked the original tall first concept highest, with the compact chibi second, and selected a 40x40 grid.
+  - Preserved both ranked reference images under `art/references/` so the temporary clipboard files are not lost.
+  - Restored the tall concept as the primary direction and designated the compact chibi as fallback only.
+  - Used the built-in image-generation workflow to create a tall production-direction source with a modestly enlarged head and glasses while preserving adult proportions.
+  - Removed the chroma background and produced a true 40x40, binary-alpha, 12-color draft.
+  - Added `tools/hand_clean_tall_base.swift` to replace the automatically collapsed face with deterministic native square-glasses pixels.
+  - Produced `art/production/mascot-base-tall-40-native-final.png` and its 8x light/dark QA sheet.
+- Decisions: 40x40 is frozen as the production grid. The tall silhouette is primary; the chibi is not used unless a future state fails 1x readability after a bounded hand-clean attempt.
+- Verification: `sips` dimension/alpha checks and visual QA are required before closing issue #2; the current candidate has been rendered on both light and dark backgrounds.
+- Risks or blockers: the tall proportions leave only a small facial area. The base now has separate square frames and lens pixels, but owner visual approval is still required before the baseline is frozen.
+- Next: review the hand-cleaned 40x40 QA sheet. If approved, close issue #2, freeze the base/baseline, and begin the animation atlas specification in issue #3.
+
 ## Next-session handoff
 
 1. Read this file in full.
-2. Present the `art/concepts/mascot-32-review-8x.png` and `art/concepts/mascot-40-review-8x-v2.png` comparison from [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2).
-3. Record the owner's native-grid selection and freeze the identity hierarchy, palette, and baseline.
-4. Hand-clean the approved base sprite and write the animation atlas specification in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3); do not scaffold the app before owner review.
+2. Present `art/production/mascot-base-tall-40-review-8x-final.png` from [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2) for owner QA.
+3. If approved, close issue #2 and freeze the 40x40 identity hierarchy, palette, and baseline.
+4. Write the animation atlas specification and begin state-frame work in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3); do not scaffold the app before owner review.
 5. Update this ledger before ending the session.
 
 ## Documentation sources
