@@ -18,9 +18,9 @@
 
 ## Purpose
 
-Create a tiny pixel-art version of the owner that lives near the macOS Dock and communicates the current state of local Codex or Claude Code work through animation. The mascot should be delightful at a glance without covering work, stealing focus, reading private content, or consuming meaningful idle resources.
+Create a tiny pixel-art version of the owner that lives near the macOS Dock and communicates the current state of coding and non-coding Claude or ChatGPT activity through animation. The mascot should be delightful at a glance without covering work, stealing focus, reading private content, or consuming meaningful idle resources.
 
-The product is successful when a user can tell within one second whether an agent is working, waiting for them, finished, failed, idle, or asleep—and can pause or quit the mascot immediately.
+The product is successful when a user can tell within one second whether an agent is coding, ideating, waiting for them, finished, failed, idle, or asleep—and can pause or quit the mascot immediately.
 
 ## Product principles
 
@@ -64,6 +64,9 @@ The reference work is inspiration only. Do not copy Claude's mascot body, palett
 | Independent Dock-edge window | The mascot visually occupies a lane at the Dock edge but does not inject into or modify the macOS Dock. Dock auto-hide may remain enabled. |
 | Dock-only movement for 0.1 | Broader roaming across the lower screen is a later experiment after Dock hit-testing and distraction are validated. |
 | Broad Claude/ChatGPT coverage is the goal | Supported lifecycle hooks are authoritative. Any ordinary ChatGPT app/web coverage must be explicitly labeled best-effort unless a documented lifecycle signal is available. |
+| Non-coding activity means ideating | The mascot sits in a Thinker-style pose while a small thought cloud appears, changes, disappears, and loops. |
+| Waiting means asking for attention | The mascot stops its current pose, turns toward the user, and raises one hand until work resumes or ends. |
+| Success means delighted recognition | The mascot shows sparkling eyes and performs one quick fist pump, then returns to strolling or scheduled sleep. |
 
 ### Questions to resolve before feature freeze
 
@@ -72,8 +75,7 @@ The reference work is inspiration only. Do not copy Claude's mascot body, palett
 - Whether automatic hook installation is acceptable or the app should only generate copyable configuration snippets.
 - Whether the first public release should remain private, become public source, or ship only as a notarized binary.
 - Whether Claude Code and Codex deserve distinct visual accents when both are active.
-- How ordinary ChatGPT app/browser activity should behave when no documented public lifecycle event is available.
-- The waiting-for-input and completion reactions.
+- How ordinary ChatGPT/Claude app or browser activity should be detected when no documented public lifecycle event is available.
 - Whether the mascot is purely click-through or supports a deliberate interaction/drag gesture.
 
 These questions do not block the foundation or prototype. They do block a 1.0 release.
@@ -85,7 +87,7 @@ These questions do not block the foundation or prototype. They do block a 1.0 re
 - One miniature owner mascot.
 - Transparent, non-activating floating window in a bounded strolling lane immediately above or beside the Dock.
 - Menu-bar controls: show/hide, pause animation, manual state, launch at login, diagnostics, quit.
-- States: `offline`, `idle`, `working`, `waiting`, `success`, `failure`, `sleeping`, `paused`.
+- States: `offline`, `idle`, `working`, `ideating`, `waiting`, `success`, `failure`, `sleeping`, `paused`.
 - Reliable Codex and Claude Code event adapters based on supported lifecycle hooks.
 - A documented capability boundary for ordinary ChatGPT app/browser activity; no unsupported scraping or fabricated fine-grained states.
 - Local-only event transport.
@@ -134,13 +136,14 @@ Remove garment texture, zipper detail below one pixel, belt detail, hand anatomy
 | Offline | Agent integrations unavailable | 2 | Quiet, dim breathing |
 | Idle/chilling | Daytime with no active work | 6 each direction | Stroll along the Dock-edge lane with occasional pause/blink |
 | Working | At least one agent is active | 6 | Sit at a tiny computer and type |
-| Waiting | User approval or input needed | 4 | Expectant look/hand raise |
-| Success | Most recent turn completed | 6 | One-shot jump, then idle |
+| Ideating | A non-coding Claude/ChatGPT task is active | 6 | Sit in a Thinker pose while a tiny thought cloud pops in and out |
+| Waiting | User approval or input needed | 4 | Stop, turn toward the user, and raise one hand persistently |
+| Success | Most recent turn completed | 6 | Sparkling eyes plus one quick fist pump, then ambient state |
 | Failure | Agent turn or integration failed | 4–6 | Brief confused/dizzy reaction, then ambient state |
 | Sleeping | Inactive during 23:00–06:00 local time | 4 | Sleep under a blanket; wake immediately for activity |
 | Paused | User disabled automatic behavior | 2 | Still pose |
 
-Detached effects should be sparse. Prefer posture and expression; do not rely on readable text or tiny UI props.
+Detached effects should be sparse. Prefer posture and expression; do not rely on readable text or tiny UI props. Implement the ideating cloud as a small effect layer above the character: two rising pixels lead into a compact cloud, which changes once, fades, and repeats. This keeps the 32x32 body readable while allowing the panel to reserve a slightly taller effect area.
 
 ## System architecture
 
@@ -149,7 +152,7 @@ Codex hooks ───────┐
                    ├─> mascot-event helper ─> local Unix socket ─> Session registry
 Claude Code hooks ─┘                                          │
 Manual override ───────────────────────────────────────────────┤
-Best-effort presence signal (optional, unresolved) ────────────┤
+Manual ideating mode / best-effort presence (unresolved) ─────┤
                                                               v
                                                    Deterministic reducer
                                                               │
@@ -257,12 +260,13 @@ Use the documented hook lifecycle:
 
 If hooks are unavailable, a wrapper command may emit `started`, periodic `heartbeat`, and `stopped`. Plain process detection may only distinguish `offline` from `possibly active`; it must not claim waiting, success, or failure.
 
-### Ordinary ChatGPT app and browser sessions
+### Ordinary ChatGPT and Claude app/browser sessions
 
-The product goal includes ChatGPT use beyond Codex tasks, but 0.1 must distinguish aspiration from proven signal coverage. Codex hooks are shared across supported Codex surfaces, including local Codex use in the ChatGPT desktop app, but the current public documentation does not expose equivalent external lifecycle hooks for every ordinary ChatGPT conversation.
+The product goal includes non-coding Claude and ChatGPT use, with the ideating animation defined above, but 0.1 must distinguish animation design from proven signal coverage. Codex hooks are shared across supported Codex surfaces, including local Codex use in the ChatGPT desktop app, while current public documentation does not expose equivalent external lifecycle hooks for every ordinary Claude or ChatGPT conversation.
 
 - Do not inspect chat text, screen pixels, browser content, accessibility trees, network traffic, or private app APIs.
-- If the owner approves an optional presence-only adapter, it may report `possibly active` while the ChatGPT app is foregrounded or a user-launched wrapper is running.
+- Until a trustworthy automatic signal is approved, a menu-bar action and optional global shortcut can explicitly enter/exit ideating mode without observing conversation content.
+- If the owner approves an optional presence-only adapter, it may report `possibly active` while the Claude or ChatGPT app is foregrounded or a user-launched wrapper is running.
 - Presence-only detection must not claim `waiting`, `success`, or `failure` and must be visibly identified as best-effort in diagnostics/settings.
 - A documented first-party lifecycle mechanism can replace this limitation later after a privacy and reliability review.
 
@@ -270,16 +274,16 @@ The product goal includes ChatGPT use beyond Codex tasks, but 0.1 must distingui
 
 Track every session independently. Reduce to the visible state using this priority:
 
-`paused > failure-recent > waiting > working > success-recent > scheduled-sleep > idle/strolling > offline`
+`paused > failure-recent > waiting > working > ideating > success-recent > scheduled-sleep > idle/strolling > offline`
 
 Rules:
 
 - Manual pause remains authoritative until the user clears it.
-- Failure reaction initially lasts 4 seconds; the success reaction remains unresolved.
+- Failure reaction initially lasts 4 seconds; sparkling-eyes/fist-pump success lasts 3 seconds.
 - Waiting persists until that session emits `active`, `completed`, `failed`, or `stopped`.
 - An active session expires to `offline` after a configurable heartbeat timeout; start with 120 seconds.
 - From 23:00 through 06:00 in the Mac's current local time zone, inactivity becomes scheduled sleep immediately rather than strolling.
-- Any `active` or `waiting` signal interrupts scheduled sleep immediately. When the last active session ends inside the sleep window, the mascot returns to sleep after any approved completion reaction.
+- Any working, ideating, or waiting signal interrupts scheduled sleep immediately. When the last active session ends inside the sleep window, the mascot returns to sleep after the completion reaction.
 - Outside the sleep window, no active or waiting sessions means chilling/strolling.
 - Duplicate events are idempotent.
 - Reordered older events do not overwrite newer state.
@@ -349,6 +353,7 @@ Acceptance: all artifacts exist, custom skills validate, repository URL resolves
 
 1. Run a user-facing grill-me round on naming, interaction tolerance, hook installation, and release visibility.
    - Round 1 completed on 2026-07-28: core animations, 23:00–06:00 sleep behavior, broad provider goal, and Dock-only 0.1 were confirmed.
+   - Round 2 completed on 2026-07-28: ideating, waiting, and successful-completion animations were confirmed; automatic non-coding activity detection remains unresolved.
 2. Produce 32x32 and 40x40 idle concept variants from the supplied avatar.
 3. Review both at 1x on light and dark backgrounds.
 4. Approve one native grid, palette, identity hierarchy, and baseline.
@@ -389,7 +394,7 @@ Acceptance: both providers drive the state engine in fixture and live smoke test
 ### Phase 5 — Animation system and full sprite set (2026-08-06 to 2026-08-08)
 
 1. Implement sprite atlas loader and animation controller.
-2. Create idle, walk, work, wait, success, failure, sleep, offline, and paused frames.
+2. Create idle, walk, work, ideate, wait, success, failure, sleep, offline, and paused frames plus the thought-cloud effect layer.
 3. Validate baseline, alpha, palette, silhouette, and loop timing.
 4. Connect state transitions with debouncing and bounded reaction durations.
 5. Add Reduced Motion variants.
@@ -457,7 +462,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | --- | --- | --- | --- |
 | Tiny sprite loses the owner's identity | High | Compare 32x32/40x40 at 1x; prioritize hair, glasses, and garment blocks | Open |
 | Provider hooks change over time | High | Version adapters, validate on install, link official docs, keep wrapper fallback | Open |
-| Ordinary ChatGPT conversations lack a documented external lifecycle signal | High | Reliable-hook tier first; optional presence-only mode; no content/accessibility/private-API scraping | Open decision |
+| Ordinary Claude/ChatGPT conversations lack a documented external lifecycle signal | High | Manual ideating control first; evaluate an optional presence-only mode; no content/accessibility/private-API scraping | Open decision |
 | “Completed” is mistaken for “successful” | Medium | Treat Codex Stop as completion reaction, not proof every command passed | Mitigated in design |
 | Hook installation damages user config | High | Preview, back up, tag ownership, mutation tests, remove only owned entries | Open |
 | Mascot blocks Dock or steals focus | High | Non-activating click-through panel, safe gap, menu-bar escape hatch | Open |
@@ -484,6 +489,9 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Keep Dock auto-hide compatible by using an independent transparent window; do not require changing the user's Dock setting.
 - Limit 0.1 roaming to a safe Dock-edge lane and defer the wider lower-screen area.
 - Treat “all Claude or ChatGPT use” as the coverage goal, with fine-grained states only where trustworthy lifecycle signals exist.
+- Represent non-coding Claude/ChatGPT activity with a seated Thinker pose and a looping thought cloud.
+- Represent waiting for input by turning toward the user and raising one hand until the wait clears.
+- Represent successful completion with sparkling eyes and one quick fist pump, followed by strolling or scheduled sleep.
 
 ## Session log
 
@@ -533,10 +541,24 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: ordinary ChatGPT app/browser conversations do not currently provide the same documented external lifecycle stream as Codex and Claude Code; owner preference for a coarse presence mode is unresolved.
 - Next: complete grill round 2 on coarse ChatGPT presence, waiting/completion behavior, and mascot interaction, then begin the 32x32/40x40 art comparison.
 
+### 2026-07-28 — Product grill round 2
+
+- Objective: define the missing non-coding, waiting-for-input, and successful-completion animation language.
+- Completed:
+  - Defined non-coding Claude/ChatGPT activity as a seated Thinker pose with a compact thought cloud that appears and disappears in a loop.
+  - Accepted the recommended waiting state: stop, turn toward the user, and raise one hand persistently.
+  - Defined success as sparkling eyes plus a quick fist pump, then a return to strolling or scheduled sleep.
+  - Added a distinct `ideating` state to the animation inventory and reducer.
+- Decisions: these three visual behaviors are approved for the 0.1 art specification.
+- Grill verdict: `not ready` for product implementation until the non-coding signal source and direct-interaction behavior are explicitly chosen.
+- Verification: owner provided explicit animation preferences in the product grill; no art has been generated yet.
+- Risks or blockers: animation intent is settled, but automatic detection of ordinary Claude/ChatGPT app and browser activity remains undefined. A manual ideating control is the recommended privacy-preserving 0.1 fallback.
+- Next: resolve non-coding detection and interaction behavior, then issue the grill verdict and begin the 32x32/40x40 art comparison.
+
 ## Next-session handoff
 
 1. Read this file in full.
-2. Continue [issue #1](https://github.com/Mr-Shine09/desktop-mascot/issues/1) with grill round 2: ordinary ChatGPT presence, waiting/completion reactions, and interaction.
+2. Continue [issue #1](https://github.com/Mr-Shine09/desktop-mascot/issues/1) with the final grill round: non-coding Claude/ChatGPT detection, interaction, and integration installation.
 3. Record the answers and issue #1 verdict in this ledger.
 4. Start only the 32x32/40x40 comparison in [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2); do not scaffold the app before owner review.
 5. Update this ledger before ending the session.
