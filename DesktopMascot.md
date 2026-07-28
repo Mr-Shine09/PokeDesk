@@ -10,7 +10,7 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Directional walk rows normalized and internally approved; idle production is blocked on identity-preserving art |
+| Status | Idle and directional walk rows are complete production candidates; remaining state rows are next |
 | Current gate | Produce and visually approve the state frames, contact sheets, and motion previews in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) before app scaffolding |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
@@ -458,7 +458,8 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Issue backlog | Every implementation phase mapped to an issue | Passed 2026-07-28: [issues #1–#13](https://github.com/Mr-Shine09/desktop-mascot/issues) |
 | Sprite readability | 1x light/dark review and owner approval | Passed 2026-07-28: secondary chibi explicitly selected and frozen at 80x80 `@2x` |
 | Atlas contract | Geometry, rows, timing, anchor, palette, alpha, and QA rules validate before frame production | Passed 2026-07-28: `python3 tools/validate_animation_atlas.py --contract-only` |
-| Directional walk candidate | Six frames each direction, shared baseline, frozen palette, light/dark contact sheet, and motion previews | Internal QA passed 2026-07-28; owner review pending |
+| Directional walk candidate | Six frames each direction, shared baseline, frozen palette, light/dark contact sheet, and motion previews | Internal QA passed; owner authorized continuation after preview on 2026-07-28 |
+| Idle candidate | Four native frames preserve the base silhouette and change only lens interiors for a half/full blink | Deterministic and internal visual QA passed 2026-07-28; owner review pending |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Not started |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
@@ -481,7 +482,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Multiple sessions thrash visible state | Medium | Per-session registry, priority reducer, debounce, bounded reactions | Open |
 | Cursor-following annoys or obstructs | Medium | Defer; require explicit opt-in and dedicated tests | Deferred |
 | Idle animation wastes battery | Medium | Event-driven updates, suspend timers, measurable energy budget | Open |
-| Generated state frames drift from the frozen identity | High | Ground every job in the frozen base, normalize deterministically, reject drift, and use native pixel editing only with explicit owner approval | Walk candidate constrained; idle blocked after two failed generation rounds |
+| Generated state frames drift from the frozen identity | High | Ground every job in the frozen base, normalize deterministically, reject drift, and use native pixel editing only with explicit owner approval | Native idle path resolved; generated prop/action rows remain at risk |
 | Personal likeness ships before review | Medium | Private repository until owner changes visibility | Mitigated for foundation |
 
 ## Decision log
@@ -531,6 +532,8 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Accept the right-walk row as an owner-review candidate after deterministic chroma removal, shared-scale normalization, frozen-palette reduction, structural validation, and visual QA.
 - Derive `walk-left` by mirroring each approved right-walk frame in place without reversing frame order. This character has no side-specific logo or prop, and the independent left-row generation failed cross-row identity QA.
 - Reject both generated idle rows and the single blink repair because they changed the approved face, glasses, hair, pose, or baseline. Do not promote them to production.
+- Treat the owner instruction to continue after the directional preview and native-edit authorization request as approval of the directional candidate and authorization for native pixel-level idle editing.
+- Author idle entirely from the frozen base: frames 0 and 3 are exact base copies; frame 1 is a half blink and frame 2 is a full blink; only the white lens-interior pixels may change.
 
 ## Session log
 
@@ -788,11 +791,29 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: built-in image generation failed two idle-row attempts and one single-blink repair because it redesigned the face, glasses, hair, pose, or baseline. Those outputs were rejected and are not present in the project. Finishing idle now requires either explicit owner approval for native pixel-level editing or a different approved identity-preserving visual workflow.
 - Next: obtain owner review of the directional candidate and direction on native idle-frame editing. Do not generate the remaining state rows or scaffold the app until this art boundary is resolved.
 
+### 2026-07-28 — Native idle blink candidate
+
+- Objective: resolve idle identity drift with the owner-authorized native pixel-editing path.
+- Completed:
+  - Inspected the exact frozen palette and face pixel coordinates before editing.
+  - Added `tools/author_idle_frames.py`, which refuses to run unless the frozen base hash and every expected lens-highlight pixel match.
+  - Authored four idle cells: exact base, half blink, full blink, exact base.
+  - Changed only lens-interior pixels in frames 1 and 2; hair, glasses outlines, face silhouette, clothing, trousers, shoes, alpha silhouette, anchor, and baseline remain unchanged.
+  - Regenerated the combined light/dark contact sheet, silhouette sheet, and idle plus directional motion previews.
+- Decisions: use a blink-only idle loop. Do not add body bobbing or geometric transforms; the zero-motion silhouette is calmer, preserves identity exactly, and supports Reduced Motion.
+- Verification:
+  - `python3 tools/validate_animation_atlas.py --frames-root art/animation/frames --states idle walk-right walk-left` passes.
+  - Idle frames 0 and 3 match every frozen-base pixel after placement at `(8, 25)`.
+  - All four frames are `96x112`, use only the frozen palette, have binary alpha and clean transparent RGB, remain inside the guard, and end on baseline `y=102`.
+  - The contract-timed GIF and light/dark contact sheet show a calm half/full blink with no size, baseline, or silhouette movement.
+- Risks or blockers: idle awaits owner review. Generated action and prop rows may still drift from the frozen identity and must use the same reject-or-repair discipline.
+- Next: present the idle preview for owner review. If accepted, produce `working`, `ideating`, and `waiting` as the next bounded state group before any app scaffolding.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
-3. Review the directional candidate in `art/animation/qa/contact-sheet-candidate.png` and the two GIF previews. If approved, explicitly authorize native pixel-level idle editing or choose another identity-preserving workflow; do not scaffold the app before issue #3 owner review.
+3. Review `art/animation/qa/previews/idle.gif`. If accepted, produce `working`, `ideating`, and `waiting` as the next bounded issue #3 state group; do not scaffold the app before the atlas passes owner review.
 4. Update this ledger before ending the session.
 
 ## Documentation sources
