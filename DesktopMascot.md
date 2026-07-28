@@ -10,8 +10,8 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Foundation complete; product grill in progress; implementation has not started |
-| Current gate | Resolve the remaining product questions in [issue #1](https://github.com/Mr-Shine09/desktop-mascot/issues/1), then begin the bounded art spike in [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2) |
+| Status | Product contract complete; 32x32/40x40 art comparison awaiting owner selection |
+| Current gate | Select the production grid from [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2), then freeze the base mascot and animation specification |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -67,16 +67,18 @@ The reference work is inspiration only. Do not copy Claude's mascot body, palett
 | Non-coding activity means ideating | The mascot sits in a Thinker-style pose while a small thought cloud appears, changes, disappears, and loops. |
 | Waiting means asking for attention | The mascot stops its current pose, turns toward the user, and raises one hand until work resumes or ends. |
 | Success means delighted recognition | The mascot shows sparkling eyes and performs one quick fist pump, then returns to strolling or scheduled sleep. |
+| Manual ideating mode for ordinary chats | Version 0.1 uses a menu-bar action and optional global shortcut; automatic ordinary Claude/ChatGPT detection is deferred until a trustworthy, privacy-preserving signal exists. |
+| Passive click-through interaction | Normal mascot motion never captures clicks. An explicit menu-bar “Unlock position” mode temporarily permits dragging, then returns to click-through. |
+| Previewed one-click hook installation | The app shows the exact Codex/Claude Code configuration change, backs up the affected file, installs only after confirmation, verifies it, and can remove only entries it owns. |
+
+Grill verdict on 2026-07-28: `ready with experiments`. The 0.1 contract is ready; automatic non-coding chat detection remains a future experiment and does not weaken the manual mode.
 
 ### Questions to resolve before feature freeze
 
 - Final product name and mascot name.
 - Whether the owner prefers the 32x32 or 40x40 concept after side-by-side 1x review.
-- Whether automatic hook installation is acceptable or the app should only generate copyable configuration snippets.
 - Whether the first public release should remain private, become public source, or ship only as a notarized binary.
 - Whether Claude Code and Codex deserve distinct visual accents when both are active.
-- How ordinary ChatGPT/Claude app or browser activity should be detected when no documented public lifecycle event is available.
-- Whether the mascot is purely click-through or supports a deliberate interaction/drag gesture.
 
 These questions do not block the foundation or prototype. They do block a 1.0 release.
 
@@ -86,7 +88,7 @@ These questions do not block the foundation or prototype. They do block a 1.0 re
 
 - One miniature owner mascot.
 - Transparent, non-activating floating window in a bounded strolling lane immediately above or beside the Dock.
-- Menu-bar controls: show/hide, pause animation, manual state, launch at login, diagnostics, quit.
+- Menu-bar controls: show/hide, pause animation, manual ideating state, unlock position, launch at login, diagnostics, quit.
 - States: `offline`, `idle`, `working`, `ideating`, `waiting`, `success`, `failure`, `sleeping`, `paused`.
 - Reliable Codex and Claude Code event adapters based on supported lifecycle hooks.
 - A documented capability boundary for ordinary ChatGPT app/browser activity; no unsupported scraping or fabricated fine-grained states.
@@ -152,7 +154,7 @@ Codex hooks ───────┐
                    ├─> mascot-event helper ─> local Unix socket ─> Session registry
 Claude Code hooks ─┘                                          │
 Manual override ───────────────────────────────────────────────┤
-Manual ideating mode / best-effort presence (unresolved) ─────┤
+Manual ideating mode ─────────────────────────────────────────┤
                                                               v
                                                    Deterministic reducer
                                                               │
@@ -265,8 +267,8 @@ If hooks are unavailable, a wrapper command may emit `started`, periodic `heartb
 The product goal includes non-coding Claude and ChatGPT use, with the ideating animation defined above, but 0.1 must distinguish animation design from proven signal coverage. Codex hooks are shared across supported Codex surfaces, including local Codex use in the ChatGPT desktop app, while current public documentation does not expose equivalent external lifecycle hooks for every ordinary Claude or ChatGPT conversation.
 
 - Do not inspect chat text, screen pixels, browser content, accessibility trees, network traffic, or private app APIs.
-- Until a trustworthy automatic signal is approved, a menu-bar action and optional global shortcut can explicitly enter/exit ideating mode without observing conversation content.
-- If the owner approves an optional presence-only adapter, it may report `possibly active` while the Claude or ChatGPT app is foregrounded or a user-launched wrapper is running.
+- Version 0.1 uses a menu-bar action and optional global shortcut to explicitly enter/exit ideating mode without observing conversation content.
+- Automatic presence detection is deferred. Merely foregrounding Claude or ChatGPT is not reliable enough to claim the model is generating a response.
 - Presence-only detection must not claim `waiting`, `success`, or `failure` and must be visibly identified as best-effort in diagnostics/settings.
 - A documented first-party lifecycle mechanism can replace this limitation later after a privacy and reliability review.
 
@@ -284,7 +286,7 @@ Rules:
 - An active session expires to `offline` after a configurable heartbeat timeout; start with 120 seconds.
 - From 23:00 through 06:00 in the Mac's current local time zone, inactivity becomes scheduled sleep immediately rather than strolling.
 - Any working, ideating, or waiting signal interrupts scheduled sleep immediately. When the last active session ends inside the sleep window, the mascot returns to sleep after the completion reaction.
-- Outside the sleep window, no active or waiting sessions means chilling/strolling.
+- Outside the sleep window, no working, ideating, or waiting session means chilling/strolling.
 - Duplicate events are idempotent.
 - Reordered older events do not overwrite newer state.
 - If Claude and Codex are active together, show one working animation and surface both providers in the menu-bar detail view.
@@ -294,7 +296,7 @@ Rules:
 
 - SwiftUI menu-bar shell with an AppKit-managed borderless transparent `NSPanel`.
 - Non-activating panel with clear background and no shadow.
-- Click-through while passive; temporarily interactive only for a documented gesture or future drag mode.
+- Click-through during normal operation. A menu-bar “Unlock position” command temporarily enables dragging and exposes a clear “Lock position” action; relock automatically after a short inactivity timeout.
 - Position from `NSScreen.visibleFrame` versus `frame` to infer Dock exclusion on each display.
 - Support bottom, left, and right Dock orientation, auto-hide, multiple displays, screen changes, Spaces, and scale-factor changes.
 - Use an independent safety lane immediately above or beside the Dock; never place the window over app-icon hit targets.
@@ -354,6 +356,7 @@ Acceptance: all artifacts exist, custom skills validate, repository URL resolves
 1. Run a user-facing grill-me round on naming, interaction tolerance, hook installation, and release visibility.
    - Round 1 completed on 2026-07-28: core animations, 23:00–06:00 sleep behavior, broad provider goal, and Dock-only 0.1 were confirmed.
    - Round 2 completed on 2026-07-28: ideating, waiting, and successful-completion animations were confirmed; automatic non-coding activity detection remains unresolved.
+   - Round 3 completed on 2026-07-28: manual ideating control, temporary unlock-to-drag, and previewed one-click hook installation were approved. Verdict: `ready with experiments`.
 2. Produce 32x32 and 40x40 idle concept variants from the supplied avatar.
 3. Review both at 1x on light and dark backgrounds.
 4. Approve one native grid, palette, identity hierarchy, and baseline.
@@ -425,8 +428,8 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 
 | Issue | Phase | Status |
 | --- | --- | --- |
-| [#1 Lock the 0.1 product contract with grill-me](https://github.com/Mr-Shine09/desktop-mascot/issues/1) | 1 | Open |
-| [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | Open |
+| [#1 Lock the 0.1 product contract with grill-me](https://github.com/Mr-Shine09/desktop-mascot/issues/1) | 1 | Closed as completed on 2026-07-28 |
+| [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | In progress; owner selection pending |
 | [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open |
 | [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Open |
 | [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | Open |
@@ -447,7 +450,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Reference understanding | Instagram third card and supplied images reviewed | Passed 2026-07-28 |
 | Repository | URL resolves under owner account | Passed 2026-07-28: [private repository](https://github.com/Mr-Shine09/desktop-mascot) |
 | Issue backlog | Every implementation phase mapped to an issue | Passed 2026-07-28: [issues #1–#13](https://github.com/Mr-Shine09/desktop-mascot/issues) |
-| Sprite readability | 1x light/dark review and owner approval | Not started |
+| Sprite readability | 1x light/dark review and owner approval | Concepts and QA sheets ready; owner selection pending |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Not started |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
@@ -462,7 +465,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | --- | --- | --- | --- |
 | Tiny sprite loses the owner's identity | High | Compare 32x32/40x40 at 1x; prioritize hair, glasses, and garment blocks | Open |
 | Provider hooks change over time | High | Version adapters, validate on install, link official docs, keep wrapper fallback | Open |
-| Ordinary Claude/ChatGPT conversations lack a documented external lifecycle signal | High | Manual ideating control first; evaluate an optional presence-only mode; no content/accessibility/private-API scraping | Open decision |
+| Ordinary Claude/ChatGPT conversations lack a documented external lifecycle signal | High | Manual ideating control in 0.1; automatic detection deferred; no content/accessibility/private-API scraping | Constrained for 0.1 |
 | “Completed” is mistaken for “successful” | Medium | Treat Codex Stop as completion reaction, not proof every command passed | Mitigated in design |
 | Hook installation damages user config | High | Preview, back up, tag ownership, mutation tests, remove only owned entries | Open |
 | Mascot blocks Dock or steals focus | High | Non-activating click-through panel, safe gap, menu-bar escape hatch | Open |
@@ -492,6 +495,10 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Represent non-coding Claude/ChatGPT activity with a seated Thinker pose and a looping thought cloud.
 - Represent waiting for input by turning toward the user and raising one hand until the wait clears.
 - Represent successful completion with sparkling eyes and one quick fist pump, followed by strolling or scheduled sleep.
+- Use manual Ideating mode for ordinary Claude/ChatGPT conversations in 0.1; defer automatic detection until it can be reliable without reading content.
+- Keep the mascot click-through by default and allow dragging only through a temporary menu-bar unlock mode.
+- Offer previewed one-click Codex/Claude Code hook installation with backup, verification, and ownership-safe uninstall.
+- Product-grill verdict: `ready with experiments`.
 
 ## Session log
 
@@ -555,12 +562,30 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: animation intent is settled, but automatic detection of ordinary Claude/ChatGPT app and browser activity remains undefined. A manual ideating control is the recommended privacy-preserving 0.1 fallback.
 - Next: resolve non-coding detection and interaction behavior, then issue the grill verdict and begin the 32x32/40x40 art comparison.
 
+### 2026-07-28 — Product grill round 3 and art-spike start
+
+- Objective: close the 0.1 product contract and begin the first implementation artifact only after the prerequisite gate passed.
+- Completed:
+  - Approved manual menu-bar/global-shortcut Ideating mode for ordinary non-coding chats.
+  - Approved passive click-through behavior with a temporary menu-bar unlock-to-drag mode.
+  - Approved previewed one-click lifecycle-hook installation with backup, verification, and ownership-safe uninstall.
+  - Issued the grill verdict `ready with experiments`; automatic ordinary-chat detection is the deferred experiment.
+  - Recorded the final decision summary on GitHub and closed issue #1 as completed.
+  - Generated 32x32 and 40x40 mascot directions from the canonical owner avatar using the built-in image-generation workflow.
+  - Rejected the first 40x40 draft because it changed body proportions and therefore was not a fair grid comparison.
+  - Generated a compact 40x40 v2 direction, removed chroma backgrounds, enforced a 12-color/binary-alpha palette, and created native sprites plus 8x light/dark QA sheets.
+  - Added the reusable `tools/prepare_pixel_concept.swift` art-preparation tool and documented prompts and artifacts in `art/concepts/README.md`.
+- Decisions: recommend 40x40 v2 because its separated glasses/eyes and additional expression room materially support ideating, waiting, success, and failure animations; owner approval remains required.
+- Verification: native files are `32x32` and `40x40`; QA sheets show each at 8x on light and dark backgrounds; generated sources remain concept references rather than production frames.
+- Risks or blockers: the 32x32 glasses collapse into a horizontal band. The 40x40 v2 is clearer but still requires owner selection and a hand-cleaned base frame before animation.
+- Next: owner selects 32x32 or 40x40 v2. Then freeze the chosen grid, hand-clean the base sprite, and write the atlas specification in issue #3.
+
 ## Next-session handoff
 
 1. Read this file in full.
-2. Continue [issue #1](https://github.com/Mr-Shine09/desktop-mascot/issues/1) with the final grill round: non-coding Claude/ChatGPT detection, interaction, and integration installation.
-3. Record the answers and issue #1 verdict in this ledger.
-4. Start only the 32x32/40x40 comparison in [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2); do not scaffold the app before owner review.
+2. Present the `art/concepts/mascot-32-review-8x.png` and `art/concepts/mascot-40-review-8x-v2.png` comparison from [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2).
+3. Record the owner's native-grid selection and freeze the identity hierarchy, palette, and baseline.
+4. Hand-clean the approved base sprite and write the animation atlas specification in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3); do not scaffold the app before owner review.
 5. Update this ledger before ending the session.
 
 ## Documentation sources
