@@ -10,8 +10,8 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Art archive cleaned; product contract and 40-point secondary-chibi base frozen; Phase 1 animation specification is next |
-| Current gate | Specify the shared baseline, anchors, frame geometry, timing, and state contact sheets in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) before app scaffolding |
+| Status | Phase 1 animation contract frozen and validated; native state-frame production is next |
+| Current gate | Produce and visually approve the state frames, contact sheets, and motion previews in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) before app scaffolding |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -366,7 +366,7 @@ Acceptance: all artifacts exist, custom skills validate, repository URL resolves
 4. Approve one native grid, palette, identity hierarchy, and baseline.
 5. Write animation frame and atlas specification.
 
-Progress on 2026-07-28: steps 2–4 complete. The owner selected a 40-point footprint, rejected every native tall treatment, and explicitly ordered the secondary chibi fallback. `mascot-base-chibi-40pt-at2x-80px-final.png` is frozen as the base. Step 5—the animation frame and atlas specification—is next.
+Progress on 2026-07-28: steps 2–5 complete. The owner selected a 40-point footprint, rejected every native tall treatment, and explicitly ordered the secondary chibi fallback. `mascot-base-chibi-40pt-at2x-80px-final.png` is frozen as the base. The version 0.1 geometry, row order, palette, timing, anchors, acceptance rules, and QA outputs are frozen in `art/animation/ATLAS.md` and `art/animation/atlas-contract.json`.
 
 Acceptance: owner selects one concept; chosen sprite is recognizable at 1x; palette and frame geometry are frozen for 0.1.
 
@@ -436,7 +436,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | --- | --- | --- |
 | [#1 Lock the 0.1 product contract with grill-me](https://github.com/Mr-Shine09/desktop-mascot/issues/1) | 1 | Closed as completed on 2026-07-28 |
 | [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | Closed as completed on 2026-07-28; secondary chibi frozen |
-| [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open |
+| [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open; specification complete, frame production pending |
 | [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Open |
 | [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | Open |
 | [#6 Implement the mascot state model and reducer](https://github.com/Mr-Shine09/desktop-mascot/issues/6) | 3 | Open |
@@ -457,6 +457,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Repository | URL resolves under owner account | Passed 2026-07-28: [private repository](https://github.com/Mr-Shine09/desktop-mascot) |
 | Issue backlog | Every implementation phase mapped to an issue | Passed 2026-07-28: [issues #1–#13](https://github.com/Mr-Shine09/desktop-mascot/issues) |
 | Sprite readability | 1x light/dark review and owner approval | Passed 2026-07-28: secondary chibi explicitly selected and frozen at 80x80 `@2x` |
+| Atlas contract | Geometry, rows, timing, anchor, palette, alpha, and QA rules validate before frame production | Passed 2026-07-28: `python3 tools/validate_animation_atlas.py --contract-only` |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Not started |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
@@ -522,6 +523,9 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Treat the explicit instruction to fall back to the secondary chibi as final selection of the already-reviewed native reduction; do not require a duplicate approval round.
 - Freeze the identical promoted copy `mascot-base-chibi-40pt-at2x-80px-final.png` as the production base and close issue #2.
 - Keep only the selected chibi source, frozen native sprite, and frozen light/dark QA sheet in the active art folders. Remove rejected concepts, failed production attempts, derived transparency intermediates, and byte-identical pre-freeze copies; preserve their decision history here and their binaries in Git history through `0f292ec`.
+- Freeze the version 0.1 animation atlas at 8 columns by 11 rows with 96x112-pixel `@2x` cells, a shared `(48, 102)` anchor/baseline, the exact 12-color base palette, binary alpha, transparent unused cells, and explicit playback timings in `art/animation/atlas-contract.json`.
+- Include the approved `ideating` row even though issue #3's original state list omitted it; the later product contract is authoritative.
+- Keep the 80x80 body canvas at 40x40 points inside a 48x56-point panel cell so the thought cloud and wider poses have bounded space without scaling the mascot.
 
 ## Session log
 
@@ -747,11 +751,24 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: none introduced. Issue #3 remains the next gate.
 - Next: write the animation atlas specification in issue #3 using only the frozen base and selected source.
 
+### 2026-07-28 — Animation atlas contract freeze
+
+- Objective: complete the issue #3 specification gate before any app scaffolding or new state-frame art.
+- Completed:
+  - Added `art/animation/ATLAS.md` with the fixed 8x11 row layout, 96x112-pixel cells, shared `(48, 102)` anchor/baseline, body and effect bounds, per-state frame counts, playback modes, timing, Reduced Motion substitutions, and production sequence.
+  - Added the machine-readable `art/animation/atlas-contract.json` covering all eleven version 0.1 rows, including the previously omitted but approved `ideating` state.
+  - Reused the frozen 12-color palette for all props and effects; no new atlas colors or semitransparent pixels are allowed.
+  - Added `tools/validate_animation_atlas.py` to validate the contract, frozen-base hash and dimensions, and later atlas dimensions, palette, alpha, transparent RGB, used/unused occupancy, and cell guards.
+- Decisions: keep the approved 80x80 body canvas at its 40-point size inside a 96x112 backing-pixel cell; reserve bounded upper space for the ideating cloud instead of resizing the character. The custom macOS app uses its own 11-row atlas contract rather than the Codex app's unrelated fixed 9-row pet package.
+- Verification: `python3 tools/validate_animation_atlas.py --contract-only` passes; `git diff --check` passes; the frozen source hash is still `954f4b19cf352808e89c2e197849c16e58409f107a4b5dfd681aa9dac432abc6`.
+- Risks or blockers: frame art, contact sheets, motion previews, owner visual review, and the dedicated `@1x` strategy remain open. Full visual generation will require a separately bounded art-production run.
+- Next: commit the contract, then begin with the anchor fixture plus `idle`, `walk-right`, and `walk-left` rows. Do not scaffold the app before owner review of issue #3 outputs.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
-3. Write the animation atlas specification and begin state-frame work in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3); do not scaffold the app before the atlas contract exists.
+3. Produce the anchor fixture plus `idle`, `walk-right`, and `walk-left` rows in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3), then render the required contact sheets and motion previews; do not scaffold the app before owner visual review.
 4. Update this ledger before ending the session.
 
 ## Documentation sources
