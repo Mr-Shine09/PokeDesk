@@ -10,7 +10,7 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Product contract and 40-point secondary-chibi base frozen; Phase 1 animation specification is next |
+| Status | Session closed cleanly; product contract and 40-point secondary-chibi base frozen; Phase 1 animation specification is next |
 | Current gate | Specify the shared baseline, anchors, frame geometry, timing, and state contact sheets in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) before app scaffolding |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
@@ -469,7 +469,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Risk | Impact | Mitigation | Status |
 | --- | --- | --- | --- |
 | Point size is confused with backing-pixel dimensions | High | Specify points and `@1x`/`@2x` assets separately; validate on real Retina/non-Retina scale factors | 40-pixel failure recorded; corrected 80-pixel contract retained |
-| Tall face loses identity at the 40-point footprint | High | Use the owner-selected secondary chibi and prohibit further tall repairs for 0.1 | Tall direction closed; chibi confirmation open |
+| Tall face loses identity at the 40-point footprint | High | Use the owner-selected secondary chibi and prohibit further tall repairs for 0.1 | Resolved for 0.1; chibi frozen |
 | Provider hooks change over time | High | Version adapters, validate on install, link official docs, keep wrapper fallback | Open |
 | Ordinary Claude/ChatGPT conversations lack a documented external lifecycle signal | High | Manual ideating control in 0.1; automatic detection deferred; no content/accessibility/private-API scraping | Constrained for 0.1 |
 | “Completed” is mistaken for “successful” | Medium | Treat Codex Stop as completion reaction, not proof every command passed | Mitigated in design |
@@ -685,6 +685,52 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Verification: SHA-256 hashes of the promoted native asset and QA sheet exactly match their previously reviewed v2 sources.
 - Risks or blockers: none for issue #2. The dedicated `@1x` strategy remains an open implementation experiment.
 - Next: write the animation atlas specification in issue #3, then begin state-frame production.
+
+### 2026-07-28 — Session closure audit
+
+- Objective: end the session with one reconciled record of what worked, what failed, what is frozen, and what the next session may do.
+- What worked:
+
+  | Work | Result and evidence |
+  | --- | --- |
+  | Project planning | The 0.1 scope, non-goals, architecture, state reducer, privacy rules, energy targets, dated phases, and acceptance gates are documented in this ledger. |
+  | Product grilling | Three `grill-me` rounds settled Dock-only behavior, manual ideating, click-through interaction, previewed hook installation, sleep schedule, and every visible state animation. Issue #1 is closed. |
+  | Reusable skills | `grill-me`, `pixel-mascot-art`, `macos-desktop-mascot`, `agent-activity-signals`, and `session-ledger` were created, installed, and validated. Curated image, goal, pet, screenshot, and security skills were also made available. |
+  | GitHub foundation | The private `Mr-Shine09/desktop-mascot` repository, issues #1–#13, and all dated ledger links were created. Authenticated `gh` commands successfully handled writes when the connected GitHub app could not see the private repository. |
+  | Product behavior contract | Strolling, typing, Thinker/idea cloud, raised-hand waiting, sparkling-eyes/fist-pump success, confused/dizzy failure, and 23:00–06:00 blanket sleep are explicitly mapped to normalized states. |
+  | macOS placement contract | The mascot will use an independent transparent Dock-edge window, remain click-through by default, support Dock auto-hide, avoid Dock hit targets, and defer wider lower-screen roaming. |
+  | Resolution correction | The desired footprint is correctly defined as 40x40 macOS points backed by an 80x80 `@2x` Retina asset. The earlier 40-source-pixel interpretation is permanently rejected. |
+  | Art tooling | `prepare_pixel_concept.swift` consistently fits, quantizes, and builds light/dark QA sheets; `keep_largest_alpha_component.swift` removed isolated chroma debris; `remove_checkerboard_background.swift` preserved the owner-approved source while removing its baked checkerboard. |
+  | Final mascot base | The secondary chibi was explicitly selected, promoted without pixel changes, verified at 80x80 with 12 subject colors and binary alpha, and frozen as `art/production/mascot-base-chibi-40pt-at2x-80px-final.png`. Issue #2 is closed. |
+  | Reproducible history | All approved, intermediate, and rejected assets remain labeled in `art/production/README.md`; the final promoted files match their reviewed v2 sources by SHA-256. |
+
+- What did not work:
+
+  | Attempt | Failure and disposition |
+  | --- | --- |
+  | 32x32 concept | The glasses collapsed into a broad facial band and did not leave enough room for expressive states. Rejected as production direction. |
+  | First tall comparison | Its changed proportions made the initial 32/40 comparison invalid. It later became a preference reference, not an approved native sprite. |
+  | 40-source-pixel tall draft | Confused UI points with backing pixels, destroyed facial detail, and produced the owner-rejected “monster” result. All related assets and `hand_clean_tall_base.swift` are evidence only. |
+  | Automatic 80x80 tall reduction | Hair, glasses, eyes, and nose merged into an unreadable cluster. Rejected. |
+  | First deterministic tall-face patch | Enlarged the head and frames into an oversized goggle bar. Rejected. |
+  | Coherent regenerated tall reduction | Lost one lens/eye at native size even though the large source face looked good. Rejected. |
+  | Approved-source tall v1 | Direct reduction still collapsed the facial construction. Rejected internally. |
+  | Approved-source tall v2 | A continuous bridge recreated the goggle-bar appearance. Rejected internally. |
+  | Approved-source tall v3 | Separated the frames mechanically but remained visually unacceptable to the owner. Explicitly rejected; no further tall repair is allowed for 0.1. |
+  | Requested transparent ImageGen source | The generator produced a baked checkerboard rather than usable transparency. Deterministic edge-connected background removal recovered the source, but this did not rescue the native tall direction. |
+  | First fallback chroma cleanup | Isolated opaque debris expanded the visible bounds and made the first reduction too small. Keeping only the largest connected alpha component fixed the pipeline. |
+  | Connected GitHub app | Returned 404 for the newly created private repository. Authenticated GitHub CLI was the successful fallback for repository, issue, comment, and close operations. |
+  | Automatic ordinary-chat detection | No trustworthy privacy-preserving lifecycle signal was established for every Claude/ChatGPT app or browser conversation. Version 0.1 uses manual Ideating mode instead. |
+
+- Decisions: freeze the secondary chibi; preserve rejected tall artifacts only as evidence; do not start app scaffolding until issue #3 defines atlas geometry, anchors, timing, and frame acceptance rules.
+- Verification:
+  - Issue #1 and issue #2 are closed; issue #3 is the next open gate.
+  - Final native asset: `art/production/mascot-base-chibi-40pt-at2x-80px-final.png`.
+  - Final QA sheet: `art/production/mascot-base-chibi-40pt-at2x-final-review-8x.png`.
+  - Repository history through the chibi freeze (`2eaf79d`) was pushed before this audit; the closure commit is the final session write.
+  - Worktree was clean at the start of this closure audit.
+- Risks or blockers: no blocker for issue #3. Open experiments are the dedicated non-Retina `@1x` strategy and automatic ordinary-chat presence detection; neither blocks atlas specification.
+- Next: begin a new session at issue #3. Do not generate more base-character concepts, revive the tall direction, or scaffold the app before the atlas contract exists.
 
 ## Next-session handoff
 
