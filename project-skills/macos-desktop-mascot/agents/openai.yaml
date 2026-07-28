@@ -1,0 +1,4 @@
+interface:
+  display_name: "macOS Desktop Mascot"
+  short_description: "Engineer native, unobtrusive macOS mascots."
+  default_prompt: "Use $macos-desktop-mascot to design or implement a native macOS mascot window, lifecycle, and interaction model."

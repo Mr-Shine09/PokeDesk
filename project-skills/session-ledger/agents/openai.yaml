@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session Ledger"
+  short_description: "Keep a living dated project handoff ledger."
+  default_prompt: "Use $session-ledger to update the project ledger with verified progress, decisions, evidence, and next steps."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Challenge Product Assumptions"
+  short_description: "Pressure-test a product plan before implementation."
+  default_prompt: "Use $grill-me to challenge this product idea and turn every unresolved assumption into a concrete decision or experiment."

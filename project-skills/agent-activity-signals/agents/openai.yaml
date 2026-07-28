@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Activity Signals"
+  short_description: "Map coding-agent events to mascot states."
+  default_prompt: "Use $agent-activity-signals to design reliable Claude Code and Codex status adapters with safe fallbacks."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pixel Mascot Art"
+  short_description: "Design tiny readable animated pixel mascots."
+  default_prompt: "Use $pixel-mascot-art to reduce this character into a readable small sprite and define its animation-ready visual system."
