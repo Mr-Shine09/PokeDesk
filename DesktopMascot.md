@@ -10,7 +10,7 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Session closed cleanly; product contract and 40-point secondary-chibi base frozen; Phase 1 animation specification is next |
+| Status | Art archive cleaned; product contract and 40-point secondary-chibi base frozen; Phase 1 animation specification is next |
 | Current gate | Specify the shared baseline, anchors, frame geometry, timing, and state contact sheets in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3) before app scaffolding |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
@@ -126,7 +126,8 @@ Remove garment texture, zipper detail below one pixel, belt detail, hand anatomy
 - On-screen footprint: initially `40x40` macOS points.
 - Retina production asset: `80x80` pixels at `@2x`, mapping one source pixel to one backing pixel on a 2x display.
 - Non-Retina behavior remains a required experiment: test a deliberately authored `40x40` `@1x` fallback versus a larger point footprint; never silently resample the Retina asset with smoothing.
-- The approved base is `mascot-base-chibi-40pt-at2x-80px-final.png`, an exact copy of the owner-selected secondary chibi reduction. All native tall variants are rejected evidence and must not enter the atlas or app.
+- The authoritative concept source is `art/references/owner-selected-fallback-chibi.png`.
+- The approved base is `mascot-base-chibi-40pt-at2x-80px-final.png`, an exact copy of the owner-selected secondary chibi reduction. All native tall variants are rejected and must not enter the atlas or app.
 - Production rendering uses nearest-neighbor interpolation and integer backing-pixel alignment.
 - Palette target: 12 colors or fewer, plus transparency.
 - Alpha: binary edges for production frames; no magenta spill or semitransparent fringe.
@@ -520,6 +521,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Restore `mascot-base-owner-chibi-40pt-at2x-80px-v2.png` as the sole current candidate. Do not spend another bounded attempt on the tall face in 0.1.
 - Treat the explicit instruction to fall back to the secondary chibi as final selection of the already-reviewed native reduction; do not require a duplicate approval round.
 - Freeze the identical promoted copy `mascot-base-chibi-40pt-at2x-80px-final.png` as the production base and close issue #2.
+- Keep only the selected chibi source, frozen native sprite, and frozen light/dark QA sheet in the active art folders. Remove rejected concepts, failed production attempts, derived transparency intermediates, and byte-identical pre-freeze copies; preserve their decision history here and their binaries in Git history through `0f292ec`.
 
 ## Session log
 
@@ -702,7 +704,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
   | Resolution correction | The desired footprint is correctly defined as 40x40 macOS points backed by an 80x80 `@2x` Retina asset. The earlier 40-source-pixel interpretation is permanently rejected. |
   | Art tooling | `prepare_pixel_concept.swift` consistently fits, quantizes, and builds light/dark QA sheets; `keep_largest_alpha_component.swift` removed isolated chroma debris; `remove_checkerboard_background.swift` preserved the owner-approved source while removing its baked checkerboard. |
   | Final mascot base | The secondary chibi was explicitly selected, promoted without pixel changes, verified at 80x80 with 12 subject colors and binary alpha, and frozen as `art/production/mascot-base-chibi-40pt-at2x-80px-final.png`. Issue #2 is closed. |
-  | Reproducible history | All approved, intermediate, and rejected assets remain labeled in `art/production/README.md`; the final promoted files match their reviewed v2 sources by SHA-256. |
+  | Reproducible history | The final promoted files match their reviewed v2 sources by SHA-256. Rejected and intermediate binaries were later pruned from the working tree but remain recoverable from Git history through `0f292ec`. |
 
 - What did not work:
 
@@ -722,7 +724,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
   | Connected GitHub app | Returned 404 for the newly created private repository. Authenticated GitHub CLI was the successful fallback for repository, issue, comment, and close operations. |
   | Automatic ordinary-chat detection | No trustworthy privacy-preserving lifecycle signal was established for every Claude/ChatGPT app or browser conversation. Version 0.1 uses manual Ideating mode instead. |
 
-- Decisions: freeze the secondary chibi; preserve rejected tall artifacts only as evidence; do not start app scaffolding until issue #3 defines atlas geometry, anchors, timing, and frame acceptance rules.
+- Decisions: freeze the secondary chibi; preserve rejected tall outcomes in the ledger and Git history rather than the active art folders; do not start app scaffolding until issue #3 defines atlas geometry, anchors, timing, and frame acceptance rules.
 - Verification:
   - Issue #1 and issue #2 are closed; issue #3 is the next open gate.
   - Final native asset: `art/production/mascot-base-chibi-40pt-at2x-80px-final.png`.
@@ -731,6 +733,19 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
   - Worktree was clean at the start of this closure audit.
 - Risks or blockers: no blocker for issue #3. Open experiments are the dedicated non-Retina `@1x` strategy and automatic ordinary-chat presence detection; neither blocks atlas specification.
 - Next: begin a new session at issue #3. Do not generate more base-character concepts, revive the tall direction, or scaffold the app before the atlas contract exists.
+
+### 2026-07-28 — Art archive cleanup
+
+- Objective: remove ignored, rejected, superseded, and duplicate images from `art/concepts/`, `art/production/`, and `art/references/` without weakening the frozen production baseline or the decision record.
+- Completed:
+  - Audited all 43 tracked images across the three art folders against the owner decisions, production README, hashes, and this ledger.
+  - Retained exactly three live images: the selected secondary-chibi source, the frozen 80x80 `@2x` sprite, and its frozen light/dark QA sheet.
+  - Removed 40 unused images: 12 superseded concept PNGs, 23 rejected or duplicate production PNGs, and five rejected or derived reference PNGs.
+  - Replaced the art-folder READMEs with concise selection boundaries and added `art/references/README.md` so future sessions cannot mistake historical failures for viable inputs.
+- Decisions: the active art tree is a production allowlist, not an experiment archive. Historical filenames and outcomes remain in this ledger; removed binaries remain recoverable from Git history through `0f292ec`.
+- Verification: the selected source remains `1254x1254`; the frozen native base remains `80x80` with alpha and SHA-256 `954f4b19cf352808e89c2e197849c16e58409f107a4b5dfd681aa9dac432abc6`; the QA sheet remains `1280x640` with alpha.
+- Risks or blockers: none introduced. Issue #3 remains the next gate.
+- Next: write the animation atlas specification in issue #3 using only the frozen base and selected source.
 
 ## Next-session handoff
 
