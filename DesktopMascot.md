@@ -10,9 +10,9 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Foundation in progress; product implementation has not started |
-| Current gate | Create the GitHub repository and issue backlog |
-| Planned repository | `Mr-Shine09/desktop-mascot` |
+| Status | Foundation complete; product implementation has not started |
+| Current gate | Complete [issue #1](https://github.com/Mr-Shine09/desktop-mascot/issues/1), then begin the bounded art spike in [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2) |
+| Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
 
@@ -311,13 +311,15 @@ Dates are working targets, not promises. Update them when evidence changes the e
 
 ### Phase 0 — Foundation (2026-07-28)
 
+**Status: Complete on 2026-07-28.**
+
 1. Review visual and Instagram references.
 2. Install relevant curated skills.
 3. Create and validate project-specific skills, including `grill-me`.
 4. Create this living ledger.
 5. Create a private GitHub repository and issue backlog.
 
-Acceptance: all artifacts exist, custom skills validate, repository URL resolves, and every later phase has a GitHub issue.
+Acceptance: all artifacts exist, custom skills validate, repository URL resolves, and every later phase has a GitHub issue. Passed on 2026-07-28.
 
 ### Phase 1 — Product contract and art spike (2026-07-29 to 2026-07-30)
 
@@ -391,23 +393,21 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 
 ## GitHub issue map
 
-Issue numbers and links will be added immediately after repository creation.
-
-| Planned issue | Phase | Status |
+| Issue | Phase | Status |
 | --- | --- | --- |
-| Lock the 0.1 product contract with grill-me | 1 | Planned |
-| Reduce the source avatar into 32x32 and 40x40 concepts | 1 | Planned |
-| Specify and produce the animation-ready sprite atlas | 1 / 5 | Planned |
-| Scaffold the native SwiftUI/AppKit macOS app | 2 | Planned |
-| Implement the transparent Dock-edge mascot window | 2 | Planned |
-| Implement the mascot state model and reducer | 3 | Planned |
-| Build the private local event bridge and helper CLI | 3 | Planned |
-| Add the Codex lifecycle-hook adapter | 4 | Planned |
-| Add the Claude Code lifecycle-hook adapter | 4 | Planned |
-| Build menu-bar settings and integration management | 2 / 4 | Planned |
-| Integrate animations, transitions, and Reduced Motion | 5 | Planned |
-| Verify privacy, accessibility, performance, and multi-display behavior | 6 | Planned |
-| Add CI, signing, notarization, packaging, and release docs | 6 | Planned |
+| [#1 Lock the 0.1 product contract with grill-me](https://github.com/Mr-Shine09/desktop-mascot/issues/1) | 1 | Open |
+| [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | Open |
+| [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open |
+| [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Open |
+| [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | Open |
+| [#6 Implement the mascot state model and reducer](https://github.com/Mr-Shine09/desktop-mascot/issues/6) | 3 | Open |
+| [#7 Build the private local event bridge and helper CLI](https://github.com/Mr-Shine09/desktop-mascot/issues/7) | 3 | Open |
+| [#8 Add the Codex lifecycle-hook adapter](https://github.com/Mr-Shine09/desktop-mascot/issues/8) | 4 | Open |
+| [#9 Add the Claude Code lifecycle-hook adapter](https://github.com/Mr-Shine09/desktop-mascot/issues/9) | 4 | Open |
+| [#10 Build menu-bar settings and integration management](https://github.com/Mr-Shine09/desktop-mascot/issues/10) | 2 / 4 | Open |
+| [#11 Integrate animations, transitions, and Reduced Motion](https://github.com/Mr-Shine09/desktop-mascot/issues/11) | 5 | Open |
+| [#12 Verify privacy, accessibility, performance, and multi-display behavior](https://github.com/Mr-Shine09/desktop-mascot/issues/12) | 6 | Open |
+| [#13 Add CI, signing, notarization, packaging, and release docs](https://github.com/Mr-Shine09/desktop-mascot/issues/13) | 6 | Open |
 
 ## Verification matrix
 
@@ -415,8 +415,8 @@ Issue numbers and links will be added immediately after repository creation.
 | --- | --- | --- |
 | Custom skills | `quick_validate.py` passes for all project skills | Passed 2026-07-28 |
 | Reference understanding | Instagram third card and supplied images reviewed | Passed 2026-07-28 |
-| Repository | URL resolves under owner account | Pending |
-| Issue backlog | Every implementation phase mapped to an issue | Pending |
+| Repository | URL resolves under owner account | Passed 2026-07-28: [private repository](https://github.com/Mr-Shine09/desktop-mascot) |
+| Issue backlog | Every implementation phase mapped to an issue | Passed 2026-07-28: [issues #1–#13](https://github.com/Mr-Shine09/desktop-mascot/issues) |
 | Sprite readability | 1x light/dark review and owner approval | Not started |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Not started |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
@@ -472,12 +472,26 @@ Issue numbers and links will be added immediately after repository creation.
 - Risks or blockers: GitHub CLI credentials are stale; repository creation will use an authenticated GitHub surface or require reauthentication.
 - Next: create `Mr-Shine09/desktop-mascot`, create every mapped issue, add issue links here, then end the foundation session without starting app implementation.
 
+### 2026-07-28 — GitHub foundation completion
+
+- Objective: resume the failed GitHub authorization session and finish Phase 0 without starting product implementation.
+- Completed:
+  - Verified GitHub CLI authentication for `Mr-Shine09`.
+  - Created the private [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) repository.
+  - Pushed the foundation commit `29d5453` to `main`.
+  - Created [issues #1–#13](https://github.com/Mr-Shine09/desktop-mascot/issues) with tasks, dependencies, and acceptance criteria for every planned phase.
+  - Added the permanent repository and issue links to this ledger.
+- Decisions: keep the repository private and keep product implementation gated behind issue #1 and owner review of the issue #2 concept comparison.
+- Verification: `gh auth status` succeeded; `git push -u origin main` succeeded; all 13 issue-creation commands returned GitHub issue URLs.
+- Risks or blockers: the connected GitHub app returned 404 for the newly created private repository, so issue creation used the authenticated GitHub CLI fallback. This does not affect the repository or issues.
+- Next: run the user-facing grill-me round in issue #1. Do not scaffold the app before the owner approves a 1x concept from issue #2.
+
 ## Next-session handoff
 
 1. Read this file in full.
-2. Confirm repository and issue URLs are present and accurate.
-3. Invoke `grill-me` for the unresolved product choices.
-4. Start only Phase 1; do not scaffold the app before the owner reviews the 1x concept comparison.
+2. Open [issue #1](https://github.com/Mr-Shine09/desktop-mascot/issues/1) and invoke `grill-me` for the unresolved product choices.
+3. Record the answers and issue #1 verdict in this ledger.
+4. Start only the 32x32/40x40 comparison in [issue #2](https://github.com/Mr-Shine09/desktop-mascot/issues/2); do not scaffold the app before owner review.
 5. Update this ledger before ending the session.
 
 ## Documentation sources
