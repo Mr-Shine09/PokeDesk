@@ -10,8 +10,8 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Six rows are owner-approved; the final five rows and complete Retina atlas are produced and await owner review |
-| Current gate | Owner-review the complete atlas in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3), then freeze it before app scaffolding |
+| Status | A 13-row effect-revision Retina atlas is produced and awaits owner review |
+| Current gate | Owner-review the requested effects and two Dock-corner leg-shake clips in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3), then freeze revision 2 before app scaffolding |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -90,6 +90,7 @@ These questions do not block the foundation or prototype. They do block a 1.0 re
 - Transparent, non-activating floating window in a bounded strolling lane immediately above or beside the Dock.
 - Menu-bar controls: show/hide, pause animation, manual ideating state, unlock position, launch at login, diagnostics, quit.
 - States: `offline`, `idle`, `working`, `ideating`, `waiting`, `success`, `failure`, `sleeping`, `paused`.
+- Idle animation variants include directional strolling and directional Dock-corner sitting with one dangling leg shaking.
 - Reliable Codex and Claude Code event adapters based on supported lifecycle hooks.
 - A documented capability boundary for ordinary ChatGPT app/browser activity; no unsupported scraping or fabricated fine-grained states.
 - Local-only event transport.
@@ -139,17 +140,18 @@ Remove garment texture, zipper detail below one pixel, belt detail, hand anatomy
 
 | State | Intent | Initial frame budget | Loop behavior |
 | --- | --- | ---: | --- |
-| Offline | Agent integrations unavailable | 2 | Quiet, dim breathing |
+| Offline | Agent integrations unavailable | 4 | Quiet bowed blink with a rising/disappearing `Z` trail |
 | Idle/chilling | Daytime with no active work | 6 each direction | Stroll along the Dock-edge lane with occasional pause/blink |
 | Working | At least one agent is active | 6 | Sit at a tiny computer and type |
 | Ideating | A non-coding Claude/ChatGPT task is active | 6 | Sit in a Thinker pose while a tiny thought cloud pops in and out |
-| Waiting | User approval or input needed | 4 | Stop, turn toward the user, and raise one hand persistently |
-| Success | Most recent turn completed | 6 | Sparkling eyes plus one quick fist pump, then ambient state |
-| Failure | Agent turn or integration failed | 4–6 | Brief confused/dizzy reaction, then ambient state |
-| Sleeping | Inactive during 23:00–06:00 local time | 4 | Sleep under a blanket; wake immediately for activity |
+| Waiting | User approval or input needed | 4 | Stop, turn toward the user, raise one hand, and show a clock above the head |
+| Success | Most recent turn completed | 6 | Sparkling eyes, stars above the head, and one quick fist pump, then ambient state |
+| Failure | Agent turn or integration failed | 6 | Confused/dizzy reaction with a broken light bulb above the head, then ambient state |
+| Sleeping | Inactive during 23:00–06:00 local time | 6 | Sleep under a blanket with a looping `Z` trail; wake immediately for activity |
 | Paused | User disabled automatic behavior | 2 | Still pose |
+| Sit-shake right/left | Ambient idle at a Dock corner | 6 each | Sit on a compact Dock-edge ledge and casually swing one dangling leg |
 
-Detached effects should be sparse. Prefer posture and expression; do not rely on readable text or tiny UI props. Implement the ideating cloud as a small effect layer above the character: two rising pixels lead into a compact cloud, which changes once, fades, and repeats. This keeps the 40-point body readable while allowing the panel to reserve a slightly taller effect area.
+Detached effects should be sparse and bounded above the character. The approved effect vocabulary is the ideating cloud, offline/sleeping `Z` trails, waiting clock, success stars/sparkles, and failure bulb. All reuse the frozen palette, stay inside the cell guard, and must remain readable at native size without obscuring the face.
 
 ## System architecture
 
@@ -436,7 +438,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | --- | --- | --- |
 | [#1 Lock the 0.1 product contract with grill-me](https://github.com/Mr-Shine09/desktop-mascot/issues/1) | 1 | Closed as completed on 2026-07-28 |
 | [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | Closed as completed on 2026-07-28; secondary chibi frozen |
-| [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open; six rows approved; final five rows and assembled Retina atlas await owner review |
+| [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open; 13-row revision 2 with requested effects and corner-sit clips awaits owner review |
 | [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Open |
 | [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | Open |
 | [#6 Implement the mascot state model and reducer](https://github.com/Mr-Shine09/desktop-mascot/issues/6) | 3 | Open |
@@ -461,8 +463,9 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Directional walk rows | Six frames each direction, shared baseline, frozen palette, light/dark contact sheet, and motion previews | Passed internal QA and owner review on 2026-07-28 |
 | Idle row | Four native frames preserve the base silhouette and change only lens interiors for a half/full blink | Passed deterministic, internal visual, and owner review on 2026-07-28 |
 | Working, ideating, waiting rows | Contract frame counts, shared baseline, frozen palette, light/dark contact sheet, silhouettes, and motion previews | Passed deterministic, internal visual, and owner review on 2026-07-28 |
-| Offline, success, failure, sleeping, paused rows | Contract frame counts and playback intent, shared baseline, frozen palette, silhouettes, and motion previews | Passed deterministic and internal visual QA on 2026-07-28; owner review pending |
-| Retina atlas assembly | Exact 768x1232 grid, used/unused occupancy, palette, alpha, transparent RGB, and cell guards | Passed 2026-07-28: `python3 tools/validate_animation_atlas.py --atlas art/animation/mascot-atlas@2x.png`; owner review pending |
+| Effect-revised offline, waiting, success, failure, sleeping rows | Contract frame counts, requested effects, shared baseline, frozen palette, silhouettes, and motion previews | Passed deterministic and internal visual QA on 2026-07-28; owner review pending |
+| Dock-corner sit-shake rows | Six frames each direction, stable seat/torso, one swinging leg, mirrored temporal order | Passed deterministic and internal visual QA on 2026-07-28; owner review pending |
+| Retina atlas assembly | Exact 768x1456 grid, used/unused occupancy, palette, alpha, transparent RGB, and cell guards | Passed 2026-07-28: `python3 tools/validate_animation_atlas.py --atlas art/animation/mascot-atlas@2x.png`; owner review pending |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Not started |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
@@ -485,7 +488,8 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Multiple sessions thrash visible state | Medium | Per-session registry, priority reducer, debounce, bounded reactions | Open |
 | Cursor-following annoys or obstructs | Medium | Defer; require explicit opt-in and dedicated tests | Deferred |
 | Idle animation wastes battery | Medium | Event-driven updates, suspend timers, measurable energy budget | Open |
-| Generated state frames drift from the frozen identity | High | Ground every job in the frozen base, normalize deterministically, reject drift, and use native pixel editing only with explicit owner approval | Six rows owner-approved; final five passed internal QA and await owner review |
+| Generated state frames drift from the frozen identity | High | Ground every job in the frozen base, normalize deterministically, reject drift, and use native pixel editing only with explicit owner approval | Revision 2 preserves existing bodies; new corner-sit rows passed internal QA and await owner review |
+| Detached status effects crowd the face or become noisy | Medium | Reserve the upper guard area, reuse the frozen palette, keep effects compact, and review at native size on light/dark backgrounds | Revision 2 passes internal QA; owner review pending |
 | Personal likeness ships before review | Medium | Private repository until owner changes visibility | Mitigated for foundation |
 
 ## Decision log
@@ -541,6 +545,8 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Treat the owner instruction to continue after reviewing the working, ideating, and waiting previews as final approval of those three rows. Freeze all six approved rows before producing the final group.
 - Build `paused` from approved idle cells rather than generating a new neutral pose; use the half-blink as its short settle and the exact neutral idle cell as its static hold.
 - Repair only the failing success and failure scopes: hold the first fist-pump peak through the last three success frames, and remove detached generated failure symbols through a stricter connected-component threshold.
+- Supersede the earlier ban on detached sleep text with the owner's explicit revision: add looping `Z` trails to offline and sleeping, a clock to waiting, stars/sparkles to success, and a cracked bulb to failure.
+- Interpret the requested two Dock-corner leg-shake animations as right- and left-facing ambient idle clips. Generate the right-facing source and derive the left row by per-frame mirroring without reversing time.
 
 ## Session log
 
@@ -867,11 +873,29 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: final owner visual approval is pending. A dedicated authored `@1x` asset remains a post-Retina experiment and does not alter this candidate.
 - Next: present the complete atlas and final five motion previews. If accepted, freeze issue #3 and begin the native app scaffold in issue #4.
 
+### 2026-07-28 — Owner-directed effects and corner-sit expansion
+
+- Objective: add the requested status effects and two Dock-corner leg-shake animations without redrawing approved body poses.
+- Completed:
+  - Expanded the contract from 11 to 13 rows and the Retina atlas from `768x1232` to `768x1456`.
+  - Added deterministic native-pixel `Z` trails to offline and sleeping, a ticking clock to waiting, stars/sparkles to success, and a cracked light bulb to failure.
+  - Expanded offline to four frames and sleeping to six frames so their `Z` trails can appear and disappear smoothly.
+  - Generated a six-frame right-facing corner-sit leg-shake source and derived the left-facing row by per-frame mirroring with temporal order preserved.
+  - Reassembled the atlas and regenerated all 13 motion previews, silhouettes, and 1x/8x light/dark contact sheets.
+- Decisions: treat the two new clips as directional ambient idle variants, not reducer states. Preserve all existing body pixels when applying effects; the effect authoring tool clears and redraws only the reserved upper area.
+- Verification:
+  - `python3 tools/author_status_effects.py` is idempotent across all five revised rows.
+  - `python3 tools/validate_animation_atlas.py --atlas art/animation/mascot-atlas@2x.png` passes.
+  - `python3 tools/validate_animation_atlas.py --frames-root art/animation/frames --states offline idle working ideating waiting success failure sleeping paused walk-right walk-left sit-shake-right sit-shake-left` passes.
+  - Native-size light/dark and silhouette QA confirms the effects avoid the face; the corner-sit torso, hip, ledge, and supporting leg remain stable.
+- Risks or blockers: owner visual approval of revision 2 is pending. Exact ambient selection frequency and which Dock corner triggers each sit direction remain app-controller decisions for issue #11.
+- Next: present all seven revised/new previews. If accepted, freeze revision 2 and begin the native app scaffold.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
-3. Obtain owner review of the complete atlas, especially `offline`, `success`, `failure`, `sleeping`, and `paused`. If accepted, freeze issue #3 and begin issue #4; do not scaffold the app before this approval.
+3. Obtain owner review of revision 2: offline/sleeping `Z` trails, waiting clock, success sparkles, failure bulb, and both corner-sit leg-shake clips. If accepted, freeze issue #3 and begin issue #4.
 4. Update this ledger before ending the session.
 
 ## Documentation sources

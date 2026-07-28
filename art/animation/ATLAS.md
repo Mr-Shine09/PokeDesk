@@ -1,13 +1,13 @@
 # Desktop Mascot animation atlas contract
 
-Status: frozen for version 0.1 on 2026-07-28. This contract must be committed before app integration or state-frame production.
+Status: revision 2 owner-directed effect expansion on 2026-07-28. This contract must be re-approved before app integration.
 
 The machine-readable source of truth is [`atlas-contract.json`](atlas-contract.json). If this document and the JSON disagree, stop and reconcile them before producing or loading art.
 
 ## Geometry
 
-- Production atlas: `mascot-atlas@2x.png`, RGBA PNG, `768x1232` pixels.
-- Grid: 8 columns by 11 rows, row-major, with no gutters or margins.
+- Production atlas: `mascot-atlas@2x.png`, RGBA PNG, `768x1456` pixels.
+- Grid: 8 columns by 13 rows, row-major, with no gutters or margins.
 - Cell: `96x112` backing pixels (`48x56` macOS points on a 2x display).
 - Character footprint: the approved `80x80`-pixel body canvas remains `40x40` points. The larger cell reserves room for poses and the approved ideating effect; it does not enlarge the mascot.
 - Cell coordinates use a top-left origin. Pixel ranges are inclusive unless stated otherwise.
@@ -27,17 +27,19 @@ Unused cells after a row's final frame are fully transparent with zero RGB. Dura
 
 | Row | State | Frames | Playback | Durations in milliseconds | Motion intent |
 | ---: | --- | ---: | --- | --- | --- |
-| 0 | `offline` | 2 | loop | `900, 900` | Quiet unavailable pose with a slow blink or breath; do not recolor the mascot to simulate dimming. |
+| 0 | `offline` | 4 | loop | `500, 500, 500, 700` | Quiet unavailable pose with a slow blink while a short rising `Z` trail appears and disappears; do not recolor the mascot. |
 | 1 | `idle` | 4 | loop | `420, 140, 180, 660` | Calm standing pause/blink used between stroll segments and as the reduced-motion ambient pose. |
 | 2 | `working` | 6 | loop | `140, 140, 140, 140, 140, 220` | Seated at one tiny computer, with focused hand/shoulder typing motion and no readable screen content. |
 | 3 | `ideating` | 6 | loop | `260, 180, 220, 260, 180, 420` | Seated Thinker pose; two rising pixels lead to one compact cloud that appears, changes once, disappears, and repeats. |
-| 4 | `waiting` | 4 | intro-hold | `140, 140, 180, hold` | Turn toward the user and raise one hand, then hold the last frame. It must not read as a repeated wave. |
-| 5 | `success` | 6 | once-hold | `100, 100, 120, 140, 180, hold` | Sparkling eyes and one quick fist pump, then hold the delighted final pose until the reducer's 3-second reaction ends. |
-| 6 | `failure` | 6 | loop | `140, 140, 180, 140, 140, 220` | Brief confused/dizzy reaction. Use posture and face first; any marks must be attached, opaque, and sparse. |
-| 7 | `sleeping` | 4 | loop | `520, 520, 520, 900` | Stable sleeping silhouette under one blanket with a subtle breath; no detached `Z` text. |
+| 4 | `waiting` | 4 | intro-hold | `140, 140, 180, hold` | Turn toward the user and raise one hand while a compact clock ticks above the head, then hold the last frame. It must not read as a repeated wave. |
+| 5 | `success` | 6 | once-hold | `100, 100, 120, 140, 180, hold` | Sparkling eyes, one quick fist pump, and bounded stars/sparkles above the head, then hold the delighted final pose until the reducer's 3-second reaction ends. |
+| 6 | `failure` | 6 | loop | `140, 140, 180, 140, 140, 220` | Brief confused/dizzy reaction with a compact visibly cracked light bulb above the head. |
+| 7 | `sleeping` | 6 | loop | `360, 360, 360, 520, 360, 360` | Stable sleeping silhouette under one blanket while a rising `Z` trail appears and disappears with the subtle breath. |
 | 8 | `paused` | 2 | intro-hold | `140, hold` | Settle into a still neutral pose and stop the frame timer on the last frame. |
 | 9 | `walk-right` | 6 | loop | `140, 120, 140, 120, 140, 120` | Right-facing contact, down, passing, up cadence with alternating feet and no floor effects. |
 | 10 | `walk-left` | 6 | loop | `140, 120, 140, 120, 140, 120` | Left-facing equivalent. A mirror is allowed only if glasses, hair, clothing, light direction, and temporal frame order remain correct. |
+| 11 | `sit-shake-right` | 6 | loop | `220, 180, 220, 180, 220, 360` | Ambient right-facing corner pose: sit on a compact Dock-edge ledge and casually swing one dangling lower leg while the torso and ledge stay stable. |
+| 12 | `sit-shake-left` | 6 | loop | `220, 180, 220, 180, 220, 360` | Mirrored left-facing corner pose with temporal order preserved. |
 
 `hold` is not a millisecond value: the controller displays that frame until the visible state changes. `intro-hold` and `once-hold` play frames `0...n-1` exactly once; neither restarts while the state remains unchanged.
 
@@ -50,8 +52,10 @@ All frames use only transparency plus the frozen 12-color subject palette:
 - Alpha is binary: only `0` or `255`.
 - Fully transparent pixels have RGB `(0, 0, 0)`.
 - No antialiasing, semitransparent fringe, chroma spill, shadow, glow, smear, or single-pixel noise.
-- Props and effects reuse the frozen palette. The computer, blanket, cloud, sparkles, and failure marks do not introduce new colors.
+- Props and effects reuse the frozen palette. The computer, blanket, cloud, `Z` trail, clock, stars, bulb, and Dock-edge ledge do not introduce new colors.
 - The identity anchors remain readable in every applicable frame: asymmetric dark hair, separate square glasses/lenses, navy torso with white side panels, gray trousers, and navy shoes.
+
+Intentional detached effects are limited to the owner-requested offline/sleeping `Z` trails, waiting clock, success stars/sparkles, failure bulb, and the existing ideating cloud. They must stay inside the guard, remain legible at native size, and never overlap the face.
 
 ## Frame acceptance rules
 
@@ -63,8 +67,9 @@ Each frame must pass in isolation and in motion:
 4. Both lenses remain distinguishable when the face is visible. Limb separation keeps at least one clear pixel where the pose depends on it.
 5. The state reads within one second at the intended 40-point body size on both light and dark backgrounds.
 6. Walk loops alternate feet, preserve temporal order, avoid foot sliding during contact, and loop without a teleport.
-7. Working, ideating, waiting, success, and failure remain visually distinct without text.
+7. Working, ideating, waiting, success, failure, sleeping, and offline remain visually distinct; only the approved `Z` trails may use letterforms.
 8. First frames of `idle`, `sleeping`, `waiting`, and `paused` are acceptable static Reduced Motion substitutions. Reduced Motion never scales or rapidly flashes the panel.
+9. `sit-shake-right` and `sit-shake-left` keep the seat, hip, torso, head, and supporting leg stable; only the dangling lower leg swings.
 
 Repair the smallest failing scope: one frame, then one row, and only then a broader redraw. Identity drift is a blocker even if automated checks pass.
 
@@ -87,6 +92,6 @@ The dedicated `@1x` asset remains an explicit experiment. It must be authored an
 2. Produce and review `idle`, `walk-right`, and `walk-left` first. Directional gait and identity must pass before props obscure the body.
 3. Produce `working`, `ideating`, and `waiting`.
 4. Produce `success`, `failure`, `sleeping`, `offline`, and `paused`.
-5. Assemble the atlas deterministically, run `tools/validate_animation_atlas.py`, render contact sheets and previews, and repair only failing rows.
-6. Obtain owner review before app integration. Do not close issue #3 merely because the atlas is structurally valid.
-
+5. Apply the owner-directed effect revision and add the two corner-sit leg-shake ambient clips.
+6. Assemble the atlas deterministically, run `tools/validate_animation_atlas.py`, render contact sheets and previews, and repair only failing rows.
+7. Obtain owner review before app integration. Do not close issue #3 merely because the atlas is structurally valid.

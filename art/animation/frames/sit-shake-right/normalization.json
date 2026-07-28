@@ -1,0 +1,47 @@
+{
+  "state": "sit-shake-right",
+  "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/sit-shake-right-row.png",
+  "frames": 6,
+  "source_slot_bounds": [
+    [
+      85,
+      172,
+      328,
+      540
+    ],
+    [
+      85,
+      177,
+      273,
+      540
+    ],
+    [
+      76,
+      181,
+      309,
+      540
+    ],
+    [
+      68,
+      177,
+      258,
+      540
+    ],
+    [
+      59,
+      177,
+      302,
+      540
+    ],
+    [
+      56,
+      178,
+      245,
+      540
+    ]
+  ],
+  "shared_scale": 0.21195652173913043,
+  "bounds_mode": "normal",
+  "minimum_component_ratio": 0.005,
+  "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/sit-shake-right"
+}

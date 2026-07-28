@@ -7,5 +7,6 @@
     "success-04.png",
     "success-05.png"
   ],
-  "reason": "prevent a down-up motion from reading as a second fist pump"
+  "reason": "prevent a down-up motion from reading as a second fist pump",
+  "scope": "body pose below the reserved effect area; later stars and sparkles may differ between held frames"
 }

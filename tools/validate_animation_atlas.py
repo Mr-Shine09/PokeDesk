@@ -150,7 +150,10 @@ def validate_frame_rows(frames_root: Path, states: list[str], contract: dict, er
     cell_size = tuple(contract["atlas"]["cell_pixel_size"])
     left, top, right, bottom = contract["bounds"]["opaque_guard_inclusive"]
     baseline_y = contract["anchor"]["baseline_y"]
-    grounded_states = {"offline", "idle", "working", "ideating", "waiting", "success", "failure", "sleeping", "paused", "walk-right", "walk-left"}
+    grounded_states = {
+        "offline", "idle", "working", "ideating", "waiting", "success", "failure",
+        "sleeping", "paused", "walk-right", "walk-left", "sit-shake-right", "sit-shake-left",
+    }
     for state in states:
         spec = specs.get(state)
         if spec is None:

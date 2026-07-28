@@ -1,0 +1,13 @@
+{
+  "state": "sleeping",
+  "frame_count": 6,
+  "effect": "rising-and-fading-Z-trail",
+  "body_frames": [
+    0,
+    1,
+    2,
+    3,
+    2,
+    1
+  ]
+}

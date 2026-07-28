@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "asset": "mascot-atlas@2x.png",
   "source_base": {
     "path": "../production/mascot-base-chibi-40pt-at2x-80px-final.png",
@@ -10,8 +10,8 @@
   "scale": 2,
   "atlas": {
     "columns": 8,
-    "rows": 11,
-    "pixel_size": [768, 1232],
+    "rows": 13,
+    "pixel_size": [768, 1456],
     "cell_pixel_size": [96, 112],
     "cell_point_size": [48, 56]
   },
@@ -44,17 +44,18 @@
     ]
   },
   "rows": [
-    {"index": 0, "state": "offline", "frames": 2, "playback": "loop", "durations_ms": [900, 900]},
+    {"index": 0, "state": "offline", "frames": 4, "playback": "loop", "durations_ms": [500, 500, 500, 700]},
     {"index": 1, "state": "idle", "frames": 4, "playback": "loop", "durations_ms": [420, 140, 180, 660]},
     {"index": 2, "state": "working", "frames": 6, "playback": "loop", "durations_ms": [140, 140, 140, 140, 140, 220]},
     {"index": 3, "state": "ideating", "frames": 6, "playback": "loop", "durations_ms": [260, 180, 220, 260, 180, 420]},
     {"index": 4, "state": "waiting", "frames": 4, "playback": "intro-hold", "durations_ms": [140, 140, 180, "hold"]},
     {"index": 5, "state": "success", "frames": 6, "playback": "once-hold", "durations_ms": [100, 100, 120, 140, 180, "hold"]},
     {"index": 6, "state": "failure", "frames": 6, "playback": "loop", "durations_ms": [140, 140, 180, 140, 140, 220]},
-    {"index": 7, "state": "sleeping", "frames": 4, "playback": "loop", "durations_ms": [520, 520, 520, 900]},
+    {"index": 7, "state": "sleeping", "frames": 6, "playback": "loop", "durations_ms": [360, 360, 360, 520, 360, 360]},
     {"index": 8, "state": "paused", "frames": 2, "playback": "intro-hold", "durations_ms": [140, "hold"]},
     {"index": 9, "state": "walk-right", "frames": 6, "playback": "loop", "durations_ms": [140, 120, 140, 120, 140, 120]},
-    {"index": 10, "state": "walk-left", "frames": 6, "playback": "loop", "durations_ms": [140, 120, 140, 120, 140, 120]}
+    {"index": 10, "state": "walk-left", "frames": 6, "playback": "loop", "durations_ms": [140, 120, 140, 120, 140, 120]},
+    {"index": 11, "state": "sit-shake-right", "frames": 6, "playback": "loop", "durations_ms": [220, 180, 220, 180, 220, 360]},
+    {"index": 12, "state": "sit-shake-left", "frames": 6, "playback": "loop", "durations_ms": [220, 180, 220, 180, 220, 360]}
   ]
 }
-

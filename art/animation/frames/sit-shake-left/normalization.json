@@ -1,0 +1,7 @@
+{
+  "state": "sit-shake-left",
+  "derivation": "per-frame-horizontal-mirror",
+  "source_state": "sit-shake-right",
+  "frame_order_preserved": true,
+  "decision_note": "Owner requested two Dock-corner leg-shake animations; the character has no side-specific logo or prop, so per-frame mirroring preserves identity and timing."
+}

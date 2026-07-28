@@ -1,0 +1,11 @@
+{
+  "state": "offline",
+  "frame_count": 4,
+  "effect": "rising-Z-trail",
+  "body_frames": [
+    0,
+    1,
+    0,
+    1
+  ]
+}

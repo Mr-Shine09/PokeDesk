@@ -1,0 +1,11 @@
+{
+  "state": "waiting",
+  "frame_count": 4,
+  "effect": "clock",
+  "hand_sequence": [
+    "12",
+    "3",
+    "6",
+    "9"
+  ]
+}
