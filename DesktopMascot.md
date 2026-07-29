@@ -10,8 +10,8 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | A 13-row effect-revision Retina atlas is produced and awaits owner review |
-| Current gate | Owner-review the requested effects and two Dock-corner leg-shake clips in [issue #3](https://github.com/Mr-Shine09/desktop-mascot/issues/3), then freeze revision 2 before app scaffolding |
+| Status | Atlas revision 2 is owner-approved and frozen; the native SwiftUI/AppKit skeleton builds and launches |
+| Current gate | Manually verify the Dock-edge panel across displays, Dock orientations, focus, show/hide, and quit behavior for [issue #5](https://github.com/Mr-Shine09/desktop-mascot/issues/5) |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -172,38 +172,32 @@ Manual ideating mode ───────────────────�
                               Transparent Dock-edge NSPanel
 ```
 
-### Proposed package layout
+### Implemented package layout
 
 ```text
 DesktopMascot/
 ├── App/
 │   ├── DesktopMascotApp.swift
 │   ├── AppDelegate.swift
-│   └── MenuBar/
-├── MascotCore/
-│   ├── AgentEvent.swift
-│   ├── MascotState.swift
-│   ├── SessionRegistry.swift
-│   └── StateReducer.swift
-├── MascotWindow/
-│   ├── MascotPanel.swift
-│   ├── DockGeometry.swift
-│   └── WindowCoordinator.swift
-├── Integrations/
-│   ├── EventServer.swift
-│   ├── HookInstaller.swift
-│   ├── CodexAdapter.swift
-│   └── ClaudeCodeAdapter.swift
-├── Animation/
-│   ├── SpriteAtlas.swift
-│   ├── AnimationController.swift
-│   └── SpriteView.swift
-├── Resources/Sprites/
-├── DesktopMascotTests/
-└── DesktopMascotUITests/
+│   ├── AppResources.swift
+│   ├── MascotPreviewView.swift
+│   └── MenuBarContent.swift
+├── Packages/DesktopMascotKit/
+│   ├── Sources/MascotCore/MascotState.swift
+│   ├── Sources/MascotAnimation/
+│   │   ├── AtlasContract.swift
+│   │   └── SpriteAtlas.swift
+│   ├── Sources/MascotWindow/
+│   │   ├── MascotPanel.swift
+│   │   ├── DockGeometry.swift
+│   │   └── WindowCoordinator.swift
+│   └── Tests/
+├── art/animation/
+├── project.yml
+└── DesktopMascot.xcodeproj/
 ```
 
-This is a proposed layout, not an implemented one. Adjust it after the Xcode scaffold exists, then update this ledger.
+XcodeGen owns the generated project. Event transport, the reducer, provider adapters, and the animation controller will extend the package boundaries in later phases.
 
 ## Agent event contract
 
@@ -359,6 +353,8 @@ Acceptance: all artifacts exist, custom skills validate, repository URL resolves
 
 ### Phase 1 — Product contract and art spike (2026-07-29 to 2026-07-30)
 
+**Status: Complete on 2026-07-28.**
+
 1. Run a user-facing grill-me round on naming, interaction tolerance, hook installation, and release visibility.
    - Round 1 completed on 2026-07-28: core animations, 23:00–06:00 sleep behavior, broad provider goal, and Dock-only 0.1 were confirmed.
    - Round 2 completed on 2026-07-28: ideating, waiting, and successful-completion animations were confirmed; automatic non-coding activity detection remains unresolved.
@@ -368,11 +364,13 @@ Acceptance: all artifacts exist, custom skills validate, repository URL resolves
 4. Approve one native grid, palette, identity hierarchy, and baseline.
 5. Write animation frame and atlas specification.
 
-Progress on 2026-07-28: steps 2–5 complete. The owner selected a 40-point footprint, rejected every native tall treatment, and explicitly ordered the secondary chibi fallback. `mascot-base-chibi-40pt-at2x-80px-final.png` is frozen as the base. The version 0.1 geometry, row order, palette, timing, anchors, acceptance rules, and QA outputs are frozen in `art/animation/ATLAS.md` and `art/animation/atlas-contract.json`.
+Completed on 2026-07-28: the owner selected a 40-point footprint, rejected every native tall treatment, and explicitly ordered the secondary chibi fallback. `mascot-base-chibi-40pt-at2x-80px-final.png` is frozen as the base. The owner approved the complete 13-row revision 2 atlas, including the requested status effects and directional corner-sit clips. The geometry, row order, palette, timing, anchors, acceptance rules, and QA outputs are frozen in `art/animation/ATLAS.md` and `art/animation/atlas-contract.json`.
 
-Acceptance: owner selects one concept; chosen sprite is recognizable at 1x; palette and frame geometry are frozen for 0.1.
+Acceptance: owner selects one concept; chosen sprite is recognizable at 1x; palette and frame geometry are frozen for 0.1. Passed on 2026-07-28.
 
 ### Phase 2 — Native app skeleton (2026-07-31 to 2026-08-02)
+
+**Status: In progress; steps 1–5 implemented on 2026-07-28, manual behavior matrix pending.**
 
 1. Create Xcode project and Swift package boundaries.
 2. Implement menu-bar lifecycle and settings model.
@@ -438,9 +436,9 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | --- | --- | --- |
 | [#1 Lock the 0.1 product contract with grill-me](https://github.com/Mr-Shine09/desktop-mascot/issues/1) | 1 | Closed as completed on 2026-07-28 |
 | [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | Closed as completed on 2026-07-28; secondary chibi frozen |
-| [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Open; 13-row revision 2 with requested effects and corner-sit clips awaits owner review |
-| [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Open |
-| [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | Open |
+| [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Owner-approved and frozen locally on 2026-07-28; GitHub status sync pending |
+| [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Implemented and build-verified locally; manual acceptance and GitHub status sync pending |
+| [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | In progress; implementation and geometry fixtures pass, manual display matrix pending |
 | [#6 Implement the mascot state model and reducer](https://github.com/Mr-Shine09/desktop-mascot/issues/6) | 3 | Open |
 | [#7 Build the private local event bridge and helper CLI](https://github.com/Mr-Shine09/desktop-mascot/issues/7) | 3 | Open |
 | [#8 Add the Codex lifecycle-hook adapter](https://github.com/Mr-Shine09/desktop-mascot/issues/8) | 4 | Open |
@@ -463,10 +461,11 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Directional walk rows | Six frames each direction, shared baseline, frozen palette, light/dark contact sheet, and motion previews | Passed internal QA and owner review on 2026-07-28 |
 | Idle row | Four native frames preserve the base silhouette and change only lens interiors for a half/full blink | Passed deterministic, internal visual, and owner review on 2026-07-28 |
 | Working, ideating, waiting rows | Contract frame counts, shared baseline, frozen palette, light/dark contact sheet, silhouettes, and motion previews | Passed deterministic, internal visual, and owner review on 2026-07-28 |
-| Effect-revised offline, waiting, success, failure, sleeping rows | Contract frame counts, requested effects, shared baseline, frozen palette, silhouettes, and motion previews | Passed deterministic and internal visual QA on 2026-07-28; owner review pending |
-| Dock-corner sit-shake rows | Six frames each direction, stable seat/torso, one swinging leg, mirrored temporal order | Passed deterministic and internal visual QA on 2026-07-28; owner review pending |
-| Retina atlas assembly | Exact 768x1456 grid, used/unused occupancy, palette, alpha, transparent RGB, and cell guards | Passed 2026-07-28: `python3 tools/validate_animation_atlas.py --atlas art/animation/mascot-atlas@2x.png`; owner review pending |
-| Window geometry | Automated fixtures plus manual multi-display matrix | Not started |
+| Effect-revised offline, waiting, success, failure, sleeping rows | Contract frame counts, requested effects, shared baseline, frozen palette, silhouettes, and motion previews | Passed deterministic, internal visual, and owner review on 2026-07-28 |
+| Dock-corner sit-shake rows | Six frames each direction, stable seat/torso, one swinging leg, mirrored temporal order | Passed deterministic, internal visual, and owner review on 2026-07-28 |
+| Retina atlas assembly | Exact 768x1456 grid, used/unused occupancy, palette, alpha, transparent RGB, and cell guards | Passed validator and owner review on 2026-07-28; revision 2 frozen |
+| Native app scaffold | Generated Xcode project, modular package, embedded atlas resources, static nearest-neighbor render, and startup smoke test | Passed 2026-07-28: five package tests, unsigned Debug `xcodebuild`, bundle-resource inspection, and three-second launch smoke test |
+| Window geometry | Automated fixtures plus manual multi-display matrix | Bottom/left/right/clamp fixtures pass; manual matrix pending |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
 | Provider adapters | Fixture tests and live smoke tests | Not started |
@@ -484,12 +483,12 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Ordinary Claude/ChatGPT conversations lack a documented external lifecycle signal | High | Manual ideating control in 0.1; automatic detection deferred; no content/accessibility/private-API scraping | Constrained for 0.1 |
 | “Completed” is mistaken for “successful” | Medium | Treat Codex Stop as completion reaction, not proof every command passed | Mitigated in design |
 | Hook installation damages user config | High | Preview, back up, tag ownership, mutation tests, remove only owned entries | Open |
-| Mascot blocks Dock or steals focus | High | Non-activating click-through panel, safe gap, menu-bar escape hatch | Open |
+| Mascot blocks Dock or steals focus | High | Non-activating click-through panel, safe gap, menu-bar escape hatch | Implemented; manual focus and display QA pending |
 | Multiple sessions thrash visible state | Medium | Per-session registry, priority reducer, debounce, bounded reactions | Open |
 | Cursor-following annoys or obstructs | Medium | Defer; require explicit opt-in and dedicated tests | Deferred |
 | Idle animation wastes battery | Medium | Event-driven updates, suspend timers, measurable energy budget | Open |
-| Generated state frames drift from the frozen identity | High | Ground every job in the frozen base, normalize deterministically, reject drift, and use native pixel editing only with explicit owner approval | Revision 2 preserves existing bodies; new corner-sit rows passed internal QA and await owner review |
-| Detached status effects crowd the face or become noisy | Medium | Reserve the upper guard area, reuse the frozen palette, keep effects compact, and review at native size on light/dark backgrounds | Revision 2 passes internal QA; owner review pending |
+| Generated state frames drift from the frozen identity | High | Ground every job in the frozen base, normalize deterministically, reject drift, and use native pixel editing only with explicit owner approval | Revision 2 owner-approved and frozen |
+| Detached status effects crowd the face or become noisy | Medium | Reserve the upper guard area, reuse the frozen palette, keep effects compact, and review at native size on light/dark backgrounds | Revision 2 owner-approved and frozen |
 | Personal likeness ships before review | Medium | Private repository until owner changes visibility | Mitigated for foundation |
 
 ## Decision log
@@ -547,6 +546,9 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Repair only the failing success and failure scopes: hold the first fist-pump peak through the last three success frames, and remove detached generated failure symbols through a stricter connected-component threshold.
 - Supersede the earlier ban on detached sleep text with the owner's explicit revision: add looping `Z` trails to offline and sleeping, a clock to waiting, stars/sparkles to success, and a cracked bulb to failure.
 - Interpret the requested two Dock-corner leg-shake animations as right- and left-facing ambient idle clips. Generate the right-facing source and derive the left row by per-frame mirroring without reversing time.
+- Treat the owner's “Ok good. Now let's continue” after reviewing all revision 2 previews as final approval. Freeze the 13-row `768x1456` atlas as the app-integration contract.
+- Use XcodeGen for a reproducible SwiftUI app shell backed by local `MascotCore`, `MascotAnimation`, and `MascotWindow` Swift package products.
+- Keep the first native checkpoint static: prove atlas decoding, nearest-neighbor frame extraction, transparent non-activating panel behavior, Dock geometry, and menu-bar recovery controls before adding timers or lifecycle signals.
 
 ## Session log
 
@@ -891,12 +893,31 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: owner visual approval of revision 2 is pending. Exact ambient selection frequency and which Dock corner triggers each sit direction remain app-controller decisions for issue #11.
 - Next: present all seven revised/new previews. If accepted, freeze revision 2 and begin the native app scaffold.
 
+### 2026-07-28 — Atlas approval and native app scaffold
+
+- Objective: freeze the approved revision 2 art contract and begin issues #4 and #5 with a buildable native macOS checkpoint.
+- Completed:
+  - Recorded owner approval and froze the 13-row `768x1456` Retina atlas as the app-integration contract.
+  - Added a reproducible XcodeGen project and a local Swift package split into `MascotCore`, `MascotAnimation`, and `MascotWindow` products.
+  - Added atlas-contract decoding, validated ImageIO frame extraction, AppKit/SwiftUI nearest-neighbor rendering, a transparent non-activating click-through `NSPanel`, bottom/left/right Dock inference, safe placement and clamping, and screen/wake repositioning.
+  - Added an accessory menu-bar app with show, pause, manual ideating, temporary 15-second position unlock, reposition, diagnostics, and quit controls.
+  - Corrected the XcodeGen resource phase after built-bundle inspection caught that the first successful compile did not embed the atlas or JSON contract.
+- Decisions: keep animation playback and live agent events outside this checkpoint. Use menu buttons with explicit checkmark/lock labels because Swift 6.3.3 crashed during IR generation for the original closure-based `Toggle` bindings.
+- Verification:
+  - `swift test` passes five tests covering state-enum stability, ambient corner-sit inventory, bottom/left/right Dock detection, and panel clamping.
+  - `xcodegen generate` succeeds and the unsigned arm64 Debug app passes `xcodebuild` with `CODE_SIGNING_ALLOWED=NO`.
+  - The built app contains `mascot-atlas@2x.png` and `atlas-contract.json` under `Contents/Resources`.
+  - A three-second direct launch smoke test stayed alive without startup output or a resource-load crash, then was stopped intentionally.
+- Risks or blockers: manual focus, show/hide/quit, Dock orientation, auto-hide, and multi-display behavior still require visual QA. Release signing and notarization remain Phase 6 work.
+- Next: complete the issue #5 manual window matrix, then add the animation controller and state-driven row playback without changing the frozen atlas.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
-3. Obtain owner review of revision 2: offline/sleeping `Z` trails, waiting clock, success sparkles, failure bulb, and both corner-sit leg-shake clips. If accepted, freeze issue #3 and begin issue #4.
-4. Update this ledger before ending the session.
+3. Treat atlas revision 2 as owner-approved and frozen. Do not change its rows, geometry, or effects without a recorded revision 3 decision.
+4. Continue issue #5 with the manual Dock orientation, multi-display, focus, show/hide, and quit matrix; the code and automated geometry fixtures already pass.
+5. Update this ledger before ending the session.
 
 ## Documentation sources
 

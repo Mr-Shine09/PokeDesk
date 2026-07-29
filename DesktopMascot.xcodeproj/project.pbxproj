@@ -1,0 +1,409 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1BEF9E2C39FC7E61326C3549 /* MenuBarContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0860DC47188B80AA1AE618B /* MenuBarContent.swift */; };
+		284B8D635FC1CED126FCF813 /* AppResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16245A1009483229670E5018 /* AppResources.swift */; };
+		287C9188AD7A02B159CCEAEA /* DesktopMascotApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41EE1C1DD5A7A2FCDDF08B3C /* DesktopMascotApp.swift */; };
+		574620DFCFC68F0BF7E09451 /* MascotCore in Frameworks */ = {isa = PBXBuildFile; productRef = CD0B0F909106FBA28B44E81D /* MascotCore */; };
+		74712B8AF062BC80039ACD7C /* mascot-atlas@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 5619442C57C4058305853A8F /* mascot-atlas@2x.png */; };
+		90CE6F844A663B5EB7EE75DF /* MascotWindow in Frameworks */ = {isa = PBXBuildFile; productRef = 169CC0F70261FBB9E36D2069 /* MascotWindow */; };
+		A0C7761B78F4DEF1ADC87AC8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8B44BFF4D72CB7D7C4C556 /* AppDelegate.swift */; };
+		B10178104EA43107B06D0605 /* atlas-contract.json in Resources */ = {isa = PBXBuildFile; fileRef = 36F19CD414F513BEB1E5C61F /* atlas-contract.json */; };
+		E3C852E43F8538F388F4F0FC /* MascotPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1836E78848D6B2FD49EC9424 /* MascotPreviewView.swift */; };
+		E7CD46E56634584A7E95F61F /* MascotAnimation in Frameworks */ = {isa = PBXBuildFile; productRef = 9BB733919D3F300907589D2A /* MascotAnimation */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		028E72C1B440D3C6CECE3C58 /* DesktopMascot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DesktopMascot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		16245A1009483229670E5018 /* AppResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppResources.swift; sourceTree = "<group>"; };
+		1836E78848D6B2FD49EC9424 /* MascotPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MascotPreviewView.swift; sourceTree = "<group>"; };
+		36F19CD414F513BEB1E5C61F /* atlas-contract.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "atlas-contract.json"; sourceTree = "<group>"; };
+		41EE1C1DD5A7A2FCDDF08B3C /* DesktopMascotApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopMascotApp.swift; sourceTree = "<group>"; };
+		5619442C57C4058305853A8F /* mascot-atlas@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "mascot-atlas@2x.png"; sourceTree = "<group>"; };
+		8D8B44BFF4D72CB7D7C4C556 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C0860DC47188B80AA1AE618B /* MenuBarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarContent.swift; sourceTree = "<group>"; };
+		EBB02BFF34AC70D56636144E /* DesktopMascotKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DesktopMascotKit; path = Packages/DesktopMascotKit; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		052DFFE39284DEB14B925B08 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				574620DFCFC68F0BF7E09451 /* MascotCore in Frameworks */,
+				E7CD46E56634584A7E95F61F /* MascotAnimation in Frameworks */,
+				90CE6F844A663B5EB7EE75DF /* MascotWindow in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4B1E22B1C470E8CAF57D7159 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				EBB02BFF34AC70D56636144E /* DesktopMascotKit */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		4DDA826F2731EA09F2923E39 /* DesktopMascot */ = {
+			isa = PBXGroup;
+			children = (
+				6BA52CA74F082D162630ED5E /* App */,
+			);
+			path = DesktopMascot;
+			sourceTree = "<group>";
+		};
+		532136949AC14F350EEA2FAF /* art */ = {
+			isa = PBXGroup;
+			children = (
+				F21384B2F7FB4E99BA420D16 /* animation */,
+			);
+			path = art;
+			sourceTree = "<group>";
+		};
+		60CCECE1C933E0F66C9987E0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				028E72C1B440D3C6CECE3C58 /* DesktopMascot.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6BA52CA74F082D162630ED5E /* App */ = {
+			isa = PBXGroup;
+			children = (
+				8D8B44BFF4D72CB7D7C4C556 /* AppDelegate.swift */,
+				16245A1009483229670E5018 /* AppResources.swift */,
+				41EE1C1DD5A7A2FCDDF08B3C /* DesktopMascotApp.swift */,
+				1836E78848D6B2FD49EC9424 /* MascotPreviewView.swift */,
+				C0860DC47188B80AA1AE618B /* MenuBarContent.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		9548C9F86CD7699BF660ED07 = {
+			isa = PBXGroup;
+			children = (
+				532136949AC14F350EEA2FAF /* art */,
+				4DDA826F2731EA09F2923E39 /* DesktopMascot */,
+				4B1E22B1C470E8CAF57D7159 /* Packages */,
+				60CCECE1C933E0F66C9987E0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F21384B2F7FB4E99BA420D16 /* animation */ = {
+			isa = PBXGroup;
+			children = (
+				36F19CD414F513BEB1E5C61F /* atlas-contract.json */,
+				5619442C57C4058305853A8F /* mascot-atlas@2x.png */,
+			);
+			path = animation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		60381C9D9296E399C0C252AC /* DesktopMascot */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 679F73147E1DA9398BECED7C /* Build configuration list for PBXNativeTarget "DesktopMascot" */;
+			buildPhases = (
+				F75D5C2B349CE3A0D1AB4D1A /* Sources */,
+				8BE6402CA7C57B751FDF22A7 /* Resources */,
+				052DFFE39284DEB14B925B08 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DesktopMascot;
+			packageProductDependencies = (
+				CD0B0F909106FBA28B44E81D /* MascotCore */,
+				9BB733919D3F300907589D2A /* MascotAnimation */,
+				169CC0F70261FBB9E36D2069 /* MascotWindow */,
+			);
+			productName = DesktopMascot;
+			productReference = 028E72C1B440D3C6CECE3C58 /* DesktopMascot.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D5BA24B8D9E4853C3E5DD0DD /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					60381C9D9296E399C0C252AC = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 332472753B11D66B21CE93A3 /* Build configuration list for PBXProject "DesktopMascot" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 9548C9F86CD7699BF660ED07;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D2A843DA0114884104B3BB6D /* XCLocalSwiftPackageReference "Packages/DesktopMascotKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 60CCECE1C933E0F66C9987E0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				60381C9D9296E399C0C252AC /* DesktopMascot */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8BE6402CA7C57B751FDF22A7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10178104EA43107B06D0605 /* atlas-contract.json in Resources */,
+				74712B8AF062BC80039ACD7C /* mascot-atlas@2x.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F75D5C2B349CE3A0D1AB4D1A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A0C7761B78F4DEF1ADC87AC8 /* AppDelegate.swift in Sources */,
+				284B8D635FC1CED126FCF813 /* AppResources.swift in Sources */,
+				287C9188AD7A02B159CCEAEA /* DesktopMascotApp.swift in Sources */,
+				E3C852E43F8538F388F4F0FC /* MascotPreviewView.swift in Sources */,
+				1BEF9E2C39FC7E61326C3549 /* MenuBarContent.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		53D292797E358BA9114584DA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dock Pet";
+				INFOPLIST_KEY_LSUIElement = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mrshine09.desktopmascot;
+				PRODUCT_NAME = "Dock Pet";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		8DE6522A30256FCD624FCAF3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dock Pet";
+				INFOPLIST_KEY_LSUIElement = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mrshine09.desktopmascot;
+				PRODUCT_NAME = "Dock Pet";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		AF848E4255A4C733D77DAF7C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		DD76DD155DFD7121F42A4264 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		332472753B11D66B21CE93A3 /* Build configuration list for PBXProject "DesktopMascot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF848E4255A4C733D77DAF7C /* Debug */,
+				DD76DD155DFD7121F42A4264 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		679F73147E1DA9398BECED7C /* Build configuration list for PBXNativeTarget "DesktopMascot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8DE6522A30256FCD624FCAF3 /* Debug */,
+				53D292797E358BA9114584DA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		D2A843DA0114884104B3BB6D /* XCLocalSwiftPackageReference "Packages/DesktopMascotKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/DesktopMascotKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		169CC0F70261FBB9E36D2069 /* MascotWindow */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MascotWindow;
+		};
+		9BB733919D3F300907589D2A /* MascotAnimation */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MascotAnimation;
+		};
+		CD0B0F909106FBA28B44E81D /* MascotCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MascotCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = D5BA24B8D9E4853C3E5DD0DD /* Project object */;
+}

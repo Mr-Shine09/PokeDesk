@@ -1,6 +1,6 @@
 # Desktop Mascot animation atlas contract
 
-Status: revision 2 owner-directed effect expansion on 2026-07-28. This contract must be re-approved before app integration.
+Status: revision 2 frozen with owner approval on 2026-07-28. This is the app-integration contract.
 
 The machine-readable source of truth is [`atlas-contract.json`](atlas-contract.json). If this document and the JSON disagree, stop and reconcile them before producing or loading art.
 

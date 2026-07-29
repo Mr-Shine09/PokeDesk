@@ -13,7 +13,7 @@ The revision 2 atlas contract is defined in `ATLAS.md` and `atlas-contract.json`
 
 These six rows passed deterministic checks, internal visual QA, and owner review on 2026-07-28.
 
-## Current owner-review revision
+## Approved revision 2
 
 - `frames/offline/` — four bowed-pose frames with a rising/disappearing `Z` trail.
 - `frames/sleeping/` — six blanket-breathing frames with a rising/fading `Z` trail.
@@ -26,7 +26,7 @@ These six rows passed deterministic checks, internal visual QA, and owner review
 - `qa/contact-sheet-backing-1x-{light,dark}.png` and `qa/contact-sheet-inspection-8x-{light,dark}.png` — full contract review sheets.
 - `qa/silhouette-sheet-candidate.png` and `qa/previews/` — full silhouette and contract-timed motion review.
 
-The requested effects, two corner-sit clips, and expanded atlas passed deterministic validation and internal native-size visual QA on 2026-07-28. They remain unapproved until owner review.
+The requested effects, two corner-sit clips, and expanded atlas passed deterministic validation, internal native-size visual QA, and owner review on 2026-07-28.
 
 Reproduction order for revised reaction rows is normalize body frames, apply any body-pose repair, then run `tools/author_status_effects.py`. The effect authoring step is idempotent and preserves every body pixel below the reserved upper effect area.
 
@@ -34,7 +34,7 @@ Reproduction order for revised reaction rows is normalize body frames, apply any
 
 Two generated idle rows and one generated single-blink repair were rejected because they changed the approved identity; their images were not admitted to the project. With owner authorization, the production idle row was authored directly at native resolution. Frames 0 and 3 preserve every frozen-base pixel; frames 1 and 2 change only the lens interiors.
 
-Do not integrate the candidate atlas into the app until owner review freezes revision 2.
+Revision 2 is frozen for app integration. Do not change row order, timing, geometry, or pixels without a recorded revision 3 decision.
 
 ## Verification
 

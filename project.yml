@@ -1,0 +1,49 @@
+name: DesktopMascot
+options:
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "26.0"
+packages:
+  DesktopMascotKit:
+    path: Packages/DesktopMascotKit
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+targets:
+  DesktopMascot:
+    type: application
+    platform: macOS
+    sources:
+      - path: DesktopMascot/App
+      - path: art/animation/mascot-atlas@2x.png
+        buildPhase: resources
+      - path: art/animation/atlas-contract.json
+        buildPhase: resources
+    dependencies:
+      - package: DesktopMascotKit
+        product: MascotCore
+      - package: DesktopMascotKit
+        product: MascotAnimation
+      - package: DesktopMascotKit
+        product: MascotWindow
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mrshine09.desktopmascot
+        PRODUCT_NAME: Dock Pet
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_KEY_CFBundleDisplayName: Dock Pet
+        INFOPLIST_KEY_LSUIElement: true
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        CODE_SIGN_STYLE: Automatic
+schemes:
+  DesktopMascot:
+    build:
+      targets:
+        DesktopMascot: all
+    run:
+      config: Debug
+    archive:
+      config: Release
