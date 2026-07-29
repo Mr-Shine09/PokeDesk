@@ -10,11 +10,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published var isVisible = true
     @Published var isPaused = false
     @Published var isIdeating = false
-    @Published var isPositionUnlocked = false
+    @Published var isRoaming = true
 
     private let previewModel = MascotPreviewModel()
     private var atlas: SpriteAtlas?
     private var windowCoordinator: WindowCoordinator?
+    private var animationController: AmbientAnimationController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -27,40 +28,65 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             previewModel.image = try atlas.frame(state: "idle", index: 0)
 
             let hostingView = NSHostingView(rootView: MascotPreviewView(model: previewModel))
-            hostingView.frame = NSRect(x: 0, y: 0, width: 48, height: 56)
-            windowCoordinator = WindowCoordinator(contentView: hostingView)
-            windowCoordinator?.setVisible(isVisible)
-            diagnostics = "Atlas revision \(contract.schemaVersion) loaded"
+            hostingView.frame = NSRect(origin: .zero, size: MascotPanel.defaultContentSize)
+            let windowCoordinator = WindowCoordinator(contentView: hostingView)
+            self.windowCoordinator = windowCoordinator
+            windowCoordinator.panel.onClick = { [weak self] in
+                self?.showMascotMenu()
+            }
+            windowCoordinator.panel.onDragBegan = { [weak self] in
+                self?.animationController?.userDidBeginDrag()
+                self?.diagnostics = "Dragging — hanging pose"
+            }
+            windowCoordinator.panel.onDragEnded = { [weak self] in
+                self?.animationController?.userDidEndDrag()
+                self?.isRoaming = false
+                self?.diagnostics = "Manual position — click mascot to resume roaming"
+            }
+            animationController = try AmbientAnimationController(
+                atlas: atlas,
+                previewModel: previewModel,
+                windowCoordinator: windowCoordinator
+            )
+            windowCoordinator.setVisible(isVisible)
+            diagnostics = "Ambient roaming — no agent signal connected"
         } catch {
             diagnostics = error.localizedDescription
         }
     }
 
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        setVisible(true)
+        diagnostics = "Mascot reopened"
+        return true
+    }
+
     func setVisible(_ visible: Bool) {
         isVisible = visible
         windowCoordinator?.setVisible(visible)
+        animationController?.setVisible(visible)
     }
 
     func setPaused(_ paused: Bool) {
         isPaused = paused
         if paused { isIdeating = false }
-        updatePreviewState()
+        animationController?.setIdeating(false)
+        animationController?.setPaused(paused)
+        diagnostics = paused ? "Animation paused" : "Ambient roaming"
     }
 
     func setIdeating(_ ideating: Bool) {
         isIdeating = ideating
         if ideating { isPaused = false }
-        updatePreviewState()
+        animationController?.setPaused(false)
+        animationController?.setIdeating(ideating)
+        diagnostics = ideating ? "Manual ideating" : "Ambient roaming"
     }
 
-    func setPositionUnlocked(_ unlocked: Bool) {
-        isPositionUnlocked = unlocked
-        windowCoordinator?.setInteractionUnlocked(unlocked)
-        if unlocked {
-            diagnostics = "Position unlocked for 15 seconds"
-        } else {
-            diagnostics = "Position locked"
-        }
+    func setRoaming(_ roaming: Bool) {
+        isRoaming = roaming
+        animationController?.setRoaming(roaming)
+        diagnostics = roaming ? "Ambient roaming" : "Offline at manual position"
     }
 
     func reposition() {
@@ -71,14 +97,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSApp.terminate(nil)
     }
 
-    private func updatePreviewState() {
-        guard let atlas else { return }
-        let state = isPaused ? "paused" : (isIdeating ? "ideating" : "idle")
-        do {
-            previewModel.image = try atlas.frame(state: state, index: 0)
-            diagnostics = "Showing \(state) preview"
-        } catch {
-            diagnostics = error.localizedDescription
-        }
+    private func showMascotMenu() {
+        let menu = NSMenu()
+        menu.addItem(withTitle: isPaused ? "Resume Animation" : "Pause Animation", action: #selector(togglePauseFromMascot), keyEquivalent: "")
+        menu.addItem(withTitle: isRoaming ? "Stop Roaming" : "Resume Roaming", action: #selector(toggleRoamingFromMascot), keyEquivalent: "")
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Hide Mascot", action: #selector(hideMascotFromMenu), keyEquivalent: "")
+        menu.addItem(withTitle: "Quit Dock Pet", action: #selector(quitFromMascotMenu), keyEquivalent: "")
+        for item in menu.items { item.target = self }
+        guard let contentView = windowCoordinator?.panel.contentView else { return }
+        menu.popUp(positioning: nil, at: NSPoint(x: contentView.bounds.midX, y: contentView.bounds.midY), in: contentView)
     }
+
+    @objc private func togglePauseFromMascot() { setPaused(!isPaused) }
+    @objc private func toggleRoamingFromMascot() { setRoaming(!isRoaming) }
+    @objc private func hideMascotFromMenu() { setVisible(false) }
+    @objc private func quitFromMascotMenu() { quit() }
 }

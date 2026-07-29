@@ -21,10 +21,11 @@ struct MenuBarContent: View {
         }
         Divider()
         Button {
-            appDelegate.setPositionUnlocked(!appDelegate.isPositionUnlocked)
+            appDelegate.setRoaming(!appDelegate.isRoaming)
         } label: {
-            Label("Unlock Position", systemImage: appDelegate.isPositionUnlocked ? "lock.open" : "lock")
+            Label("Roam Along Bottom", systemImage: appDelegate.isRoaming ? "checkmark" : "minus")
         }
+        Text("Click for options • Drag anytime")
         Button("Reposition on Current Display") {
             appDelegate.reposition()
         }

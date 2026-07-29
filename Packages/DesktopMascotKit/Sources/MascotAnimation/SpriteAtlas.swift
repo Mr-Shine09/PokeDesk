@@ -57,7 +57,7 @@ public final class SpriteAtlas {
         let cellHeight = contract.atlas.cellPixelSize[1]
         let sourceRect = CGRect(
             x: index * cellWidth,
-            y: image.height - ((row.index + 1) * cellHeight),
+            y: row.index * cellHeight,
             width: cellWidth,
             height: cellHeight
         )

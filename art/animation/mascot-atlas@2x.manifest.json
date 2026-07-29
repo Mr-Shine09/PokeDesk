@@ -2,7 +2,7 @@
   "asset": "mascot-atlas@2x.png",
   "pixel_size": [
     768,
-    1456
+    1568
   ],
   "contract": "art/animation/atlas-contract.json",
   "frames_root": "art/animation/frames",
@@ -74,6 +74,12 @@
     "sit-shake-left/sit-shake-left-02.png": "9597ea642a4af1f8ec1869c96b7a05b458c8cf516aa7db3efc159adb5bc66656",
     "sit-shake-left/sit-shake-left-03.png": "9f4ab0ce52a6feeac40087f3f4e3e95c465e35b0b864662454e95fc63746b5dd",
     "sit-shake-left/sit-shake-left-04.png": "a8cc3cbdb07cd4ebaf3ea20e91cd1c7b5b25790bc3f19172eee28c2dbc6baf05",
-    "sit-shake-left/sit-shake-left-05.png": "b786397539b71942f9c251f105ad3af97f0c3c54b7b694b016cacfb790909c96"
+    "sit-shake-left/sit-shake-left-05.png": "b786397539b71942f9c251f105ad3af97f0c3c54b7b694b016cacfb790909c96",
+    "hanging/hanging-00.png": "9bc53972083f47f4a0171259acf79051db4cfd2d67bfda96e6dd9d2ebd7f9975",
+    "hanging/hanging-01.png": "5991a52689ec84c5402eed187515733d79f94ea202342b892c79c7bd6c5fdda2",
+    "hanging/hanging-02.png": "736172af82ecf7b2066ed441a423726573f9e12a55e4a97b0b8a6083682a9689",
+    "hanging/hanging-03.png": "576cbbf8cd9724b1d26bf5ad72d2f9ccbdef519b33dca4ce7f5918eec249681e",
+    "hanging/hanging-04.png": "c55eab08627b4ca72903d7410e52927bfebccfcd067c9878e226255d3a7bbf4b",
+    "hanging/hanging-05.png": "c8faa5e9b27bc57ae0a60ce4128ca34877d2d452d9b96b68cd1cb1d90f6b2fca"
   }
 }

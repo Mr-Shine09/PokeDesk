@@ -9,9 +9,9 @@
 | Project | Desktop Mascot for macOS |
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
-| Last updated | 2026-07-28 |
-| Status | Session closed after freezing atlas revision 2 and completing the verified native SwiftUI/AppKit scaffold |
-| Current gate | Manually verify the Dock-edge panel across displays, Dock orientations, focus, show/hide, and quit behavior for [issue #5](https://github.com/Mr-Shine09/desktop-mascot/issues/5) |
+| Last updated | 2026-07-29 |
+| Status | Revision 3 cursor-hanging animation is generated, validated, integrated, and build-verified in the 2x prototype |
+| Current gate | Owner-verify the physical cursor-hanging drag feel; then implement the local event bridge |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -53,6 +53,7 @@ The reference work is inspiration only. Do not copy Claude's mascot body, palett
 | Dock-edge behavior first | Lower interruption and accessibility risk than cursor-following. |
 | Cursor-following deferred and opt-in | It needs separate pointer-obstruction, speed, distance, and multi-display testing. |
 | 40x40-point on-screen footprint | Owner selected the apparent 40x40 size. On Retina this requires an 80x80-pixel `@2x` asset; 40 source pixels are insufficient for the selected tall design. |
+| Enlarged 80-point body presentation | On 2026-07-28 the owner asked twice for a larger mascot. Keep the frozen atlas unchanged but present its 48x56-point cell at 2x (`96x112` points), producing an apparent body footprint of about 80x80 points. |
 | Secondary chibi is the production direction | Owner explicitly rejected the final native tall treatment and ordered a fallback to the secondary chibi. No further tall-face repair is allowed for 0.1. |
 | No readable Chelsea crest or other logo | It will not survive at native size and creates unnecessary trademark/detail noise. Preserve navy/white color blocking instead. |
 | No briefcase in the base identity | Reserve props for unmistakable action states; keep the default silhouette clean. |
@@ -69,7 +70,7 @@ The reference work is inspiration only. Do not copy Claude's mascot body, palett
 | Waiting means asking for attention | The mascot stops its current pose, turns toward the user, and raises one hand until work resumes or ends. |
 | Success means delighted recognition | The mascot shows sparkling eyes and performs one quick fist pump, then returns to strolling or scheduled sleep. |
 | Manual ideating mode for ordinary chats | Version 0.1 uses a menu-bar action and optional global shortcut; automatic ordinary Claude/ChatGPT detection is deferred until a trustworthy, privacy-preserving signal exists. |
-| Passive click-through interaction | Normal mascot motion never captures clicks. An explicit menu-bar “Unlock position” mode temporarily permits dragging, then returns to click-through. |
+| Direct mascot interaction | The owner's later explicit request supersedes passive click-through: the mascot accepts clicks for Pause/Resume, Stop/Resume Roaming, Close, and Quit options, and accepts drag/drop at any time. The menu-bar escape hatch remains available. |
 | Previewed one-click hook installation | The app shows the exact Codex/Claude Code configuration change, backs up the affected file, installs only after confirmation, verifies it, and can remove only entries it owns. |
 
 Grill verdict on 2026-07-28: `ready with experiments`. The 0.1 contract is ready; automatic non-coding chat detection remains a future experiment and does not weaken the manual mode.
@@ -124,8 +125,8 @@ Remove garment texture, zipper detail below one pixel, belt detail, hand anatomy
 
 ### Technical sprite specification
 
-- On-screen footprint: initially `40x40` macOS points.
-- Retina production asset: `80x80` pixels at `@2x`, mapping one source pixel to one backing pixel on a 2x display.
+- On-screen footprint: `80x80` apparent body points inside a `96x112`-point panel, enlarged 2x from the frozen atlas cell after owner review.
+- Retina production body asset remains `80x80` pixels inside the frozen `96x112` atlas cell. The approved larger presentation uses nearest-neighbor 2x display scaling and does not modify atlas pixels.
 - Non-Retina behavior remains a required experiment: test a deliberately authored `40x40` `@1x` fallback versus a larger point footprint; never silently resample the Retina asset with smoothing.
 - The authoritative concept source is `art/references/owner-selected-fallback-chibi.png`.
 - The approved base is `mascot-base-chibi-40pt-at2x-80px-final.png`, an exact copy of the owner-selected secondary chibi reduction. All native tall variants are rejected and must not enter the atlas or app.
@@ -150,6 +151,7 @@ Remove garment texture, zipper detail below one pixel, belt detail, hand anatomy
 | Sleeping | Inactive during 23:00–06:00 local time | 6 | Sleep under a blanket with a looping `Z` trail; wake immediately for activity |
 | Paused | User disabled automatic behavior | 2 | Still pose |
 | Sit-shake right/left | Ambient idle at a Dock corner | 6 each | Sit on a compact Dock-edge ledge and casually swing one dangling leg |
+| Hanging | Direct mascot drag | 6 | One raised hand stays attached to the cursor while the body swings beneath it; no cliff or ledge |
 
 Detached effects should be sparse and bounded above the character. The approved effect vocabulary is the ideating cloud, offline/sleeping `Z` trails, waiting clock, success stars/sparkles, and failure bulb. All reuse the frozen palette, stay inside the cell guard, and must remain readable at native size without obscuring the face.
 
@@ -179,6 +181,7 @@ DesktopMascot/
 ├── App/
 │   ├── DesktopMascotApp.swift
 │   ├── AppDelegate.swift
+│   ├── AmbientAnimationController.swift
 │   ├── AppResources.swift
 │   ├── MascotPreviewView.swift
 │   └── MenuBarContent.swift
@@ -197,7 +200,7 @@ DesktopMascot/
 └── DesktopMascot.xcodeproj/
 ```
 
-XcodeGen owns the generated project. Event transport, the reducer, provider adapters, and the animation controller will extend the package boundaries in later phases.
+XcodeGen owns the generated project. The app layer now contains the first ambient animation controller; event transport, the deterministic reducer, and provider adapters will extend the package boundaries in later phases.
 
 ## Agent event contract
 
@@ -296,14 +299,15 @@ Rules:
 
 - SwiftUI menu-bar shell with an AppKit-managed borderless transparent `NSPanel`.
 - Non-activating panel with clear background and no shadow.
-- Click-through during normal operation. A menu-bar “Unlock position” command temporarily enables dragging and exposes a clear “Lock position” action; relock automatically after a short inactivity timeout.
+- The compact mascot panel accepts direct clicks and drag/drop. A click opens local Pause/Resume, Stop/Resume Roaming, Close Mascot, and Quit options. Dragging stops roaming at the dropped position; Resume Roaming returns it to the bottom lane.
 - Position from `NSScreen.visibleFrame` versus `frame` to infer Dock exclusion on each display.
 - Support bottom, left, and right Dock orientation, auto-hide, multiple displays, screen changes, Spaces, and scale-factor changes.
 - Use an independent safety lane immediately above or beside the Dock; never place the window over app-icon hit targets.
 - Dock auto-hide does not need to be disabled. When the Dock hides, the mascot remains a separate visible overlay at the screen edge unless testing shows that following the hidden Dock is less distracting.
-- Keep an initial 8-point safety gap from the Dock hit region and clamp the entire sprite to the visible frame.
+- Align the visible character baseline to the Dock boundary. The default 2x panel uses a 10-point transparent visual inset so only transparent cell padding overlaps the Dock exclusion; visible character pixels remain on the workspace side.
 - Reposition with bounded motion; never teleport across unrelated displays unless the user selects a display.
 - Menu-bar item remains the reliable pause/hide/quit control.
+- Reopening an already-running app restores a hidden mascot panel through `applicationShouldHandleReopen`; “Hide Mascot” and “Quit Dock Pet” remain intentionally distinct.
 
 No code should inject into `Dock.app`, use accessibility privileges merely to discover the Dock, or use private window-server APIs.
 
@@ -364,13 +368,13 @@ Acceptance: all artifacts exist, custom skills validate, repository URL resolves
 4. Approve one native grid, palette, identity hierarchy, and baseline.
 5. Write animation frame and atlas specification.
 
-Completed on 2026-07-28: the owner selected a 40-point footprint, rejected every native tall treatment, and explicitly ordered the secondary chibi fallback. `mascot-base-chibi-40pt-at2x-80px-final.png` is frozen as the base. The owner approved the complete 13-row revision 2 atlas, including the requested status effects and directional corner-sit clips. The geometry, row order, palette, timing, anchors, acceptance rules, and QA outputs are frozen in `art/animation/ATLAS.md` and `art/animation/atlas-contract.json`.
+Completed on 2026-07-28: the owner selected a 40-point footprint, rejected every native tall treatment, and explicitly ordered the secondary chibi fallback. `mascot-base-chibi-40pt-at2x-80px-final.png` is frozen as the base. The owner approved the 13-row revision 2 atlas, including the requested status effects and directional corner-sit clips. On 2026-07-29 the owner's explicit hanging request authorized revision 3, which adds one dedicated cursor-hanging row and top grip anchor. The current geometry, row order, palette, timing, anchors, acceptance rules, and QA outputs live in `art/animation/ATLAS.md` and `art/animation/atlas-contract.json`.
 
 Acceptance: owner selects one concept; chosen sprite is recognizable at 1x; palette and frame geometry are frozen for 0.1. Passed on 2026-07-28.
 
 ### Phase 2 — Native app skeleton (2026-07-31 to 2026-08-02)
 
-**Status: In progress; steps 1–5 implemented on 2026-07-28, manual behavior matrix pending.**
+**Status: In progress; steps 1–5 implemented, eight automated tests pass, and the live bottom-Dock/single-display pass is complete as of 2026-07-28. Remaining manual configurations are pending.**
 
 1. Create Xcode project and Swift package boundaries.
 2. Implement menu-bar lifecycle and settings model.
@@ -401,6 +405,8 @@ Acceptance: all reducer and transport tests pass; malformed data cannot change m
 Acceptance: both providers drive the state engine in fixture and live smoke tests; removing the integration leaves unrelated settings untouched.
 
 ### Phase 5 — Animation system and full sprite set (2026-08-06 to 2026-08-08)
+
+**Status: In progress; atlas playback and random ambient walk/offline phases were pulled forward at the owner's explicit request. Provider-driven transitions and Reduced Motion remain open.**
 
 1. Implement sprite atlas loader and animation controller.
 2. Create idle, walk, work, ideate, wait, success, failure, sleep, offline, and paused frames plus the thought-cloud effect layer.
@@ -438,13 +444,13 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | [#2 Reduce the source avatar into 32x32 and 40x40 concepts](https://github.com/Mr-Shine09/desktop-mascot/issues/2) | 1 | Closed as completed on 2026-07-28; secondary chibi frozen |
 | [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Owner-approved and frozen locally on 2026-07-28; GitHub status sync pending |
 | [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Implemented and build-verified locally; manual acceptance and GitHub status sync pending |
-| [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | In progress; implementation and geometry fixtures pass, manual display matrix pending |
+| [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | In progress; eight automated tests and live bottom-Dock/single-display/focus checks pass, but the remaining manual matrix is pending |
 | [#6 Implement the mascot state model and reducer](https://github.com/Mr-Shine09/desktop-mascot/issues/6) | 3 | Open |
 | [#7 Build the private local event bridge and helper CLI](https://github.com/Mr-Shine09/desktop-mascot/issues/7) | 3 | Open |
 | [#8 Add the Codex lifecycle-hook adapter](https://github.com/Mr-Shine09/desktop-mascot/issues/8) | 4 | Open |
 | [#9 Add the Claude Code lifecycle-hook adapter](https://github.com/Mr-Shine09/desktop-mascot/issues/9) | 4 | Open |
 | [#10 Build menu-bar settings and integration management](https://github.com/Mr-Shine09/desktop-mascot/issues/10) | 2 / 4 | Open |
-| [#11 Integrate animations, transitions, and Reduced Motion](https://github.com/Mr-Shine09/desktop-mascot/issues/11) | 5 | Open |
+| [#11 Integrate animations, transitions, and Reduced Motion](https://github.com/Mr-Shine09/desktop-mascot/issues/11) | 5 | In progress; cached frame playback and random bottom-lane walk/offline phases run locally; provider transitions and Reduced Motion remain open |
 | [#12 Verify privacy, accessibility, performance, and multi-display behavior](https://github.com/Mr-Shine09/desktop-mascot/issues/12) | 6 | Open |
 | [#13 Add CI, signing, notarization, packaging, and release docs](https://github.com/Mr-Shine09/desktop-mascot/issues/13) | 6 | Open |
 
@@ -463,9 +469,12 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Working, ideating, waiting rows | Contract frame counts, shared baseline, frozen palette, light/dark contact sheet, silhouettes, and motion previews | Passed deterministic, internal visual, and owner review on 2026-07-28 |
 | Effect-revised offline, waiting, success, failure, sleeping rows | Contract frame counts, requested effects, shared baseline, frozen palette, silhouettes, and motion previews | Passed deterministic, internal visual, and owner review on 2026-07-28 |
 | Dock-corner sit-shake rows | Six frames each direction, stable seat/torso, one swinging leg, mirrored temporal order | Passed deterministic, internal visual, and owner review on 2026-07-28 |
-| Retina atlas assembly | Exact 768x1456 grid, used/unused occupancy, palette, alpha, transparent RGB, and cell guards | Passed validator and owner review on 2026-07-28; revision 2 frozen |
-| Native app scaffold | Generated Xcode project, modular package, embedded atlas resources, static nearest-neighbor render, and startup smoke test | Passed 2026-07-28: five package tests, unsigned Debug `xcodebuild`, bundle-resource inspection, and three-second launch smoke test |
-| Window geometry | Automated fixtures plus manual multi-display matrix | Bottom/left/right/clamp fixtures pass; manual matrix pending |
+| Retina atlas assembly | Exact current grid, used/unused occupancy, palette, alpha, transparent RGB, and cell guards | Revision 3 `768x1568` candidate passes validator on 2026-07-29; owner drag QA pending |
+| Cursor-hanging row | Six frames, fixed top grip, frozen palette, binary alpha, no cliff/ledge, and cursor-attached drag geometry | Passed deterministic art validation, runtime pixel equality, drag geometry test, and Debug build on 2026-07-29; physical feel pending |
+| Native app scaffold | Generated Xcode project, modular package, embedded atlas resources, static nearest-neighbor render, and startup/reopen smoke tests | Passed initial scaffold on 2026-07-28; fresh Debug relaunch restored a visible `96x112` window on 2026-07-29 |
+| Window geometry | Automated fixtures plus manual multi-display matrix | Ten tests pass, including bottom/left/right/clamp, visibility, non-activating interaction, click routing, and drag begin/end routing; remaining display matrix pending |
+| Atlas runtime mapping | Every declared row crops to the matching frozen frame pixels | Passed 2026-07-29 for offline, idle, working, ideating, both walk directions, and both cliff-edge sit rows |
+| Ambient animation | Atlas timing, directional movement, alternating walk direction, random offline rests, and bounded bottom-lane motion | Corrected live samples show distinct right gait while x increases and left gait while x decreases; offline transition also visually verified |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
 | Provider adapters | Fixture tests and live smoke tests | Not started |
@@ -483,7 +492,11 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Ordinary Claude/ChatGPT conversations lack a documented external lifecycle signal | High | Manual ideating control in 0.1; automatic detection deferred; no content/accessibility/private-API scraping | Constrained for 0.1 |
 | “Completed” is mistaken for “successful” | Medium | Treat Codex Stop as completion reaction, not proof every command passed | Mitigated in design |
 | Hook installation damages user config | High | Preview, back up, tag ownership, mutation tests, remove only owned entries | Open |
-| Mascot blocks Dock or steals focus | High | Non-activating click-through panel, safe gap, menu-bar escape hatch | Implemented; manual focus and display QA pending |
+| Mascot blocks Dock or steals focus | High | Non-activating compact interactive panel, transparent Dock inset, and menu-bar escape hatch | Bottom-Dock live pass succeeds; manual direct-interaction and display QA pending |
+| Bottom-Dock lane visually covers lower-screen app controls | High | Use bounded bottom motion, stop roaming when manually dragged, and add pointer/control avoidance before release | Open; owner explicitly requested roaming, so pointer/control avoidance remains required hardening |
+| Ambient animation claims agent inactivity without a lifecycle signal | High | Label the current controller as ambient/no-signal behavior and replace it with reducer output after issues #6–#9 | Constrained; current diagnostics explicitly say no agent signal is connected |
+| Hidden mascot is mistaken for a quit app and will not reopen | Medium | Label the action “Hide Mascot,” retain a distinct Quit action, and restore the panel on application reopen events | Fixed 2026-07-29; owner retest pending |
+| Atlas rows render in reverse vertical order | High | Compare runtime crops pixel-for-pixel with frozen frame files across distant rows | Fixed 2026-07-29; regression test covers eight representative rows |
 | Multiple sessions thrash visible state | Medium | Per-session registry, priority reducer, debounce, bounded reactions | Open |
 | Cursor-following annoys or obstructs | Medium | Defer; require explicit opt-in and dedicated tests | Deferred |
 | Idle animation wastes battery | Medium | Event-driven updates, suspend timers, measurable energy budget | Open |
@@ -549,6 +562,19 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Treat the owner's “Ok good. Now let's continue” after reviewing all revision 2 previews as final approval. Freeze the 13-row `768x1456` atlas as the app-integration contract.
 - Use XcodeGen for a reproducible SwiftUI app shell backed by local `MascotCore`, `MascotAnimation`, and `MascotWindow` Swift package products.
 - Keep the first native checkpoint static: prove atlas decoding, nearest-neighbor frame extraction, transparent non-activating panel behavior, Dock geometry, and menu-bar recovery controls before adding timers or lifecycle signals.
+- Reposition relative to the panel's current display, falling back to the main display only when the panel has no screen.
+- Propagate timer-driven position relocking back to app state so the menu-bar lock indicator cannot remain stale.
+- Start bottom-Dock placement at the left third of the safe lane rather than the screen center, which commonly contains compose and approval controls.
+- Present the frozen atlas at 1.5x (`72x84` panel points) and align its visible baseline to the Dock with a 7.5-point transparent inset. This supersedes the original 48x56-point panel presentation without revising atlas art.
+- Supersede the 1.5x presentation with the owner's later request for a 2x `96x112`-point panel and 10-point transparent Dock inset; the frozen atlas pixels remain unchanged.
+- Supersede passive click-through and temporary unlock with direct click options and always-available drag/drop. Dragging stops roaming at the dropped position; Resume Roaming restores the bottom lane.
+- Pull the first issue #11 slice forward: cache offline/walk/paused/ideating frames, alternate random 7–13-second walks with 2.5–5-second offline rests, reverse at lane bounds, and move at 20 Hz on backing-pixel-aligned coordinates.
+- Until issues #6–#9 land, do not claim ambient roaming means ChatGPT or Claude is truly inactive. The controller has no provider signal and must yield to the future deterministic reducer.
+- Distinguish Hide from Quit in the direct mascot menu. Handle a LaunchServices reopen event by restoring the existing panel and animation rather than leaving a hidden accessory process with no visible window.
+- Treat atlas JSON row indices as top-origin coordinates when cropping the CGImage. The earlier bottom-origin conversion inverted all runtime states and is prohibited by pixel-equality tests.
+- Alternate walk direction after each offline rest instead of repeatedly selecting direction from the mascot's current half of the screen; reverse immediately at lane bounds.
+- During active drag, play the approved directional `sit-shake` cliff-edge/dangling-leg row. On drop, stop roaming and retain the manual position until Resume Roaming.
+- Supersede the temporary sit-shake drag treatment with atlas revision 3: use one dedicated six-frame `hanging` row, fix its raised-hand grip to atlas coordinate `(48, 4)`, map that to AppKit panel point `(48, 108)`, and draw no cliff, ledge, rope, or cursor.
 
 ## Session log
 
@@ -923,15 +949,136 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: no implementation blocker. The unpushed local commits must be preserved; manual multi-display, Dock-orientation, auto-hide, focus, show/hide, and quit validation remains incomplete.
 - Next: start from issue #5 and execute the manual window matrix before implementing state-driven animation playback.
 
+### 2026-07-28 — Issue #5 live bottom-Dock validation
+
+- Objective: resume from the static scaffold checkpoint and execute the available portion of the manual Dock-edge window matrix before animation work.
+- Completed:
+  - Re-ran the package suite and unsigned Debug Xcode build with the real macOS toolchain.
+  - Launched the app on the single built-in `1280x832`-point Retina display with a bottom Dock and inspected the full desktop, native `48x56` panel, and Dock-adjacent crop.
+  - Confirmed background launch leaves ChatGPT/Codex frontmost, the sprite renders sharply at native size, the panel is transparent, and its frame remains above the Dock hit region.
+  - Fixed “Reposition on Current Display” to prefer the panel's actual screen instead of always selecting `NSScreen.main`.
+  - Fixed the 15-second automatic position relock so it updates the observable menu state and diagnostics as well as the panel flags.
+  - Moved the static bottom-Dock start from screen center to the left third of the safe lane after native QA showed the center overlapping Codex's approval bar.
+  - Enlarged the panel and nearest-neighbor sprite presentation from `48x56` to `72x84` points at the owner's request.
+  - Replaced the visible eight-point gap with a 7.5-point transparent-edge inset, placing the character baseline directly on the Dock boundary while keeping opaque pixels outside Dock hit targets.
+  - Added AppKit regression coverage for panel visibility, non-key/non-main, click-through defaults, temporary interaction unlock, timer-driven relock, and relock state reporting.
+- Decisions: keep issue #5 open and do not start state-driven animation. Use the left third as the safer static bottom-Dock start; require a separate pointer/control-avoidance decision before issue #11 enables full-width strolling.
+- Verification:
+  - `swift test` passes eight tests.
+  - `xcodebuild -project DesktopMascot.xcodeproj -scheme DesktopMascot -configuration Debug -derivedDataPath .build/xcode-derived CODE_SIGNING_ALLOWED=NO -quiet build` exits successfully.
+  - AppKit reported one `1280x832`-point screen, a `1280x736` visible frame beginning at `y=66`, and `2.0` backing scale; window inspection reported a `48x56` Dock Pet panel.
+  - A background `open -g` relaunch left `ChatGPT` frontmost. Final window inspection reported `72x84+390+690`; native visual QA showed the foot baseline on the Dock top edge and the larger sprite clear of Dock icons.
+- Risks or blockers: the current environment has one display and a bottom Dock, so left/right Dock and multi-display behavior cannot be honestly marked manually verified. Menu automation is blocked because `osascript` lacks Accessibility permission. Full-width strolling will later need pointer/control avoidance rather than assuming every point in the lane is visually safe.
+- Next: ask the owner to exercise show/hide, drag/relock, quit, left/right Dock, auto-hide, and any available multi-display cases before closing issue #5.
+
+### 2026-07-28 — Interactive roaming prototype
+
+- Objective: respond to owner QA by enlarging the mascot again, adding visible motion and random offline rests, keeping it at the bottom across app/tab changes, and making the mascot directly clickable and draggable.
+- Completed:
+  - Enlarged the presentation from `72x84` to `96x112` points, giving the frozen 80-pixel body an apparent 80-point footprint without modifying atlas pixels.
+  - Updated the transparent Dock inset from 7.5 to 10 points so the larger sprite baseline remains aligned with the Dock boundary.
+  - Added `AmbientAnimationController.swift`, which caches atlas frames, honors row timings, walks left/right along bounded bottom-lane coordinates, reverses at screen bounds, and enters random offline rest phases.
+  - Added menu-bar roaming control. Manual ideating and pause remain authoritative over ambient playback.
+  - Made the non-activating panel directly interactive. A click opens Pause/Resume, Stop/Resume Roaming, Close Mascot, and Quit options; right-click opens the same options.
+  - Added always-available drag/drop. Completing a drag stops roaming and keeps the manual position; Resume Roaming repositions to and restarts the bottom lane.
+  - Regenerated the Xcode project so the new app source is reproducibly included.
+- Decisions: the owner's explicit interaction request supersedes the earlier passive click-through/temporary-unlock contract. Pull only ambient atlas playback forward from issue #11; do not fabricate working/waiting state detection before the event bridge and adapters exist.
+- Verification:
+  - `swift test` passes eight tests, including non-activating interactive-panel invariants, panel visibility, direct-click event routing, bottom/left/right visual alignment, and clamping.
+  - `xcodegen generate` succeeds.
+  - The unsigned Debug `xcodebuild` succeeds with `CODE_SIGNING_ALLOWED=NO`.
+  - Live inspection reported a `96x112` panel aligned at `y=664`; successive samples moved from `x=419` to `x=485` in two seconds.
+  - Native visual inspection observed both directional walking and the random offline rest/effect state at the bottom edge.
+- Risks or blockers: direct click-menu and physical drag feel still require owner hands-on QA because external UI automation lacks Accessibility permission. Current roaming is ambient/no-signal behavior and will continue even during real provider work until issues #6–#9 connect lifecycle events. Pointer/control avoidance and Reduced Motion remain open.
+- Next: owner-test click options and drag/drop. Then implement the local event decoder, reducer, and bridge so authoritative working/waiting/completion signals replace ambient behavior when available.
+
+### 2026-07-29 — Hidden-app reopen repair
+
+- Objective: reproduce and fix the report that Dock Pet would not reopen after the owner believed it had quit.
+- Completed:
+  - Found the original Dock Pet process still alive for more than eleven hours with no visible mascot window; opening the bundle therefore targeted the hidden process instead of starting a new one.
+  - Added `applicationShouldHandleReopen` to restore the panel and resume its animation timer whenever LaunchServices reopens the existing accessory app.
+  - Renamed the direct action from “Close Mascot” to “Hide Mascot” so it cannot be confused with the separate “Quit Dock Pet” action.
+  - Rebuilt, terminated the stale hidden process, and launched the corrected build.
+- Decisions: Hide keeps the menu-bar app running and must be reversible by reopening the bundle or choosing Show Mascot. Quit terminates the process and a later launch starts a fresh instance.
+- Verification:
+  - Unsigned Debug `xcodebuild` succeeds.
+  - The stale process was replaced by a fresh process and window inspection reported a visible `96x112` Dock Pet panel.
+  - The public `NSRunningApplication.hide()` API cannot hide this accessory app externally (`false`), so the exact Hide-menu-to-reopen path still requires owner hands-on confirmation.
+- Risks or blockers: external UI automation still lacks Accessibility permission, preventing an automated click of Hide Mascot. Owner retest is required, but the missing reopen lifecycle handler that caused the failure is now implemented.
+- Next: owner selects Hide Mascot, then reopens the app bundle and confirms the panel returns; separately verify Quit Dock Pet removes the process and a fresh launch returns it.
+
+### 2026-07-29 — Directional playback and drag-cliff repair
+
+- Objective: fix the owner's report that the mascot appeared left-facing, showed no walking gait, and lacked a hanging/cliff motion during drag.
+- Completed:
+  - Diagnosed a vertical atlas-cropping inversion: runtime `offline` displayed `sit-shake-left`, `walk-right` displayed `ideating`, and `walk-left` displayed `working`, causing seated sprites to slide instead of walk.
+  - Corrected `SpriteAtlas` to treat contract row indices as top-origin coordinates.
+  - Added a pixel-equality regression test comparing runtime crops with the frozen files for eight representative rows.
+  - Changed ambient direction selection to alternate after each offline rest and still reverse at lane bounds, rather than repeating one direction until crossing the screen midpoint.
+  - Reduced walking speed from 34 to 24 points per second so contact/passing gait frames remain visible instead of reading as sliding.
+  - Added drag-begin and drag-end callbacks. Active dragging now plays the appropriate approved `sit-shake-left/right` ledge animation as the requested cliff-edge/dangling motion; dropping stops roaming at the manual position.
+  - Changed drag tracking to use each mouse event's window coordinate converted to screen space and added synthetic drag lifecycle coverage.
+- Decisions: reuse the owner-approved directional ledge/leg-shake rows for drag hanging rather than revise the frozen atlas. No image generation or atlas revision is required.
+- Verification:
+  - `swift test` passes ten tests without warnings.
+  - `python3 tools/validate_animation_atlas.py --atlas art/animation/mascot-atlas@2x.png` passes; atlas pixels remain unchanged.
+  - Three successive corrected native captures show distinct right-facing contact, passing, and stride frames.
+  - Correlated live samples show x increasing with `walk-right` pixels and, after the next rest, x decreasing with `walk-left` pixels.
+  - The unsigned Debug Xcode build succeeds.
+- Risks or blockers: the drag lifecycle and hanging-row selection are automated, but the owner's physical drag feel still requires hands-on QA. The sit-shake row reads as seated/dangling at a ledge; if the owner wants a two-handed suspended hang instead, that requires an explicit revision 3 art change.
+- Next: owner verifies both walk directions, visible gait, and cliff-edge drag motion in the relaunched app.
+
+### 2026-07-29 — Interactive prototype session closure
+
+- Objective: reconcile the completed prototype changes, verification evidence, and exact restart point, then end the session without beginning the agent bridge.
+- Completed:
+  - Confirmed the current ledger records the 2x presentation, bottom alignment, ambient walk/offline controller, direct click menu, drag/drop, hide/reopen repair, atlas-row correction, alternating direction, and drag-cliff behavior.
+  - Confirmed the final corrected Dock Pet process is running from the Debug bundle with a visible `96x112` panel.
+  - Reconciled the verification matrix, risk register, decision log, dated session history, and next-session handoff.
+- Decisions: close this implementation session at the owner-QA gate. Do not begin the local event bridge or revise atlas art implicitly.
+- Verification: ten Swift package tests pass without warnings; the unsigned Debug Xcode build succeeds; atlas revision 2 validates; `git diff --check` passes.
+- Risks or blockers: changes remain uncommitted in a worktree where `main` is five commits ahead of `origin/main`. Owner hands-on QA and provider lifecycle integration remain open.
+- Next: resume with owner feedback on gait, drag-cliff feel, and hide/reopen. If accepted, implement issues #6 and #7 before provider adapters.
+
+### 2026-07-29 — Dedicated cursor-hanging animation
+
+- Objective: replace the temporary seated cliff-edge drag pose with a new one-handed hanging animation that visibly attaches to the cursor without a cliff.
+- Completed:
+  - Generated a six-frame horizontal pixel-art source strip using the frozen chibi identity and the supplied pose reference; promoted it to `art/animation/sources/hanging-row.png`.
+  - Added deterministic top-grip normalization, a fixed `(48, 4)` hanging anchor, validator coverage, six production cells, QA sheets, a motion GIF, and atlas revision 3 at `768x1568`.
+  - Integrated the `hanging` state into the frame cache and drag lifecycle.
+  - Changed panel drag geometry so the raised-hand grip at AppKit panel point `(48, 108)` remains under the cursor throughout dragging.
+  - Extended runtime pixel-equality and drag-geometry tests and rebuilt the app with the revision 3 atlas and contract embedded.
+- Decisions: hanging is a separate interaction-only state; the approved Dock-corner sit-shake rows remain available for ambient behavior and are no longer reused during drag.
+- Verification: hanging frame-row validation passes; the complete atlas validates; full light/dark and silhouette QA regenerated; all ten Swift package tests pass; unsigned Debug Xcode build succeeds; bundled atlas hash matches the workspace atlas; `git diff --check` passes.
+- Risks or blockers: physical drag feel and the perceived snap from the clicked body point to the raised-hand cursor anchor require owner hands-on QA.
+- Next: owner tests dragging from several mascot body points and confirms the swing timing and cursor attachment feel.
+
+### 2026-07-29 — Claude Code maintainer handoff
+
+- Objective: transfer the complete project context, assets, operating procedures, and next-work sequence to Mr. C (Claude Code) so development can continue without reconstructing prior decisions.
+- Completed:
+  - Added root `CLAUDE.md` with mandatory session startup, project invariants, safety boundaries, and current priorities.
+  - Added `docs/HANDOFF.md`, `docs/DEVELOPMENT.md`, `docs/ARCHITECTURE.md`, `docs/ASSET_PIPELINE.md`, and `docs/QA_CHECKLIST.md`, plus a documentation index.
+  - Documented the uncommitted worktree, five unpushed local commits, implemented prototype behavior, asset ownership, revision 3 geometry, reproducible commands, planned event architecture, known risks, and ordered first-hour/next-milestone actions.
+- Decisions: keep `DesktopMascot.md` authoritative for evolving status and history; use focused documents as operational guides; make `CLAUDE.md` the automatic Claude Code entry point.
+- Verification: documentation paths and referenced repository files were checked against the current tree; commands reflect the passing 2026-07-29 package/atlas/build baseline; `git diff --check` is required before closure.
+- Risks or blockers: documentation cannot replace owner hands-on QA or preserve the external original owner-source path on another machine. In-repository promoted production assets remain sufficient for continued atlas work.
+- Next: Mr. C reads `CLAUDE.md` and `docs/HANDOFF.md`, preserves the dirty worktree, runs the baseline, records hanging QA, then starts the event decoder/reducer milestone.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
-3. Treat atlas revision 2 as owner-approved and frozen. Do not change its rows, geometry, or effects without a recorded revision 3 decision.
+3. Treat atlas revision 3 as the current candidate: 14 rows, `768x1568`, with the new six-frame `hanging` row at index 13 and a `(48, 4)` top grip anchor.
 4. Preserve the local `main` commits, including native scaffold commit `609f151`; they have not been pushed to `origin/main`.
-5. Continue issue #5 with the manual Dock orientation, multi-display, auto-hide, focus, show/hide, and quit matrix; the code and automated geometry fixtures already pass.
-6. Only after that matrix passes, add the animation controller and state-driven row playback without changing the frozen atlas.
-7. Update this ledger before ending the next session.
+5. Treat the current presentation as `96x112` points with a 10-point transparent Dock inset. The frozen atlas itself remains unchanged.
+6. Ask the owner to test dragging from several body points and verify that the raised hand remains under the cursor while the body swings left/center/right; also retain the broader click, reopen, relaunch, and display-matrix QA.
+7. Preserve the honest capability boundary: ambient random walking/offline playback is implemented, but it does not yet know whether ChatGPT or Claude is working. Continue issues #6 and #7, then adapters #8 and #9, before mapping real activity to working/waiting/success/failure.
+8. Do not mistake direct `open` activation for automatic panel focus theft; the verified background launch (`open -g`) left ChatGPT/Codex frontmost. Do not use `open -j`, which intentionally hides the app.
+9. Update this ledger before ending the next session.
+10. Use `CLAUDE.md` and `docs/HANDOFF.md` as the maintainer onboarding entry points; keep them synchronized when architecture, commands, or asset contracts materially change.
 
 ## Documentation sources
 

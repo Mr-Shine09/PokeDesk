@@ -1,4 +1,5 @@
 import AppKit
+import MascotWindow
 import SwiftUI
 
 @MainActor
@@ -19,7 +20,10 @@ struct MascotPreviewView: View {
                 Color.clear
             }
         }
-        .frame(width: 48, height: 56)
+        .frame(
+            width: MascotPanel.defaultContentSize.width,
+            height: MascotPanel.defaultContentSize.height
+        )
         .background(Color.clear)
         .accessibilityHidden(true)
     }

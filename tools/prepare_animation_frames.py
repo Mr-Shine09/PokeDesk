@@ -150,6 +150,7 @@ def process_strip(
     tolerance: int,
     bounds_mode: str,
     minimum_component_ratio: float,
+    anchor_mode: str,
 ) -> None:
     source = Image.open(strip_path).convert("RGB")
     slot_width = source.width / frame_count
@@ -173,7 +174,7 @@ def process_strip(
     left, top, right, bottom = contract["bounds"][bounds_key]
     maximum_width = right - left + 1
     baseline_y = contract["anchor"]["baseline_y"]
-    maximum_height = min(bottom, baseline_y) - top + 1
+    maximum_height = (bottom - top + 1) if anchor_mode == "hanging" else min(bottom, baseline_y) - top + 1
     scale = min(
         maximum_width / max(image.width for image in extracted),
         maximum_height / max(image.height for image in extracted),
@@ -193,8 +194,22 @@ def process_strip(
         )
         quantized = quantize_to_palette(resized, palette)
         cell = Image.new("RGBA", cell_size, (0, 0, 0, 0))
-        x = round(anchor_x - quantized.width / 2)
-        y = baseline_y - quantized.height + 1
+        if anchor_mode == "hanging":
+            grip_anchor = contract["hanging_anchor"]
+            alpha = quantized.getchannel("A")
+            top_band_height = max(1, round(quantized.height * 0.18))
+            top_bounds = alpha.crop((0, 0, quantized.width, top_band_height)).getbbox()
+            if top_bounds is None:
+                raise ValueError(f"{state} frame {index} has no visible overhead grip")
+            top_row_x = [candidate_x for candidate_x in range(quantized.width) if alpha.getpixel((candidate_x, 0))]
+            if not top_row_x:
+                raise ValueError(f"{state} frame {index} has no visible pixel on its grip row")
+            grip_x = top_row_x[len(top_row_x) // 2]
+            x = round(grip_anchor["x"] - grip_x)
+            y = grip_anchor["grip_y"]
+        else:
+            x = round(anchor_x - quantized.width / 2)
+            y = baseline_y - quantized.height + 1
         cell.alpha_composite(quantized, (x, y))
         cell.save(destination / f"{state}-{index:02d}.png")
 
@@ -206,6 +221,7 @@ def process_strip(
         "shared_scale": scale,
         "bounds_mode": bounds_mode,
         "minimum_component_ratio": minimum_component_ratio,
+        "anchor_mode": anchor_mode,
         "output_root": str(destination.resolve()),
     }
     (destination / "normalization.json").write_text(json.dumps(report, indent=2) + "\n")
@@ -222,6 +238,7 @@ def main() -> int:
     parser.add_argument("--key-tolerance", type=int, default=48)
     parser.add_argument("--bounds-mode", choices=("normal", "guard"), default="normal")
     parser.add_argument("--minimum-component-ratio", type=float, default=0.005)
+    parser.add_argument("--anchor-mode", choices=("grounded", "hanging"), default="grounded")
     args = parser.parse_args()
 
     contract_path = args.contract.resolve()
@@ -248,6 +265,7 @@ def main() -> int:
         args.key_tolerance,
         args.bounds_mode,
         args.minimum_component_ratio,
+        args.anchor_mode,
     )
     print(f"wrote {args.frames} normalized {args.state} frames")
     return 0

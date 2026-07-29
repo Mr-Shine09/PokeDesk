@@ -15,6 +15,7 @@ let package = Package(
         .target(name: "MascotAnimation", dependencies: ["MascotCore"]),
         .target(name: "MascotWindow", dependencies: ["MascotCore"]),
         .testTarget(name: "MascotCoreTests", dependencies: ["MascotCore"]),
+        .testTarget(name: "MascotAnimationTests", dependencies: ["MascotAnimation"]),
         .testTarget(name: "MascotWindowTests", dependencies: ["MascotWindow"]),
     ]
 )

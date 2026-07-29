@@ -22,4 +22,5 @@ public enum AmbientAnimation: String, CaseIterable, Codable, Sendable {
     case walkLeft = "walk-left"
     case sitShakeRight = "sit-shake-right"
     case sitShakeLeft = "sit-shake-left"
+    case hanging
 }

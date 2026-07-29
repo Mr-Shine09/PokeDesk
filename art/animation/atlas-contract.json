@@ -10,8 +10,8 @@
   "scale": 2,
   "atlas": {
     "columns": 8,
-    "rows": 13,
-    "pixel_size": [768, 1456],
+    "rows": 14,
+    "pixel_size": [768, 1568],
     "cell_pixel_size": [96, 112],
     "cell_point_size": [48, 56]
   },
@@ -19,6 +19,11 @@
     "coordinate_origin": "top-left",
     "x": 48,
     "baseline_y": 102
+  },
+  "hanging_anchor": {
+    "coordinate_origin": "top-left",
+    "x": 48,
+    "grip_y": 4
   },
   "bounds": {
     "opaque_guard_inclusive": [4, 4, 91, 107],
@@ -56,6 +61,7 @@
     {"index": 9, "state": "walk-right", "frames": 6, "playback": "loop", "durations_ms": [140, 120, 140, 120, 140, 120]},
     {"index": 10, "state": "walk-left", "frames": 6, "playback": "loop", "durations_ms": [140, 120, 140, 120, 140, 120]},
     {"index": 11, "state": "sit-shake-right", "frames": 6, "playback": "loop", "durations_ms": [220, 180, 220, 180, 220, 360]},
-    {"index": 12, "state": "sit-shake-left", "frames": 6, "playback": "loop", "durations_ms": [220, 180, 220, 180, 220, 360]}
+    {"index": 12, "state": "sit-shake-left", "frames": 6, "playback": "loop", "durations_ms": [220, 180, 220, 180, 220, 360]},
+    {"index": 13, "state": "hanging", "frames": 6, "playback": "loop", "durations_ms": [160, 160, 220, 160, 160, 220]}
   ]
 }

@@ -1,6 +1,6 @@
 # Animation production status
 
-The revision 2 atlas contract is defined in `ATLAS.md` and `atlas-contract.json`.
+The revision 3 atlas contract is defined in `ATLAS.md` and `atlas-contract.json`.
 
 ## Approved rows
 
@@ -13,7 +13,7 @@ The revision 2 atlas contract is defined in `ATLAS.md` and `atlas-contract.json`
 
 These six rows passed deterministic checks, internal visual QA, and owner review on 2026-07-28.
 
-## Approved revision 2
+## Revision 3 candidate
 
 - `frames/offline/` — four bowed-pose frames with a rising/disappearing `Z` trail.
 - `frames/sleeping/` — six blanket-breathing frames with a rising/fading `Z` trail.
@@ -22,7 +22,8 @@ These six rows passed deterministic checks, internal visual QA, and owner review
 - `frames/failure/` — the confused/dizzy reaction with a cracked light bulb above the head.
 - `frames/paused/` — two deterministic approved-idle frame reuses ending in a static hold.
 - `frames/sit-shake-right/` and `frames/sit-shake-left/` — two six-frame directional Dock-corner ambient clips with one dangling leg swinging.
-- `mascot-atlas@2x.png` — complete structurally validated `768x1456` revision 2 candidate atlas.
+- `frames/hanging/` — six cursor-hanging frames with a fixed raised-hand grip and a left/center/right pendulum swing, with no cliff or ledge.
+- `mascot-atlas@2x.png` — complete structurally validated `768x1568` revision 3 candidate atlas.
 - `qa/contact-sheet-backing-1x-{light,dark}.png` and `qa/contact-sheet-inspection-8x-{light,dark}.png` — full contract review sheets.
 - `qa/silhouette-sheet-candidate.png` and `qa/previews/` — full silhouette and contract-timed motion review.
 
@@ -43,5 +44,5 @@ python3 tools/validate_animation_atlas.py --contract-only
 python3 tools/validate_animation_atlas.py --atlas art/animation/mascot-atlas@2x.png
 python3 tools/validate_animation_atlas.py \
   --frames-root art/animation/frames \
-  --states offline idle working ideating waiting success failure sleeping paused walk-right walk-left sit-shake-right sit-shake-left
+  --states offline idle working ideating waiting success failure sleeping paused walk-right walk-left sit-shake-right sit-shake-left hanging
 ```

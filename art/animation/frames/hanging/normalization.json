@@ -1,0 +1,48 @@
+{
+  "state": "hanging",
+  "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/hanging-row.png",
+  "frames": 6,
+  "source_slot_bounds": [
+    [
+      115,
+      159,
+      247,
+      517
+    ],
+    [
+      109,
+      161,
+      262,
+      520
+    ],
+    [
+      81,
+      161,
+      264,
+      521
+    ],
+    [
+      76,
+      161,
+      209,
+      519
+    ],
+    [
+      69,
+      161,
+      227,
+      520
+    ],
+    [
+      62,
+      161,
+      244,
+      522
+    ]
+  ],
+  "shared_scale": 0.2880886426592798,
+  "bounds_mode": "guard",
+  "minimum_component_ratio": 0.005,
+  "anchor_mode": "hanging",
+  "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/hanging"
+}

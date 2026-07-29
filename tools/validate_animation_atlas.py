@@ -154,6 +154,7 @@ def validate_frame_rows(frames_root: Path, states: list[str], contract: dict, er
         "offline", "idle", "working", "ideating", "waiting", "success", "failure",
         "sleeping", "paused", "walk-right", "walk-left", "sit-shake-right", "sit-shake-left",
     }
+    hanging_anchor = contract.get("hanging_anchor", {})
     for state in states:
         spec = specs.get(state)
         if spec is None:
@@ -186,6 +187,13 @@ def validate_frame_rows(frames_root: Path, states: list[str], contract: dict, er
                 fail(f"{state} frame {index} crosses the opaque guard: {bounds}", errors)
             if state in grounded_states and cell_bottom - 1 != baseline_y:
                 fail(f"{state} frame {index} misses baseline y={baseline_y}: {bounds}", errors)
+            if state == "hanging":
+                grip_y = hanging_anchor.get("grip_y")
+                grip_x = hanging_anchor.get("x")
+                if cell_top != grip_y:
+                    fail(f"hanging frame {index} misses grip y={grip_y}: {bounds}", errors)
+                if not isinstance(grip_x, int) or image.getpixel((grip_x, grip_y))[3] == 0:
+                    fail(f"hanging frame {index} misses cursor grip x={grip_x}, y={grip_y}", errors)
 
 
 def main() -> int:

@@ -1,17 +1,18 @@
 # Desktop Mascot animation atlas contract
 
-Status: revision 2 frozen with owner approval on 2026-07-28. This is the app-integration contract.
+Status: revision 3 adds the owner-requested cursor-hanging drag row on 2026-07-29. This is the app-integration contract.
 
 The machine-readable source of truth is [`atlas-contract.json`](atlas-contract.json). If this document and the JSON disagree, stop and reconcile them before producing or loading art.
 
 ## Geometry
 
-- Production atlas: `mascot-atlas@2x.png`, RGBA PNG, `768x1456` pixels.
-- Grid: 8 columns by 13 rows, row-major, with no gutters or margins.
+- Production atlas: `mascot-atlas@2x.png`, RGBA PNG, `768x1568` pixels.
+- Grid: 8 columns by 14 rows, row-major, with no gutters or margins.
 - Cell: `96x112` backing pixels (`48x56` macOS points on a 2x display).
 - Character footprint: the approved `80x80`-pixel body canvas remains `40x40` points. The larger cell reserves room for poses and the approved ideating effect; it does not enlarge the mascot.
 - Cell coordinates use a top-left origin. Pixel ranges are inclusive unless stated otherwise.
 - Shared anchor: `(48, 102)` in cell coordinates. This is the horizontal character center and ground baseline.
+- Hanging grip anchor: `(48, 4)` in cell coordinates. Hanging frames keep an opaque raised-hand pixel at this fixed point; the app maps it to panel point `(48, 108)` in AppKit's bottom-left coordinate system so it remains under the cursor.
 - Frozen-base placement: place the approved `80x80` base canvas at `(8, 25)`. Its current opaque foot pixels then end on baseline `y=102`.
 - Normal grounded poses keep the lowest supporting foot, chair, computer, or blanket pixel on `y=102`. Airborne decorative pixels may not redefine the baseline.
 - All opaque pixels stay within the four-pixel cell guard: `x=4...91`, `y=4...107`. Nothing may touch or cross a cell edge.
@@ -40,6 +41,7 @@ Unused cells after a row's final frame are fully transparent with zero RGB. Dura
 | 10 | `walk-left` | 6 | loop | `140, 120, 140, 120, 140, 120` | Left-facing equivalent. A mirror is allowed only if glasses, hair, clothing, light direction, and temporal frame order remain correct. |
 | 11 | `sit-shake-right` | 6 | loop | `220, 180, 220, 180, 220, 360` | Ambient right-facing corner pose: sit on a compact Dock-edge ledge and casually swing one dangling lower leg while the torso and ledge stay stable. |
 | 12 | `sit-shake-left` | 6 | loop | `220, 180, 220, 180, 220, 360` | Mirrored left-facing corner pose with temporal order preserved. |
+| 13 | `hanging` | 6 | loop | `160, 160, 220, 160, 160, 220` | One raised hand grips the cursor anchor while the body, free arm, and legs swing left through center to right; no ledge, rope, cursor art, or ground contact. |
 
 `hold` is not a millisecond value: the controller displays that frame until the visible state changes. `intro-hold` and `once-hold` play frames `0...n-1` exactly once; neither restarts while the state remains unchanged.
 
@@ -70,6 +72,7 @@ Each frame must pass in isolation and in motion:
 7. Working, ideating, waiting, success, failure, sleeping, and offline remain visually distinct; only the approved `Z` trails may use letterforms.
 8. First frames of `idle`, `sleeping`, `waiting`, and `paused` are acceptable static Reduced Motion substitutions. Reduced Motion never scales or rapidly flashes the panel.
 9. `sit-shake-right` and `sit-shake-left` keep the seat, hip, torso, head, and supporting leg stable; only the dangling lower leg swings.
+10. `hanging` keeps an opaque hand pixel fixed at `(48, 4)` while the body swings beneath it; neither foot touches the ground and no cliff, ledge, rope, or cursor is drawn.
 
 Repair the smallest failing scope: one frame, then one row, and only then a broader redraw. Identity drift is a blocker even if automated checks pass.
 
@@ -93,5 +96,6 @@ The dedicated `@1x` asset remains an explicit experiment. It must be authored an
 3. Produce `working`, `ideating`, and `waiting`.
 4. Produce `success`, `failure`, `sleeping`, `offline`, and `paused`.
 5. Apply the owner-directed effect revision and add the two corner-sit leg-shake ambient clips.
-6. Assemble the atlas deterministically, run `tools/validate_animation_atlas.py`, render contact sheets and previews, and repair only failing rows.
-7. Obtain owner review before app integration. Do not close issue #3 merely because the atlas is structurally valid.
+6. Add the revision 3 cursor-hanging row with its separate top grip anchor.
+7. Assemble the atlas deterministically, run `tools/validate_animation_atlas.py`, render contact sheets and previews, and repair only failing rows.
+8. Obtain owner review before closing issue #3 merely because the atlas is structurally valid.
