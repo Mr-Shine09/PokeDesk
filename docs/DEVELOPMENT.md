@@ -44,7 +44,7 @@ SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/mac-dock-pet-swiftpm-cache \
 swift test
 ```
 
-Expected handoff baseline: 10 Swift Testing tests pass. A higher count is fine; a lower count requires investigation.
+Expected handoff baseline: 70 Swift Testing tests pass as of 2026-07-29. A higher count is fine; a lower count requires investigation.
 
 ## Generate the Xcode project
 

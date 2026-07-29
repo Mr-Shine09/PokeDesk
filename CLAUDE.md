@@ -26,7 +26,7 @@ Welcome, Mr. C. This file is the mandatory entry point for work on Dock Pet.
 ## Current priority
 
 1. Obtain/record owner hands-on QA for cursor hanging and the remaining window matrix.
-2. Implement the versioned local event model, decoder, session registry, deterministic reducer, and transport.
+2. The versioned event model, strict decoder, session registry, and deterministic reducer are implemented and tested. Remaining: the same-user local socket transport and helper (#7), then wiring `MascotVisibleState` into animation selection.
 3. Add privacy-preserving Claude Code and Codex hook adapters only after the core event path is tested.
 
 Detailed procedures:

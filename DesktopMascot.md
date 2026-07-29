@@ -445,7 +445,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | [#3 Specify and produce the animation-ready sprite atlas](https://github.com/Mr-Shine09/desktop-mascot/issues/3) | 1 / 5 | Owner-approved and frozen locally on 2026-07-28; GitHub status sync pending |
 | [#4 Scaffold the native SwiftUI/AppKit macOS app](https://github.com/Mr-Shine09/desktop-mascot/issues/4) | 2 | Implemented and build-verified locally; manual acceptance and GitHub status sync pending |
 | [#5 Implement the transparent Dock-edge mascot window](https://github.com/Mr-Shine09/desktop-mascot/issues/5) | 2 | In progress; eight automated tests and live bottom-Dock/single-display/focus checks pass, but the remaining manual matrix is pending |
-| [#6 Implement the mascot state model and reducer](https://github.com/Mr-Shine09/desktop-mascot/issues/6) | 3 | Open |
+| [#6 Implement the mascot state model and reducer](https://github.com/Mr-Shine09/desktop-mascot/issues/6) | 3 | In progress; envelope, decoder, session registry, and reducer are implemented and tested locally on 2026-07-29. App wiring is deliberately deferred until transport #7 exists; GitHub status sync pending |
 | [#7 Build the private local event bridge and helper CLI](https://github.com/Mr-Shine09/desktop-mascot/issues/7) | 3 | Open |
 | [#8 Add the Codex lifecycle-hook adapter](https://github.com/Mr-Shine09/desktop-mascot/issues/8) | 4 | Open |
 | [#9 Add the Claude Code lifecycle-hook adapter](https://github.com/Mr-Shine09/desktop-mascot/issues/9) | 4 | Open |
@@ -476,7 +476,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Atlas runtime mapping | Every declared row crops to the matching frozen frame pixels | Passed 2026-07-29 for offline, idle, working, ideating, both walk directions, and both cliff-edge sit rows |
 | Ambient animation | Atlas timing, directional movement, alternating walk direction, random offline rests, and bounded bottom-lane motion | Corrected live samples show distinct right gait while x increases and left gait while x decreases; offline transition also visually verified |
 | Event envelope and decoder | Version/provider/event allowlists, opaque session-ID validation, payload ceiling, RFC 3339 parsing, injected-clock skew bounds | Passed 2026-07-29: 21 decoder fixtures inside a 31-test package suite |
-| State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started; registry and reducer are the next milestone |
+| State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Passed 2026-07-29: 39 registry/reducer fixtures inside a 70-test package suite, covering the full documented priority order, duplicate idempotence, stale-event rejection, heartbeat expiry boundaries, bounded reaction boundaries, stopped grace, capacity eviction, wake reconciliation, sleep-window hours, and concurrent providers. Two mutation checks confirmed the heartbeat-refresh-only and stale-ordering guards are genuinely enforced. Not yet wired to the app |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Partially passed 2026-07-29 at the decoder boundary: forbidden keys are discarded, the envelope exposes only six allowlisted fields, and no error carries payload text. Storage and diagnostics remain unverified because neither exists yet |
 | Provider adapters | Fixture tests and live smoke tests | Not started |
 | Accessibility | Reduce Motion, pause, VoiceOver/menu-bar review | Not started |
@@ -498,7 +498,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Ambient animation claims agent inactivity without a lifecycle signal | High | Label the current controller as ambient/no-signal behavior and replace it with reducer output after issues #6–#9 | Constrained; current diagnostics explicitly say no agent signal is connected |
 | Hidden mascot is mistaken for a quit app and will not reopen | Medium | Label the action “Hide Mascot,” retain a distinct Quit action, and restore the panel on application reopen events | Fixed 2026-07-29; owner retest pending |
 | Atlas rows render in reverse vertical order | High | Compare runtime crops pixel-for-pixel with frozen frame files across distant rows | Fixed 2026-07-29; regression test covers eight representative rows |
-| Multiple sessions thrash visible state | Medium | Per-session registry, priority reducer, debounce, bounded reactions | Open |
+| Multiple sessions thrash visible state | Medium | Per-session registry, priority reducer, debounce, bounded reactions | Registry, priority reducer, and bounded reactions implemented and tested 2026-07-29. Debounce at the animation boundary remains open and belongs with the app wiring |
 | Cursor-following annoys or obstructs | Medium | Defer; require explicit opt-in and dedicated tests | Deferred |
 | Idle animation wastes battery | Medium | Event-driven updates, suspend timers, measurable energy budget | Open |
 | Generated state frames drift from the frozen identity | High | Ground every job in the frozen base, normalize deterministically, reject drift, and use native pixel editing only with explicit owner approval | Revision 2 owner-approved and frozen |
@@ -506,7 +506,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Personal likeness ships before review | Medium | Private repository until owner changes visibility | Mitigated for foundation |
 | Roaming on a left or right Dock walks across mid-screen | High | `panelOrigin` centers the panel vertically for side Docks while `horizontalMovementBounds` still sweeps the full `visibleFrame` width, so the mascot would walk horizontally through the middle of the screen over app windows | Open; found 2026-07-29 during maintainer onboarding. Needs an owner decision before the side-Dock matrix can pass |
 | Hide/Show discards a manually dragged position | Medium | `WindowCoordinator.setVisible(true)` repositions unconditionally, so Hide→Show and app reopen snap the mascot back to the Dock lane while roaming stays off, stranding it where the user did not put it | Open; found 2026-07-29 during maintainer onboarding |
-| `MascotCore` state vocabulary is unused by the running app | Medium | `AmbientAnimationController` drives animation with raw atlas row strings; `MascotState`/`AmbientAnimation` are exercised only by tests. The reducer must become the single typed source of visible state instead of growing beside the string-keyed controller | Open; the registry/reducer milestone is the intended fix |
+| `MascotCore` state vocabulary is unused by the running app | Medium | `AmbientAnimationController` drives animation with raw atlas row strings; `MascotState`/`AmbientAnimation` are exercised only by tests. The reducer must become the single typed source of visible state instead of growing beside the string-keyed controller | Still open, and now larger: `MascotStateReducer` emits typed `MascotVisibleState` but nothing consumes it. Wiring was deliberately deferred because with no transport the reducer would report `offline` forever and would regress the owner-approved ambient roaming. Close this together with #7 |
 | Atlas revision is tracked only in prose | Low | `atlas-contract.json` carries `schema_version` but no revision field, so no tool can assert which revision is loaded. Geometry itself validates and matches documented revision 3 | Open; low impact while one contract ships |
 
 ## Decision log
@@ -586,6 +586,16 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Never copy payload text into an error value. `unknownProvider` and `unknownEvent` report kind only, because the offending string is untrusted input that may contain private content.
 - Inject `now` into every decode rather than reading the clock inside the decoder, so skew, ordering, and expiry behavior stay deterministic under test.
 - Keep unknown top-level JSON keys silently dropped by the fixed `Decodable` payload shape rather than rejected. This satisfies the "forbidden fields are discarded" rule without making provider hook evolution brittle.
+- Separate the two clocks explicitly. Wall-clock `occurredAt` orders events *within* one session; a monotonic `Uptime` drives heartbeat expiry and reaction windows. Laptop sleep, a time-zone change, or an NTP correction must not retire a live session or freeze a reaction on screen.
+- Key sessions by provider *and* opaque ID. Per-provider IDs share no namespace, so two providers may legitimately emit the same string.
+- Let only state-asserting events (`started`, `active`, `waiting`, `completed`, `failed`) create a session. `heartbeat` and `stopped` refer to a session rather than assert one, so they cannot conjure a session the registry never saw start.
+- Treat `heartbeat` as refresh-only. It means "work continues", never "work began", so it must not promote an idle session to working — otherwise a `PostToolUse` hook alone could claim work that no prompt started.
+- Accept an event whose `occurredAt` equals the session's newest accepted timestamp, and reject only strictly older ones. Same-second sequences are ordinary, and a redelivered identical event is idempotent because it recomputes the same state.
+- Never let a bounded reaction be cut short by either the heartbeat timeout or the stopped grace period. A session with a live reaction is retained regardless, which is what makes "returns to sleep after the completion reaction" hold.
+- Exclude `stopped` sessions from presence. The grace period exists so a finished turn's reaction can play, not to hold the mascot in strolling after the agent is gone.
+- Cap the registry at 64 sessions and evict the least recently seen. A looping or hostile helper must not grow local state without bound.
+- Treat the sleep window as `[23:00, 06:00)` in the Mac's current local time zone, so 06:00 is already awake.
+- Surface only the providers responsible for the chosen state, and surface none for manual ideating, which has no originating session.
 
 ## Session log
 
@@ -1112,17 +1122,36 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: three owner decisions remain open and are the gate on the next milestone — the physical cursor-hanging drag verdict, side-Dock roaming behavior, and whether Hide/Show should preserve a manually dragged position. None of these can be answered by automation; external UI automation still lacks Accessibility permission.
 - Next: collect the three owner answers, then implement `SessionRegistry` with heartbeat expiry on an injected monotonic clock, followed by `MascotStateReducer` using the documented priority order. Do not start provider adapters #8 and #9 before those pass.
 
+### 2026-07-29 — Session registry and deterministic reducer
+
+- Objective: advance issue #6 by implementing the smallest gate that does not require an owner answer — per-session state with heartbeat expiry, then the documented priority reducer — without touching transport, provider adapters, the atlas, or `project.yml`.
+- Completed:
+  - Re-ran the documented read-only baseline and reproduced it exactly: contract and full atlas validate, 31 package tests pass, worktree clean at `0ba5a85`.
+  - Added `MascotCore/SessionRegistry.swift`: monotonic `Uptime`, `SessionActivity`, `SessionReaction`, provider-scoped `SessionKey`, privacy-bounded `AgentSession`, `SessionRegistryLimits` (120 s heartbeat, 5 s stopped grace, 3 s success, 4 s failure, 64-session cap), `IngestOutcome`, and a value-type registry with `ingest`, `sessions(at:)`, `session(for:at:)`, and `reconcile(at:)`.
+  - Added `MascotCore/MascotStateReducer.swift`: `ManualOverrides`, `SleepWindow`, `MascotVisibleState`, and a reducer implementing `paused > failure-recent > waiting > working > ideating > success-recent > scheduled-sleep > idle/strolling > offline` with an injected calendar and both clocks passed in separately.
+  - Added 39 fixtures across two test files covering event-to-activity mapping, duplicate idempotence, stale-event rejection, equal-timestamp arrival order, cross-provider ID collision, deterministic snapshot order, waiting persistence, heartbeat expiry boundaries at 120 s, stopped grace, reaction survival past both deadlines, capacity eviction, wake reconciliation, every priority rung, reaction boundaries at 3 s and 4 s, sleep-window hours 22:59/23:00/00:30/05:59/06:00, sleep interruption, post-reaction return to sleep, and concurrent-provider collapse.
+  - Recorded ten new decision-log entries covering the two-clock split, session keying, which events may create a session, heartbeat-as-refresh, equal-timestamp acceptance, reaction survival, stopped-session presence, the registry cap, the half-open sleep window, and provider surfacing.
+- Decisions: see those ten entries. Deliberately **not** done — no transport, no provider adapter, and no app wiring. Wiring the reducer into `AmbientAnimationController` now would replace owner-approved ambient roaming with a permanent `offline` state, because nothing produces events yet. That step belongs with issue #7.
+- Verification:
+  - `swift test` passes **70 tests** with no warnings, up from 31.
+  - Two deliberate mutations were introduced and reverted to prove the fixtures have teeth: promoting `heartbeat` to `working` failed 2 tests, and disabling the stale-ordering guard failed `reorderedOlderEventsDoNotOverwriteNewerState` on all 3 of its expectations.
+  - `python3 tools/validate_animation_atlas.py --contract-only` and `--atlas art/animation/mascot-atlas@2x.png` pass.
+  - The unsigned Debug `xcodebuild` succeeds; bundled atlas hash still `9475bf6d…` and `cmp` reports the bundled contract byte-identical.
+  - `git diff --check` passes. The four new files are untracked and nothing existing was modified except this ledger.
+- Risks or blockers: the same three owner decisions are still open and still gate the window work — the physical cursor-hanging drag verdict, side-Dock roaming behavior, and whether Hide/Show preserves a manually dragged position. The typed-vocabulary risk grew rather than shrank, because the reducer now exists but nothing consumes it.
+- Next: implement the same-user local Unix-domain socket transport and helper CLI (#7) on top of `EventDecoder`, then wire `MascotVisibleState` into animation selection with debounce, preserving manual pause and ideating. Do not start adapters #8 and #9 first.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
 3. Treat atlas revision 3 as the current candidate: 14 rows, `768x1568`, with the new six-frame `hanging` row at index 13 and a `(48, 4)` top grip anchor.
-4. Preserve the local `main` commits, including native scaffold commit `609f151` and revision 3 checkpoint `46bd324`; `main` is six commits ahead of `origin/main` and has not been pushed.
+4. `main` was published to `origin/main` at the owner's direction and is level with it as of `0ba5a85`. The registry/reducer work and this ledger update are **uncommitted**: four untracked files under `Packages/DesktopMascotKit/`. Preserve them.
 5. Treat the current presentation as `96x112` points with a 10-point transparent Dock inset. The frozen atlas itself remains unchanged.
 6. Ask the owner to test dragging from several body points and verify that the raised hand remains under the cursor while the body swings left/center/right; also retain the broader click, reopen, relaunch, and display-matrix QA.
-7. Preserve the honest capability boundary: ambient random walking/offline playback is implemented, but it does not yet know whether ChatGPT or Claude is working. The event envelope and decoder now exist, but nothing produces or consumes events yet. Continue issue #6 with the session registry and reducer, then #7 transport, then adapters #8 and #9, before mapping real activity to working/waiting/success/failure.
-8. Treat `EventEnvelope` as the privacy boundary and `EventDecoder` as fail-closed. Do not widen the envelope, relax the `SessionID` charset, or copy payload text into an error without a recorded product decision.
-9. Resolve the four onboarding discrepancies in the risk register. Side-Dock roaming and the Hide/Show position reset need owner decisions; the unused `MascotCore` vocabulary should be fixed by the reducer rather than worked around.
+7. Preserve the honest capability boundary: ambient random walking/offline playback is implemented, but it does not yet know whether ChatGPT or Claude is working. The envelope, decoder, session registry, and reducer now all exist and are tested, but **nothing produces or consumes events yet**. The next step is #7 transport, then wiring the reducer to animation selection, then adapters #8 and #9. Do not describe the reducer as making the mascot reflect real agent activity until the transport lands.
+8. Treat `EventEnvelope` as the privacy boundary and `EventDecoder` as fail-closed. Do not widen the envelope, relax the `SessionID` charset, or copy payload text into an error without a recorded product decision. `AgentSession` extends the same boundary and must gain no new field either. Keep the two clocks separate as well: wall-clock `occurredAt` orders events inside one session, monotonic `Uptime` drives expiry and reactions, and both stay caller-injected so fixtures remain deterministic.
+9. Resolve the four onboarding discrepancies in the risk register. Side-Dock roaming and the Hide/Show position reset still need owner decisions. The unused-vocabulary risk is now the reducer-wiring task: `MascotVisibleState` must become the single typed source of visible state, replacing the raw atlas row strings in `AmbientAnimationController` — not growing beside them.
 10. Do not mistake direct `open` activation for automatic panel focus theft; the verified background launch (`open -g`) left ChatGPT/Codex frontmost. Do not use `open -j`, which intentionally hides the app.
 11. Update this ledger before ending the next session.
 12. Use `CLAUDE.md` and `docs/HANDOFF.md` as the maintainer onboarding entry points; keep them synchronized when architecture, commands, or asset contracts materially change.

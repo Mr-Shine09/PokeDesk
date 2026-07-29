@@ -18,7 +18,7 @@ Claude Code hooks ─┘                                      |
                                               animation + window controller
 ```
 
-The event bridge, registry, reducer, and provider adapters are planned but not yet implemented. The running prototype currently alternates ambient walking and offline animations without knowing whether an agent is active.
+The decoder, registry, and reducer are implemented and unit-tested. The transport and the provider adapters are not, and nothing in the running app consumes reducer output yet, so the prototype still alternates ambient walking and offline animations without knowing whether an agent is active.
 
 ## Current working state
 
@@ -30,7 +30,8 @@ The event bridge, registry, reducer, and provider adapters are planned but not y
 - Reopening an already-running hidden app restores the mascot panel.
 - Manual Ideating, Pause, Show/Hide, Roaming, Reposition, diagnostics, and Quit controls exist in the menu bar.
 - Atlas revision 3 contains 14 rows and validates structurally.
-- Ten Swift package tests pass and an unsigned Debug Xcode build succeeds.
+- Seventy Swift package tests pass and an unsigned Debug Xcode build succeeds.
+- The local event path exists as tested logic only: `EventEnvelope`, `EventDecoder`, `SessionRegistry`, and `MascotStateReducer`. No transport produces events and no controller consumes reducer output yet.
 
 ## Repository warning
 
@@ -57,14 +58,15 @@ Run `git status --short --branch` and preserve every current modification/untrac
 | Product history and gates | `DesktopMascot.md` | Authoritative living ledger |
 | Xcode project definition | `project.yml` | Source of truth; Xcode project is generated |
 | App lifecycle/UI | `DesktopMascot/App/` | Prototype implemented |
-| State vocabulary | `Packages/DesktopMascotKit/Sources/MascotCore/` | Enum exists; reducer not implemented |
+| State vocabulary | `Packages/DesktopMascotKit/Sources/MascotCore/` | Enum, envelope, decoder, registry, and reducer implemented and tested; not yet wired to the app |
 | Atlas loading | `Packages/DesktopMascotKit/Sources/MascotAnimation/` | Implemented and tested |
 | Panel/Dock geometry | `Packages/DesktopMascotKit/Sources/MascotWindow/` | Implemented; manual matrix incomplete |
 | Frozen base art | `art/production/` | Do not replace |
 | Atlas contract and output | `art/animation/` | Revision 3 candidate |
 | Deterministic art tooling | `tools/` | Implemented and reusable |
 | Provider lifecycle adapters | not yet created | Planned issues #8 and #9 |
-| Local event transport/reducer | not yet created | Next engineering milestone |
+| Local event reducer | `Packages/DesktopMascotKit/Sources/MascotCore/` | Registry and priority reducer implemented 2026-07-29 |
+| Local event transport | not yet created | Next engineering milestone (issue #7) |
 
 ## Product truths that must survive the handoff
 
@@ -83,15 +85,15 @@ paused > failure-recent > waiting > working > ideating > success-recent > schedu
 
 ## Immediate next milestone
 
-Build the core event system before provider-specific installers:
+Build the core event system before provider-specific installers. Steps 1–6 are complete as of 2026-07-29:
 
-1. Define a versioned event envelope and strict decoder.
-2. Reject oversized, malformed, reordered, future-skewed, and unknown events.
-3. Store only provider, opaque session ID, event type, timestamp, and allowlisted coarse detail.
-4. Implement per-session registry state and heartbeat expiry (initially 120 seconds).
-5. Implement the reducer priority and recent success/failure windows.
-6. Add deterministic clock injection and comprehensive unit fixtures.
-7. Add a same-user local Unix-domain socket and small helper only after decoder/reducer tests pass.
+1. ~~Define a versioned event envelope and strict decoder.~~
+2. ~~Reject oversized, malformed, reordered, future-skewed, and unknown events.~~
+3. ~~Store only provider, opaque session ID, event type, timestamp, and allowlisted coarse detail.~~
+4. ~~Implement per-session registry state and heartbeat expiry (initially 120 seconds).~~
+5. ~~Implement the reducer priority and recent success/failure windows.~~
+6. ~~Add deterministic clock injection and comprehensive unit fixtures.~~
+7. Add a same-user local Unix-domain socket and small helper. Decoder and reducer tests now pass, so this is unblocked.
 8. Connect reducer output to animation selection, preserving manual pause/ideating behavior.
 
 Acceptance criteria are in the Phase 3 section of `DesktopMascot.md`.
