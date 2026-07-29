@@ -34,12 +34,9 @@ The event bridge, registry, reducer, and provider adapters are planned but not y
 
 ## Repository warning
 
-At handoff time:
+At the original handoff, `main` was five commits ahead of `origin/main` with the interactive animation/window work and revision 3 hanging assets uncommitted.
 
-- branch: `main`
-- relationship: `main` is five commits ahead of `origin/main`
-- latest local commit: `bb52a0f` (`Close native scaffold session`)
-- the interactive animation/window work and revision 3 hanging assets are uncommitted
+As of the 2026-07-29 maintainer session that work is committed (`46bd324`), the event decoder was added (`39074b2`), and `main` was published to `origin/main` at the owner's explicit direction. The repository remains private.
 
 Run `git status --short --branch` and preserve every current modification/untracked file. Do not reset, clean, checkout over, or regenerate blindly. Make a deliberate checkpoint commit before risky refactors, but do not publish or change repository visibility without the owner’s approval.
 

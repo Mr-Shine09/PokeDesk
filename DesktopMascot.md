@@ -1100,6 +1100,18 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: the cursor-hanging drag feel is still unverified by the owner and remains the stated gate; the side-Dock roaming lane and the Hide/Show position reset both need an owner decision; `main` is now six commits ahead of `origin/main` and still unpushed.
 - Next: obtain the owner's hanging-drag verdict and the two behavior decisions, then implement `SessionRegistry` with heartbeat expiry on an injected monotonic clock, followed by `MascotStateReducer` with the documented priority order.
 
+### 2026-07-29 — Maintainer session closure and first publish
+
+- Objective: close the maintainer onboarding session, reconcile the ledger with the repository, and publish the accumulated local history at the owner's explicit direction.
+- Completed:
+  - Confirmed the ledger, risk register, verification matrix, decision log, and handoff match the code and the recorded evidence.
+  - Published `main` to `origin/main` on the owner's explicit instruction. This is the first push since `26d7988`; it moves seven commits, including the previously unpushed art, scaffold, revision 3, and event-decoder work.
+  - Left repository visibility unchanged. `Mr-Shine09/desktop-mascot` remains private.
+- Decisions: end the session at the owner-QA gate. No session registry, reducer, transport, or provider adapter was started, and the atlas remains untouched.
+- Verification: 31 Swift package tests pass with no warnings; atlas contract and full atlas validate; the unsigned Debug build succeeds; the bundled atlas hash and contract match the workspace; `git diff --check` passes; the worktree is clean at closure.
+- Risks or blockers: three owner decisions remain open and are the gate on the next milestone — the physical cursor-hanging drag verdict, side-Dock roaming behavior, and whether Hide/Show should preserve a manually dragged position. None of these can be answered by automation; external UI automation still lacks Accessibility permission.
+- Next: collect the three owner answers, then implement `SessionRegistry` with heartbeat expiry on an injected monotonic clock, followed by `MascotStateReducer` using the documented priority order. Do not start provider adapters #8 and #9 before those pass.
+
 ## Next-session handoff
 
 1. Read this file in full.
