@@ -10,7 +10,7 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-28 |
-| Status | Atlas revision 2 is owner-approved and frozen; the native SwiftUI/AppKit skeleton builds and launches |
+| Status | Session closed after freezing atlas revision 2 and completing the verified native SwiftUI/AppKit scaffold |
 | Current gate | Manually verify the Dock-edge panel across displays, Dock orientations, focus, show/hide, and quit behavior for [issue #5](https://github.com/Mr-Shine09/desktop-mascot/issues/5) |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
@@ -911,13 +911,27 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: manual focus, show/hide/quit, Dock orientation, auto-hide, and multi-display behavior still require visual QA. Release signing and notarization remain Phase 6 work.
 - Next: complete the issue #5 manual window matrix, then add the animation controller and state-driven row playback without changing the frozen atlas.
 
+### 2026-07-28 — Native scaffold session closure
+
+- Objective: reconcile the repository and ledger, preserve the verified scaffold checkpoint, and end the session with an exact restart point.
+- Completed:
+  - Confirmed the atlas approval, implemented package layout, Phase 2 progress, issue map, verification matrix, risks, and handoff all match the repository evidence.
+  - Confirmed the native scaffold is committed at `609f151` (`Scaffold native macOS mascot app`).
+  - Left the manual issue #5 display and focus matrix as the next bounded milestone; no animation-controller or provider-integration work was started implicitly.
+- Decisions: end this session at the static native checkpoint. Keep revision 2 frozen and do not expand scope during the next manual window-validation pass.
+- Verification: `git status --short --branch` was clean before this ledger-only closure update; `main` was four commits ahead of `origin/main`, with `609f151` at `HEAD`. The earlier five Swift package tests, unsigned Debug Xcode build, embedded-resource inspection, atlas validation, and startup smoke test remain the acceptance evidence for the checkpoint.
+- Risks or blockers: no implementation blocker. The unpushed local commits must be preserved; manual multi-display, Dock-orientation, auto-hide, focus, show/hide, and quit validation remains incomplete.
+- Next: start from issue #5 and execute the manual window matrix before implementing state-driven animation playback.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
 3. Treat atlas revision 2 as owner-approved and frozen. Do not change its rows, geometry, or effects without a recorded revision 3 decision.
-4. Continue issue #5 with the manual Dock orientation, multi-display, focus, show/hide, and quit matrix; the code and automated geometry fixtures already pass.
-5. Update this ledger before ending the session.
+4. Preserve the local `main` commits, including native scaffold commit `609f151`; they have not been pushed to `origin/main`.
+5. Continue issue #5 with the manual Dock orientation, multi-display, auto-hide, focus, show/hide, and quit matrix; the code and automated geometry fixtures already pass.
+6. Only after that matrix passes, add the animation controller and state-driven row playback without changing the frozen atlas.
+7. Update this ledger before ending the next session.
 
 ## Documentation sources
 
