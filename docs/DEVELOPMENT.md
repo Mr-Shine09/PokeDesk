@@ -14,7 +14,8 @@ No runtime network dependency is intended.
 
 ```text
 DesktopMascot/App/                  SwiftUI app shell and ambient controller
-Packages/DesktopMascotKit/         Swift package: core, animation, and window modules
+Packages/DesktopMascotKit/         Swift package: core, animation, window, and transport modules
+                                   plus the dockpet-event helper executable
 art/production/                    frozen base mascot
 art/animation/                     contract, sources, frames, atlas, and QA output
 tools/                             deterministic art build/validation scripts
@@ -44,7 +45,21 @@ SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/mac-dock-pet-swiftpm-cache \
 swift test
 ```
 
-Expected handoff baseline: 70 Swift Testing tests pass as of 2026-07-29. A higher count is fine; a lower count requires investigation.
+Expected handoff baseline: 113 Swift Testing tests pass as of 2026-07-29. A higher count is fine; a lower count requires investigation.
+
+## Exercise the event helper
+
+`dockpet-event` sends one lifecycle event to a running Dock Pet over the current
+user's private socket. It is not yet bundled into the app, so build and run it
+from the package:
+
+```bash
+swift run dockpet-event --provider claude-code --event active --session demo --verbose
+```
+
+It exits 0 when nothing is listening, which is the normal case while the app does
+not yet run the server. `--verbose` sends one line to stderr; without it the
+helper is silent so a provider hook is never disturbed. Usage errors exit 64.
 
 ## Generate the Xcode project
 

@@ -18,7 +18,7 @@ Claude Code hooks ─┘                                      |
                                               animation + window controller
 ```
 
-The decoder, registry, and reducer are implemented and unit-tested. The transport and the provider adapters are not, and nothing in the running app consumes reducer output yet, so the prototype still alternates ambient walking and offline animations without knowing whether an agent is active.
+Everything from the decoder through the transport and helper is implemented and tested, but nothing in the running app listens on the socket or consumes reducer output, and the provider adapters do not exist. The prototype therefore still alternates ambient walking and offline animations without knowing whether an agent is active.
 
 ## Current working state
 
@@ -30,8 +30,8 @@ The decoder, registry, and reducer are implemented and unit-tested. The transpor
 - Reopening an already-running hidden app restores the mascot panel.
 - Manual Ideating, Pause, Show/Hide, Roaming, Reposition, diagnostics, and Quit controls exist in the menu bar.
 - Atlas revision 3 contains 14 rows and validates structurally.
-- Seventy Swift package tests pass and an unsigned Debug Xcode build succeeds.
-- The local event path exists as tested logic only: `EventEnvelope`, `EventDecoder`, `SessionRegistry`, and `MascotStateReducer`. No transport produces events and no controller consumes reducer output yet.
+- 113 Swift package tests pass and an unsigned Debug Xcode build succeeds.
+- The local event path exists but the app does not run it: `EventEnvelope`, `EventDecoder`, `SessionRegistry`, `MascotStateReducer`, `MascotTransport`, and the `dockpet-event` helper are all implemented and tested, and the helper delivers events cross-process to a listener on the real socket path. The app itself neither listens nor consumes reducer output, and no provider hook can reach the helper yet.
 
 ## Repository warning
 
@@ -66,7 +66,8 @@ Run `git status --short --branch` and preserve every current modification/untrac
 | Deterministic art tooling | `tools/` | Implemented and reusable |
 | Provider lifecycle adapters | not yet created | Planned issues #8 and #9 |
 | Local event reducer | `Packages/DesktopMascotKit/Sources/MascotCore/` | Registry and priority reducer implemented 2026-07-29 |
-| Local event transport | not yet created | Next engineering milestone (issue #7) |
+| Local event transport | `Packages/DesktopMascotKit/Sources/MascotTransport/` | Socket server, client, framing, and helper implemented 2026-07-29; app wiring is the next milestone |
+| Event helper CLI | `Packages/DesktopMascotKit/Sources/dockpet-event/` | Works cross-process; not bundled into the app and not installed for any hook |
 
 ## Product truths that must survive the handoff
 
@@ -93,8 +94,8 @@ Build the core event system before provider-specific installers. Steps 1–6 are
 4. ~~Implement per-session registry state and heartbeat expiry (initially 120 seconds).~~
 5. ~~Implement the reducer priority and recent success/failure windows.~~
 6. ~~Add deterministic clock injection and comprehensive unit fixtures.~~
-7. Add a same-user local Unix-domain socket and small helper. Decoder and reducer tests now pass, so this is unblocked.
-8. Connect reducer output to animation selection, preserving manual pause/ideating behavior.
+7. ~~Add a same-user local Unix-domain socket and small helper.~~
+8. Run the server inside the app, feed the registry and reducer, and surface the result in menu-bar diagnostics before changing any animation. Then connect reducer output to animation selection, preserving manual pause/ideating behavior and keeping ambient roaming as the no-signal default.
 
 Acceptance criteria are in the Phase 3 section of `DesktopMascot.md`.
 
