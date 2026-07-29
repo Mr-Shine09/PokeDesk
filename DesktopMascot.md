@@ -10,8 +10,8 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-29 |
-| Status | Revision 3 cursor-hanging animation is generated, validated, integrated, and build-verified in the 2x prototype |
-| Current gate | Owner-verify the physical cursor-hanging drag feel; then implement the local event bridge |
+| Status | Revision 3 cursor-hanging animation is integrated and build-verified; the strict local event envelope and decoder are implemented and fixture-tested |
+| Current gate | Owner-verify the physical cursor-hanging drag feel; then implement the session registry and deterministic reducer |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -475,8 +475,9 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Window geometry | Automated fixtures plus manual multi-display matrix | Ten tests pass, including bottom/left/right/clamp, visibility, non-activating interaction, click routing, and drag begin/end routing; remaining display matrix pending |
 | Atlas runtime mapping | Every declared row crops to the matching frozen frame pixels | Passed 2026-07-29 for offline, idle, working, ideating, both walk directions, and both cliff-edge sit rows |
 | Ambient animation | Atlas timing, directional movement, alternating walk direction, random offline rests, and bounded bottom-lane motion | Corrected live samples show distinct right gait while x increases and left gait while x decreases; offline transition also visually verified |
-| State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started |
-| Privacy | Forbidden fields absent from storage and diagnostic output | Not started |
+| Event envelope and decoder | Version/provider/event allowlists, opaque session-ID validation, payload ceiling, RFC 3339 parsing, injected-clock skew bounds | Passed 2026-07-29: 21 decoder fixtures inside a 31-test package suite |
+| State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Not started; registry and reducer are the next milestone |
+| Privacy | Forbidden fields absent from storage and diagnostic output | Partially passed 2026-07-29 at the decoder boundary: forbidden keys are discarded, the envelope exposes only six allowlisted fields, and no error carries payload text. Storage and diagnostics remain unverified because neither exists yet |
 | Provider adapters | Fixture tests and live smoke tests | Not started |
 | Accessibility | Reduce Motion, pause, VoiceOver/menu-bar review | Not started |
 | Energy | CPU, memory, leak, and latency targets | Not started |
@@ -503,6 +504,10 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Generated state frames drift from the frozen identity | High | Ground every job in the frozen base, normalize deterministically, reject drift, and use native pixel editing only with explicit owner approval | Revision 2 owner-approved and frozen |
 | Detached status effects crowd the face or become noisy | Medium | Reserve the upper guard area, reuse the frozen palette, keep effects compact, and review at native size on light/dark backgrounds | Revision 2 owner-approved and frozen |
 | Personal likeness ships before review | Medium | Private repository until owner changes visibility | Mitigated for foundation |
+| Roaming on a left or right Dock walks across mid-screen | High | `panelOrigin` centers the panel vertically for side Docks while `horizontalMovementBounds` still sweeps the full `visibleFrame` width, so the mascot would walk horizontally through the middle of the screen over app windows | Open; found 2026-07-29 during maintainer onboarding. Needs an owner decision before the side-Dock matrix can pass |
+| Hide/Show discards a manually dragged position | Medium | `WindowCoordinator.setVisible(true)` repositions unconditionally, so Hide→Show and app reopen snap the mascot back to the Dock lane while roaming stays off, stranding it where the user did not put it | Open; found 2026-07-29 during maintainer onboarding |
+| `MascotCore` state vocabulary is unused by the running app | Medium | `AmbientAnimationController` drives animation with raw atlas row strings; `MascotState`/`AmbientAnimation` are exercised only by tests. The reducer must become the single typed source of visible state instead of growing beside the string-keyed controller | Open; the registry/reducer milestone is the intended fix |
+| Atlas revision is tracked only in prose | Low | `atlas-contract.json` carries `schema_version` but no revision field, so no tool can assert which revision is loaded. Geometry itself validates and matches documented revision 3 | Open; low impact while one contract ships |
 
 ## Decision log
 
@@ -575,6 +580,12 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Alternate walk direction after each offline rest instead of repeatedly selecting direction from the mascot's current half of the screen; reverse immediately at lane bounds.
 - During active drag, play the approved directional `sit-shake` cliff-edge/dangling-leg row. On drop, stop roaming and retain the manual position until Resume Roaming.
 - Supersede the temporary sit-shake drag treatment with atlas revision 3: use one dedicated six-frame `hanging` row, fix its raised-hand grip to atlas coordinate `(48, 4)`, map that to AppKit panel point `(48, 108)`, and draw no cliff, ledge, rope, or cursor.
+- Make `EventEnvelope` itself the privacy boundary. It declares exactly six fields and has no storage for prompt text, transcripts, code, tool arguments or output, paths, repository names, usernames, or tokens, so retaining forbidden content requires an explicit product decision rather than an implementation slip.
+- Model the session identifier as a validated `SessionID` restricted to `[A-Za-z0-9._-]` and 128 characters. The excluded characters are exactly those needed to express a path, URL, or prose, so an opaque ID cannot structurally smuggle private content.
+- Fail closed on an unknown `version`, `provider`, or `event`, but discard an unknown `detail` instead of rejecting the event. `detail` only refines a reaction, so new provider vocabulary must not invalidate the `event` that actually drives state.
+- Never copy payload text into an error value. `unknownProvider` and `unknownEvent` report kind only, because the offending string is untrusted input that may contain private content.
+- Inject `now` into every decode rather than reading the clock inside the decoder, so skew, ordering, and expiry behavior stay deterministic under test.
+- Keep unknown top-level JSON keys silently dropped by the fixed `Decodable` payload shape rather than rejected. This satisfies the "forbidden fields are discarded" rule without making provider hook evolution brittle.
 
 ## Session log
 
@@ -1067,18 +1078,42 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: documentation cannot replace owner hands-on QA or preserve the external original owner-source path on another machine. In-repository promoted production assets remain sufficient for continued atlas work.
 - Next: Mr. C reads `CLAUDE.md` and `docs/HANDOFF.md`, preserves the dirty worktree, runs the baseline, records hanging QA, then starts the event decoder/reducer milestone.
 
+### 2026-07-29 — Maintainer onboarding and local event decoder
+
+- Objective: take over the project as Mr. C, verify the documented baseline against the real repository, preserve the uncommitted prototype work, and implement the smallest useful slice of the Phase 3 event system without touching provider adapters.
+- Completed:
+  - Read `CLAUDE.md`, `docs/HANDOFF.md`, this ledger in full, and all four procedure documents; inspected `git status --short --branch` and `git log --oneline --decorate -12`.
+  - Ran the full documented read-only baseline and confirmed every documented claim reproduces.
+  - Preserved all 25 modified files and 8 untracked paths, then recorded them as deliberate checkpoint commit `46bd324` on local `main`. Nothing was pushed, reset, cleaned, or discarded.
+  - Added `MascotCore/EventEnvelope.swift`: `EventProvider`, `AgentEvent`, `EventDetail`, a validated opaque `SessionID`, and the six-field `EventEnvelope`.
+  - Added `MascotCore/EventDecoder.swift`: `EventDecoderLimits`, a payload-content-free `EventDecodingError`, a 4 KB pre-parse payload ceiling, allowlist checks, RFC 3339 parsing with and without fractional seconds, and injected-clock skew bounds of 120 seconds ahead and 3600 seconds behind.
+  - Added 21 decoder fixtures covering valid events, every declared event and detail value, idempotence, discarded forbidden fields, the exact allowlisted field set, payload-free errors, unknown version/provider/event, malformed and truncated JSON, missing fields, oversized payloads, path-like and oversized session IDs, unparsable timestamps, skew boundaries on both sides, and unknown-detail discard.
+  - Reported four documentation-versus-code discrepancies and recorded them in the risk register.
+- Decisions: see the seven event-model entries appended to the decision log. No transport, session registry, reducer, app wiring, or provider adapter was written; `project.yml` and the atlas were not touched.
+- Verification:
+  - `python3 tools/validate_animation_atlas.py --contract-only` and `--atlas art/animation/mascot-atlas@2x.png` pass.
+  - `swift test` passes **31 tests** with no warnings, up from the documented baseline of 10.
+  - The unsigned Debug `xcodebuild` succeeds.
+  - The bundled atlas hash matches the workspace atlas (`9475bf6d…`) and `cmp` reports the bundled contract byte-identical.
+  - `git diff --check` passes.
+  - One self-inflicted test defect was found and fixed during the run: the payload-free-error fixture originally used a secret string that is a *valid* opaque session ID, so it decoded instead of throwing.
+- Risks or blockers: the cursor-hanging drag feel is still unverified by the owner and remains the stated gate; the side-Dock roaming lane and the Hide/Show position reset both need an owner decision; `main` is now six commits ahead of `origin/main` and still unpushed.
+- Next: obtain the owner's hanging-drag verdict and the two behavior decisions, then implement `SessionRegistry` with heartbeat expiry on an injected monotonic clock, followed by `MascotStateReducer` with the documented priority order.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
 3. Treat atlas revision 3 as the current candidate: 14 rows, `768x1568`, with the new six-frame `hanging` row at index 13 and a `(48, 4)` top grip anchor.
-4. Preserve the local `main` commits, including native scaffold commit `609f151`; they have not been pushed to `origin/main`.
+4. Preserve the local `main` commits, including native scaffold commit `609f151` and revision 3 checkpoint `46bd324`; `main` is six commits ahead of `origin/main` and has not been pushed.
 5. Treat the current presentation as `96x112` points with a 10-point transparent Dock inset. The frozen atlas itself remains unchanged.
 6. Ask the owner to test dragging from several body points and verify that the raised hand remains under the cursor while the body swings left/center/right; also retain the broader click, reopen, relaunch, and display-matrix QA.
-7. Preserve the honest capability boundary: ambient random walking/offline playback is implemented, but it does not yet know whether ChatGPT or Claude is working. Continue issues #6 and #7, then adapters #8 and #9, before mapping real activity to working/waiting/success/failure.
-8. Do not mistake direct `open` activation for automatic panel focus theft; the verified background launch (`open -g`) left ChatGPT/Codex frontmost. Do not use `open -j`, which intentionally hides the app.
-9. Update this ledger before ending the next session.
-10. Use `CLAUDE.md` and `docs/HANDOFF.md` as the maintainer onboarding entry points; keep them synchronized when architecture, commands, or asset contracts materially change.
+7. Preserve the honest capability boundary: ambient random walking/offline playback is implemented, but it does not yet know whether ChatGPT or Claude is working. The event envelope and decoder now exist, but nothing produces or consumes events yet. Continue issue #6 with the session registry and reducer, then #7 transport, then adapters #8 and #9, before mapping real activity to working/waiting/success/failure.
+8. Treat `EventEnvelope` as the privacy boundary and `EventDecoder` as fail-closed. Do not widen the envelope, relax the `SessionID` charset, or copy payload text into an error without a recorded product decision.
+9. Resolve the four onboarding discrepancies in the risk register. Side-Dock roaming and the Hide/Show position reset need owner decisions; the unused `MascotCore` vocabulary should be fixed by the reducer rather than worked around.
+10. Do not mistake direct `open` activation for automatic panel focus theft; the verified background launch (`open -g`) left ChatGPT/Codex frontmost. Do not use `open -j`, which intentionally hides the app.
+11. Update this ledger before ending the next session.
+12. Use `CLAUDE.md` and `docs/HANDOFF.md` as the maintainer onboarding entry points; keep them synchronized when architecture, commands, or asset contracts materially change.
 
 ## Documentation sources
 

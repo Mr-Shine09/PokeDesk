@@ -12,7 +12,13 @@
 
 ### MascotCore
 
-`MascotState.swift` defines stable state names and ambient variants. It is not yet a session registry or reducer.
+`MascotState.swift` defines stable state names and ambient variants. Note that the running app does not consume it: `AmbientAnimationController` selects rows by raw atlas name, so this vocabulary is currently exercised only by tests. The reducer is expected to make it the single typed source of visible state.
+
+`EventEnvelope.swift` defines `EventProvider`, `AgentEvent`, `EventDetail`, the validated opaque `SessionID`, and the six-field `EventEnvelope`. The envelope is the privacy boundary: it has no field for forbidden content, so retaining any requires an explicit product decision.
+
+`EventDecoder.swift` decodes transport bytes into an envelope and fails closed. It enforces a pre-parse payload ceiling, the version/provider/event allowlists, `SessionID` validation, RFC 3339 parsing with and without fractional seconds, and skew bounds against an injected `now`. Unknown top-level keys are dropped by the fixed payload shape; an unknown `detail` is discarded rather than rejected; no error value carries payload text.
+
+The session registry and reducer are not implemented.
 
 ### MascotAnimation
 
@@ -56,14 +62,14 @@ provider hook stdin
   -> animation controller
 ```
 
-Recommended package placement:
+Recommended package placement (`✅` implemented, `▫️` planned):
 
 ```text
 MascotCore/
-  EventEnvelope.swift
-  EventDecoder.swift
-  SessionRegistry.swift
-  MascotStateReducer.swift
+  EventEnvelope.swift          ✅
+  EventDecoder.swift           ✅
+  SessionRegistry.swift        ▫️
+  MascotStateReducer.swift     ▫️
 MascotTransport/             new product only when transport work begins
   LocalSocketServer.swift
   PayloadLimits.swift

@@ -9,7 +9,7 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 - [ ] Complete atlas validates.
 - [ ] Every changed frame row validates.
 - [ ] Full QA sheets and motion previews are regenerated after atlas changes.
-- [ ] Swift package tests pass (handoff baseline: 10).
+- [ ] Swift package tests pass (current baseline: 31; original handoff baseline: 10).
 - [ ] Unsigned Debug Xcode build succeeds.
 - [ ] Built atlas hash matches workspace atlas.
 - [ ] Built JSON contract byte-matches workspace contract.
@@ -52,13 +52,15 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 - [ ] Non-Retina or deliberately authored `@1x` behavior.
 - [ ] No app focus theft during timer/state changes.
 
-## Event system acceptance (future)
+## Event system acceptance
 
-- [ ] Valid events decode into allowlisted fields only.
-- [ ] Unknown version/provider/event fails closed.
-- [ ] Oversized/malformed JSON cannot mutate state.
-- [ ] Forbidden payload fields are discarded and never logged.
-- [ ] Duplicates are idempotent.
+- [x] Valid events decode into allowlisted fields only.
+- [x] Unknown version/provider/event fails closed.
+- [x] Oversized/malformed JSON cannot mutate state.
+- [x] Forbidden payload fields are discarded and never logged.
+- [x] Decoding the same bytes twice yields the same envelope.
+- [x] Timestamp skew is evaluated against an injected clock, not the wall clock.
+- [ ] Duplicates are idempotent *at the registry* (decoder-level idempotence is proven; the registry does not exist).
 - [ ] Older reordered events cannot replace newer session state.
 - [ ] Heartbeat expiry uses an injected monotonic clock.
 - [ ] Concurrent Claude Code and Codex sessions reduce deterministically.
