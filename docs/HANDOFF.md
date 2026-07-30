@@ -18,7 +18,7 @@ Claude Code hooks ─┘                                      |
                                               animation + window controller
 ```
 
-As of 2026-07-30 every stage of this flow is implemented: hook adapters for both providers (`dockpet-event --hook`), the bundled helper, the socket transport, the reducer, and animation driven by the result. What has *not* happened is a live provider session driving it — every event so far was synthesized by writing payloads to the helper. The mapping and transport are proven; the providers' documented hook behavior is trusted, not observed. Do not describe Dock Pet as reflecting real agent activity until that run happens.
+As of 2026-07-30 every stage of this flow is implemented **and verified against a real Claude Code session**: hooks fired, the bundled helper mapped them, and a socket capture showed `started -> active -> active(tool) -> active(tool) -> completed -> stopped` in order, with no path, filename, or file content in any frame. Two limits remain: **Codex has never been run live** (it shares the adapter, which is inference rather than evidence), and `waiting` and `failed` are fixture-covered but have never been seen from a real provider.
 
 ## Current working state
 
@@ -26,15 +26,16 @@ As of 2026-07-30 every stage of this flow is implemented: hook adapters for both
 - Transparent `96x112`-point non-activating `NSPanel` remains visible across Spaces.
 - The mascot animates from reduced state: working sits at a computer, waiting stops and turns, reactions play in place, and only the chilling/offline states stroll the lane. A 0.75-second dwell stops rapid state flips from thrashing; pause and resume bypass it.
 - While strolling, the mascot walks left/right along the bottom visible-frame lane, pauses randomly, reverses at bounds, and renders at nearest-neighbor scale. Placement and roaming always anchor to the screen's bottom edge; Dock-edge tracking (left/right Dock) was tried, found buggy, and removed rather than fixed — see the Decision log in `DesktopMascot.md`, 2026-07-30.
-- Click/right-click opens Pause/Resume, Stop/Resume Roaming, Hide, and Quit actions.
+- Click/right-click opens Pause/Resume, Stop/Resume Roaming, Dismiss, and Quit actions.
 - Dragging switches to a six-frame one-handed hanging animation. The raised hand is fixed under the cursor; dropping stops roaming at the manual position.
 - Reopening an already-running hidden app restores the mascot panel, preserving a manually dragged position rather than snapping back to the default lane.
-- Launching, showing, or reopening the mascot plays a 1.25-second Dock portal transition before normal behavior resumes; Reduce Motion uses a stationary fade.
-- Manual Ideating, Pause, Show/Hide, Roaming, Reposition, diagnostics, and Quit controls exist in the menu bar.
+- The mascot appears only when summoned: launching the app leaves the menu-bar item and nothing else. Summoning or reopening plays a 1.25-second Dock portal transition; Reduce Motion uses a stationary fade. There is no launch-at-login, by owner decision.
+- The menu bar carries Summon/Dismiss, Pause, Manual Ideating, Roaming, Reposition, **Preview State** (forces any animation without an agent), **Agent Hook Setup** (copies the install snippet), diagnostics with VoiceOver labels, and Quit.
 - Atlas revision 4 contains 14 rows, replaces the sit-shake ledges with small freestanding chairs, and validates structurally.
-- 166 Swift package tests pass, and unsigned Debug and Release Xcode builds both succeed.
+- 172 Swift package tests pass, and unsigned Debug and Release Xcode builds both succeed. Run `swift package clean` before believing a failure that appears right after a stored property is added to a public struct.
 - The app runs the local event path as of 2026-07-30: it binds the owner-only socket at launch, ingests delivered events through `SessionRegistry` and `MascotStateReducer` via `EventPipeline`, drives animation from the result, shows listener status and reduced state in the menu bar, and unlinks the socket on quit.
-- Both provider adapters exist as `dockpet-event --hook --provider <name>`, and `--print-hooks` emits the settings snippet to install them. Nothing has been installed into a real provider yet.
+- Both provider adapters exist as `dockpet-event --hook --provider <name>`, and `--print-hooks` emits the settings snippet. The Claude Code hooks were installed into `~/.claude/settings.json` and observed driving the mascot; Codex has not been installed or run.
+- The app installs durably to `~/Applications/Dock Pet.app` via `tools/install_app.sh`, ad-hoc signed with the nested helper signed first. It is not notarized and cannot be given to anyone else.
 
 ## Repository warning
 
@@ -54,7 +55,7 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 4. Build the app and confirm the bundled atlas/contract match the workspace versions.
 5. Ask the owner to drag the mascot from several body points and confirm the cursor snap/swing feels right.
 6. Record the QA result in `DesktopMascot.md`.
-7. Every stage of the event path is implemented, including both hook adapters. The open milestone is observing a *live* provider session drive the mascot; do not treat the fixture evidence as a substitute for it.
+7. The event path is complete and live-verified for Claude Code. The only remaining 0.1 work is owner hands-on QA: the Preview State menu, the cursor-hanging feel, and the display matrix.
 8. The two menu-bar lines (`Event socket:` and `Reduced state:`) were owner-verified on screen on 2026-07-30 and need no re-check.
 
 ## Key ownership boundaries
@@ -71,7 +72,7 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 | Frozen base art | `art/production/` | Do not replace |
 | Atlas contract and output | `art/animation/` | Revision 4; chair sit-shake rows merged 2026-07-30 |
 | Deterministic art tooling | `tools/` | Implemented and reusable |
-| Provider lifecycle adapters | `Packages/DesktopMascotKit/Sources/MascotTransport/HookPayload.swift` | Implemented 2026-07-30 as helper `--hook` mode for both providers; awaiting a live session |
+| Provider lifecycle adapters | `Packages/DesktopMascotKit/Sources/MascotTransport/HookPayload.swift` | Implemented 2026-07-30 as helper `--hook` mode for both providers; Claude Code observed live, Codex never run |
 | Local event reducer | `Packages/DesktopMascotKit/Sources/MascotCore/` | Registry and priority reducer implemented 2026-07-29; issue #6 closed 2026-07-30; drives animation since 2026-07-30 |
 | Local event transport | `Packages/DesktopMascotKit/Sources/MascotTransport/` | Socket server, client, framing, and helper implemented 2026-07-29; run by the app since 2026-07-30 |
 | Event helper CLI | `Packages/DesktopMascotKit/Sources/dockpet-event/` | Bundled at `Contents/MacOS/dockpet-event`; also the hook adapter via `--hook`, and prints its own install snippet via `--print-hooks` |
