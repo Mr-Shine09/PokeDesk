@@ -450,7 +450,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | [#8 Add the Codex lifecycle-hook adapter](https://github.com/Mr-Shine09/desktop-mascot/issues/8) | 4 | Open |
 | [#9 Add the Claude Code lifecycle-hook adapter](https://github.com/Mr-Shine09/desktop-mascot/issues/9) | 4 | Open |
 | [#10 Build menu-bar settings and integration management](https://github.com/Mr-Shine09/desktop-mascot/issues/10) | 2 / 4 | Open |
-| [#11 Integrate animations, transitions, and Reduced Motion](https://github.com/Mr-Shine09/desktop-mascot/issues/11) | 5 | In progress; cached ambient playback and the portal summon transition run locally; provider transitions and broader Reduced Motion coverage remain open |
+| [#11 Integrate animations, transitions, and Reduced Motion](https://github.com/Mr-Shine09/desktop-mascot/issues/11) | 5 | In progress; cached ambient playback and the portal summon transition run locally in [draft PR #15](https://github.com/Mr-Shine09/desktop-mascot/pull/15); provider transitions and broader Reduced Motion coverage remain open |
 | [#12 Verify privacy, accessibility, performance, and multi-display behavior](https://github.com/Mr-Shine09/desktop-mascot/issues/12) | 6 | Open |
 | [#13 Add CI, signing, notarization, packaging, and release docs](https://github.com/Mr-Shine09/desktop-mascot/issues/13) | 6 | Open |
 
@@ -1185,7 +1185,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
   - Added a Reduce Motion path that replaces portal translation/scaling with a stationary fade.
   - Added three timing fixtures covering ordering, full emergence before closure, clamping, and completion.
 - Decisions: keep the portal code-rendered and local to the existing `96x112` panel; do not add an atlas row or alter frozen art for this effect. A drag that begins during the transition cancels it immediately so direct interaction remains responsive.
-- Verification: 116 Swift package tests pass; the unsigned Debug Xcode build succeeds; atlas contract and pixels remain unchanged; `git diff --check` passes; the Debug app launched successfully in the background. Owner visual QA of color, scale, and timing remains pending.
+- Verification: 116 Swift package tests pass; the unsigned Debug Xcode build succeeds; atlas contract and pixels remain unchanged; `git diff --check` passes; the Debug app launched successfully in the background; [draft PR #15](https://github.com/Mr-Shine09/desktop-mascot/pull/15) is open for Mr. C's review. Owner visual QA of color, scale, and timing remains pending.
 - Risks or blockers: the compact panel bounds intentionally clip the pet below the portal during emergence. The exact perceived alignment with different Dock configurations still needs hands-on QA alongside the existing display matrix.
 - Next: owner hides and shows the mascot (and reopens the running app) to approve the portal timing and Dock alignment, then resume the event-server app wiring milestone.
 
