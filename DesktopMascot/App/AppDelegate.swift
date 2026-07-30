@@ -48,8 +48,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 previewModel: previewModel,
                 windowCoordinator: windowCoordinator
             )
-            windowCoordinator.setVisible(isVisible)
-            diagnostics = "Ambient roaming — no agent signal connected"
+            animationController?.onSummonCompleted = { [weak self] in
+                guard let self else { return }
+                if self.isPaused {
+                    self.diagnostics = "Animation paused"
+                } else if self.isIdeating {
+                    self.diagnostics = "Manual ideating"
+                } else if self.isRoaming {
+                    self.diagnostics = "Ambient roaming — no agent signal connected"
+                } else {
+                    self.diagnostics = "Offline at manual position"
+                }
+            }
+            setVisible(isVisible)
         } catch {
             diagnostics = error.localizedDescription
         }
@@ -65,6 +76,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         isVisible = visible
         windowCoordinator?.setVisible(visible)
         animationController?.setVisible(visible)
+        diagnostics = visible ? "Opening Dock portal" : "Mascot hidden"
     }
 
     func setPaused(_ paused: Bool) {
