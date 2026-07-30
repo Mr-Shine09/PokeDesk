@@ -34,6 +34,11 @@ struct MenuBarContent: View {
         Text(appDelegate.diagnostics)
         Text(eventBridge.summary)
         Text(eventBridge.reducedStateSummary)
+        Text(EventHelperLocation.summary)
+        Button("Copy Event Helper Path") {
+            appDelegate.copyHelperPath()
+        }
+        .disabled(EventHelperLocation.path == nil)
         Button("Quit Dock Pet") {
             appDelegate.quit()
         }

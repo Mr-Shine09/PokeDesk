@@ -12,6 +12,22 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
 targets:
+  # Built as a native tool target rather than copied from SwiftPM output, so the
+  # helper inside the bundle is produced by the same build that produces the app
+  # and cannot drift from it.
+  dockpet-event:
+    type: tool
+    platform: macOS
+    sources:
+      - path: Packages/DesktopMascotKit/Sources/dockpet-event
+    dependencies:
+      - package: DesktopMascotKit
+        product: MascotTransport
+    settings:
+      base:
+        PRODUCT_NAME: dockpet-event
+        CODE_SIGN_STYLE: Automatic
+
   DesktopMascot:
     type: application
     platform: macOS
@@ -30,6 +46,13 @@ targets:
         product: MascotWindow
       - package: DesktopMascotKit
         product: MascotTransport
+      # Rides along inside the bundle so a provider hook has a stable absolute
+      # path to invoke. It is a plain executable, not a login item or an XPC
+      # service: nothing launches it except a hook, one event at a time.
+      - target: dockpet-event
+        embed: true
+        copy:
+          destination: executables
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mrshine09.desktopmascot

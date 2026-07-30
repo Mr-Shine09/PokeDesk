@@ -50,8 +50,19 @@ Expected handoff baseline: 143 Swift Testing tests pass as of 2026-07-30. A high
 ## Exercise the event helper
 
 `dockpet-event` sends one lifecycle event to a running Dock Pet over the current
-user's private socket. It is not yet bundled into the app, so build and run it
-from the package:
+user's private socket. Since 2026-07-30 it is built as a native tool target and
+copied into the app bundle, so the copy a hook should invoke is:
+
+```text
+/private/tmp/DesktopMascotDerivedData/Build/Products/Debug/Dock Pet.app/Contents/MacOS/dockpet-event
+```
+
+That path is not durable — it lives in DerivedData and changes whenever the build
+location does, which is why the menu bar offers **Copy Event Helper Path** rather
+than documenting a fixed string. It becomes stable only once the app is installed
+somewhere permanent (issue #13).
+
+For quick iteration the package copy still works and is identical in behavior:
 
 ```bash
 swift run dockpet-event --provider claude-code --event active --session demo --verbose
