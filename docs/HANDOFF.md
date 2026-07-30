@@ -36,9 +36,11 @@ Everything from the decoder through the transport and helper is implemented and 
 
 ## Repository warning
 
-`main` is level with `origin/main` as of `2b8dfbd` (PR #14, merged 2026-07-30). This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` at session start rather than trusting this file. The repository remains private.
+`main` is level with `origin/main` as of `a351aed`, with PRs #14, #15, #16, and #17 all merged and no feature branch outstanding. This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` at session start rather than trusting this file. The repository remains private.
 
-The assistant's `gh pr merge` / `gh pr ready` / branch-delete calls are blocked by the auto-mode permission classifier as sensitive actions. Give the owner the exact command to run in their own terminal instead of retrying or working around the denial.
+Merge and branch-delete commands are sometimes refused for the assistant by the auto-mode permission classifier and sometimes allowed; the outcome is not predictable in advance. When one is denied, give the owner the exact command to run in their own terminal instead of retrying or working around the denial.
+
+More than one agent session may share this working tree at once. Before committing, confirm every staged file belongs to your own change; stash and rebranch rather than bundling another session's work into your commit.
 
 Preserve every current modification/untracked file. Do not reset, clean, checkout over, or regenerate blindly. Make a deliberate checkpoint commit before risky refactors, but do not publish or change repository visibility without the owner's approval.
 
@@ -50,7 +52,7 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 4. Build the app and confirm the bundled atlas/contract match the workspace versions.
 5. Ask the owner to drag the mascot from several body points and confirm the cursor snap/swing feels right.
 6. Record the QA result in `DesktopMascot.md`.
-7. If accepted, begin the local event model/reducer work; do not jump directly to hook installers.
+7. The event model, reducer, transport, and helper are all done (issues #6 and #7). The open milestone is running the server inside the app and surfacing it in diagnostics; do not jump directly to hook installers.
 
 ## Key ownership boundaries
 
@@ -61,12 +63,12 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 | App lifecycle/UI | `DesktopMascot/App/` | Prototype implemented |
 | State vocabulary | `Packages/DesktopMascotKit/Sources/MascotCore/` | Enum, envelope, decoder, registry, and reducer implemented and tested; not yet wired to the app |
 | Atlas loading | `Packages/DesktopMascotKit/Sources/MascotAnimation/` | Implemented and tested |
-| Panel/Dock geometry | `Packages/DesktopMascotKit/Sources/MascotWindow/` | Implemented; manual matrix incomplete |
+| Panel/Dock geometry | `Packages/DesktopMascotKit/Sources/MascotWindow/` | Implemented, bottom-anchored only as of 2026-07-30; hands-on display matrix incomplete |
 | Frozen base art | `art/production/` | Do not replace |
-| Atlas contract and output | `art/animation/` | Revision 3 candidate |
+| Atlas contract and output | `art/animation/` | Revision 4; chair sit-shake rows merged 2026-07-30 |
 | Deterministic art tooling | `tools/` | Implemented and reusable |
 | Provider lifecycle adapters | not yet created | Planned issues #8 and #9 |
-| Local event reducer | `Packages/DesktopMascotKit/Sources/MascotCore/` | Registry and priority reducer implemented 2026-07-29 |
+| Local event reducer | `Packages/DesktopMascotKit/Sources/MascotCore/` | Registry and priority reducer implemented 2026-07-29; issue #6 closed 2026-07-30; still not consumed by the app |
 | Local event transport | `Packages/DesktopMascotKit/Sources/MascotTransport/` | Socket server, client, framing, and helper implemented 2026-07-29; app wiring is the next milestone |
 | Event helper CLI | `Packages/DesktopMascotKit/Sources/dockpet-event/` | Works cross-process; not bundled into the app and not installed for any hook |
 
@@ -103,9 +105,10 @@ Acceptance criteria are in the Phase 3 section of `DesktopMascot.md`.
 ## Known risks and incomplete verification
 
 - Physical hanging drag feel is not yet owner-approved; snapping the clicked body point to the overhead grip may need refinement.
-- Left/right Dock, Dock auto-hide, multiple displays, full-screen Spaces, non-Retina, sleep/wake, and screen-lock behavior need broader hands-on coverage.
+- Dock auto-hide, multiple displays, full-screen Spaces, non-Retina, sleep/wake, and screen-lock behavior need broader hands-on coverage. Left/right Dock placement is no longer in scope: as of 2026-07-30 the mascot always anchors to the screen's bottom edge regardless of Dock position.
 - Pointer/control avoidance is not implemented for roaming.
-- Reduce Motion, launch at login, energy measurement, signing, notarization, packaging, and clean-account install remain open.
+- Launch at login, energy measurement, signing, notarization, packaging, and clean-account install remain open. Reduce Motion is honored by the portal summon transition only; broader Reduce Motion coverage is still open under issue #11.
+- The app is not installed anywhere durable. The only binary is the unsigned Debug build under `/private/tmp/DesktopMascotDerivedData`, which macOS clears on reboot, so relaunching means rebuilding first. Reopening the mascot is a developer action, not a user action, until packaging (issue #13).
 - The canonical original owner source listed in the ledger is outside the repository. The promoted production base and selected reference are inside the repository and are sufficient for current atlas work; do not assume the external path exists on another machine.
 - Generated image sources are not authoritative until normalized, validated, visually reviewed, and promoted into `art/animation/frames/`.
 

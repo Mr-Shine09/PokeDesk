@@ -25,8 +25,8 @@ Welcome, Mr. C. This file is the mandatory entry point for work on Dock Pet.
 
 ## Current priority
 
-1. Obtain/record owner hands-on QA for cursor hanging and the remaining window matrix.
-2. The event model, strict decoder, session registry, deterministic reducer, local socket transport, and `dockpet-event` helper are implemented and tested. Remaining: run the server inside the app and surface it in diagnostics, then wire `MascotVisibleState` into animation selection with ambient roaming as the no-signal default.
+1. Run the event socket server inside the app, feed the registry and reducer, and surface the result in menu-bar diagnostics before changing any animation. Then wire `MascotVisibleState` into animation selection with ambient roaming as the no-signal default. Everything upstream of this — event model, strict decoder, session registry, deterministic reducer, local socket transport, and the `dockpet-event` helper — is implemented, tested, and merged.
+2. Obtain/record owner hands-on QA for cursor hanging and the remaining display matrix (auto-hide, multiple displays, full-screen Spaces, sleep/wake). Placement is bottom-anchored only, so left/right Dock is no longer part of that matrix.
 3. Add privacy-preserving Claude Code and Codex hook adapters only after the core event path is tested.
 
 Detailed procedures:

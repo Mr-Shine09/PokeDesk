@@ -9,9 +9,9 @@
 | Project | Desktop Mascot for macOS |
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
-| Last updated | 2026-07-29 |
-| Status | Portal summon, revision 4 chair sit-shake/cursor-hanging atlas, ambient animation, event engine, and local transport are implemented and build-verified |
-| Current gate | Owner-verify the chair sit-shake, portal summon, and physical cursor-hanging feel; then wire the tested local event path into the app |
+| Last updated | 2026-07-30 |
+| Status | Portal summon, revision 4 chair sit-shake/cursor-hanging atlas, bottom-anchored window placement, ambient animation, event engine, and local transport are implemented, tested, and merged to `main` (`a351aed`) |
+| Current gate | Wire the tested local event path into the app: run the socket server, surface it in menu-bar diagnostics, then drive animation selection from `MascotVisibleState`. Owner hands-on QA still outstanding for the physical cursor-hanging feel and the display matrix |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -1229,21 +1229,37 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: left/right Dock placement no longer exists in code at all (not just untested), so reintroducing it later is a feature addition, not a bug fix. The bottom-anchored formula has not been hands-on tested on a real left/right-Dock machine, since it no longer branches on Dock position at all — the remaining owner QA is the display/orientation matrix in `docs/QA_CHECKLIST.md`, now simpler because there is only one placement path to verify instead of three.
 - Next: owner runs `gh pr ready 15 && gh pr merge 15 --merge --delete-branch` to merge the portal summon PR (approved, held back only because merge/branch-delete are treated as sensitive actions requiring the owner's own terminal). After that, resume the deferred Phase 3 milestone: run the event socket server inside the app, surface it in menu-bar diagnostics, then wire `MascotVisibleState` into animation selection.
 
+### 2026-07-30 — Session closure: three PRs merged, backlog reconciled
+
+- Objective: land the reviewed work, reconcile the GitHub backlog with actual evidence, and close the session cleanly.
+- Completed:
+  - All three open PRs merged to `main`: [#15](https://github.com/Mr-Shine09/desktop-mascot/pull/15) portal summon (owner-approved art), [#17](https://github.com/Mr-Shine09/desktop-mascot/pull/17) bottom-anchored window placement and manual-position preservation, and [#16](https://github.com/Mr-Shine09/desktop-mascot/pull/16) the chair sit-shake atlas revision 4. `main` is at `a351aed` and level with `origin/main`.
+  - Issues #3, #4, and #6 closed with recorded evidence. #5 remains open with a status comment explaining that its two code defects are fixed and its scope narrowed to bottom-anchored placement; only the hands-on display matrix remains.
+  - Reviewed the chair atlas visually at inspection scale before approving #16: both sit-shake rows read as a compact freestanding chair, the seated identity and leg-swing cadence survive, and the frozen palette and silhouette rules hold.
+  - Answered two owner questions without writing code, because both were already covered: the menu-bar escape hatch already exists (`MenuBarExtra` in `DesktopMascotApp.swift` plus `MenuBarContent.swift`), and relaunching after Quit is currently the documented `xcodebuild` + `open -g` pair. Confirmed the broader menu-bar settings surface (launch-at-login, animation speed, display selection, provider hook management, VoiceOver) is issue #10 and deliberately untouched.
+  - Quit the running Debug instance (PID 33766) at the owner's request; no Dock Pet process remains.
+- Verification: no code changed in this closing segment. The last full verification stands at 118 Swift package tests passing, unsigned Debug and Release builds succeeding, atlas contract and atlas validating, and bundled resources byte-matching the workspace.
+- Decisions: none beyond those already recorded in the 2026-07-30 Decision log block.
+- Risks or blockers: the app is still not installed anywhere durable — the only binary lives under `/private/tmp/DesktopMascotDerivedData`, which macOS clears on reboot, so after a restart the app must be rebuilt before it can be launched at all. That is expected until packaging (issue #13), but it means "reopen the mascot" is a developer action rather than a user action today. The capability boundary is unchanged and still the most important thing to state honestly: the event path is fully built and tested but nothing in the running app uses it.
+- Next: run the event socket server inside the app, feed the registry and reducer, and surface the result in menu-bar diagnostics before touching animation selection. Then map `MascotVisibleState` onto animation rows with ambient roaming as the no-signal default.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
 3. Treat atlas revision 4 as the current candidate: 14 rows, `768x1568`; the directional sit-shake rows now use a small freestanding chair, and the six-frame `hanging` row remains at index 13 with a `(48, 4)` top grip anchor.
-4. `main` and `origin/main` include the event engine, window-geometry fixes, and merged portal PR #15 at `07a14d3`. The chair revision is being reviewed on its own feature branch; do not mix unrelated work into it.
+4. `main` and `origin/main` are level at `a351aed` and include the event engine, the bottom-anchored window fixes, merged portal PR #15, and merged chair PR #16. No feature branch is outstanding. Verify with `git status --short --branch` and `gh pr list` rather than trusting this line.
 5. Treat the current presentation as `96x112` points with a 10-point transparent Dock inset. Revision 4 changes only the two sit-shake rows inside the existing atlas geometry.
 6. Ask the owner to test dragging from several body points and verify that the raised hand remains under the cursor while the body swings left/center/right; also retain the broader click, reopen, relaunch, and display-matrix QA.
 7. Preserve the honest capability boundary: portal summon and ambient random walking/offline playback are implemented, but neither knows whether ChatGPT or Claude is working. The envelope, decoder, registry, reducer, transport, and helper all exist and are tested, but **the app itself still runs none of them** — it neither listens on the socket nor consumes reducer output, and no provider hook can reach the helper. The next steps are app wiring, then bundling the helper, then adapters #8 and #9. Until then, do not describe Dock Pet as reflecting real agent activity.
 8. Treat `EventEnvelope` as the privacy boundary and `EventDecoder` as fail-closed. Do not widen the envelope, relax the `SessionID` charset, or copy payload text into an error without a recorded product decision. `AgentSession` extends the same boundary and must gain no new field either. Keep the two clocks separate as well: wall-clock `occurredAt` orders events inside one session, monotonic `Uptime` drives expiry and reactions, and both stay caller-injected so fixtures remain deterministic. On the transport side, keep the helper's flag set closed, keep the session value hashed inside the helper, keep the `getpeereid` same-user check, and keep the socket path derived rather than passed in.
 9. Treat mascot placement and roaming as bottom-of-screen-anchored only, per the owner's 2026-07-30 decision — `DockGeometry` has no Dock-edge inference at all now. Do not reintroduce left/right Dock-aware placement without a fresh owner decision; it is future scope, not a bug to quietly fix back in. The unused-vocabulary risk is now the reducer-wiring task: `MascotVisibleState` must become the single typed source of visible state, replacing the raw atlas row strings in `AmbientAnimationController` — not growing beside them.
 10. Do not mistake direct `open` activation for automatic panel focus theft; the verified background launch (`open -g`) left ChatGPT/Codex frontmost. Do not use `open -j`, which intentionally hides the app.
-11. `gh pr merge` and `gh pr ready` (and any other push/merge/branch-delete) are blocked for the assistant by the auto-mode permission classifier. Hand the owner the exact command and let them run it in their own terminal rather than retrying or working around the denial.
-12. Update this ledger before ending the next session.
-13. Use `CLAUDE.md` and `docs/HANDOFF.md` as the maintainer onboarding entry points; keep them synchronized when architecture, commands, or asset contracts materially change.
+11. Merge and branch-delete commands are sometimes refused for the assistant by the auto-mode permission classifier and sometimes allowed; the outcome is not predictable in advance. If one is denied, hand the owner the exact command to run in their own terminal rather than retrying it or working around the denial.
+12. The app exists only as an unsigned Debug build under `/private/tmp/DesktopMascotDerivedData`, which macOS clears on reboot. There is no installed copy and no launch-at-login, so relaunching means rebuilding first (`xcodebuild ...`) and then `open -g`. Do not describe reopening the mascot as a user-facing action until packaging (issue #13) exists.
+13. More than one agent session may be working in this repository at the same time, sharing one working tree. Before committing, run `git status --short --branch` and confirm every staged file is yours; stash and rebranch rather than bundling another session's work into your commit.
+14. Update this ledger before ending the next session.
+15. Use `CLAUDE.md` and `docs/HANDOFF.md` as the maintainer onboarding entry points; keep them synchronized when architecture, commands, or asset contracts materially change.
 
 ## Documentation sources
 
