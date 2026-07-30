@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuBarContent: View {
     @ObservedObject var appDelegate: AppDelegate
+    @ObservedObject var eventBridge: AgentEventBridge
 
     var body: some View {
         Button {
@@ -31,6 +32,8 @@ struct MenuBarContent: View {
         }
         Divider()
         Text(appDelegate.diagnostics)
+        Text(eventBridge.summary)
+        Text(eventBridge.reducedStateSummary)
         Button("Quit Dock Pet") {
             appDelegate.quit()
         }
