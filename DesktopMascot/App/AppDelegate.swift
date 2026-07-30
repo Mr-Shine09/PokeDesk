@@ -2,6 +2,7 @@ import AppKit
 import Combine
 import MascotAnimation
 import MascotCore
+import MascotTransport
 import MascotWindow
 import SwiftUI
 
@@ -17,7 +18,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published var isVisible = false
     @Published var isPaused = false
     @Published var isIdeating = false
-    @Published var isRoaming = true
+    /// Restored from preferences, so a deliberate choice survives relaunch.
+    @Published var isRoaming = Preferences.roaming
+    /// Forces one animation for inspection. Never persisted: it is a testing
+    /// mode, and finding the pet stuck in a fake state after a relaunch with no
+    /// memory of choosing it would be its own bug.
+    @Published private(set) var previewState: MascotState?
 
     /// Listens for provider lifecycle events, reduces them, and is the single
     /// source of the mascot's visible state — manual pause and ideating included,
@@ -118,18 +124,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         syncOverrides()
     }
 
+    /// Shows one state for inspection, so every animation is reachable without an
+    /// agent. Passing `nil` returns to whatever the reducer actually believes.
+    ///
+    /// Mutually exclusive with pause and ideating, because the reducer places a
+    /// preview above both and leaving them set would strand the user in a state
+    /// they cannot see the effect of.
+    func setPreview(_ state: MascotState?) {
+        previewState = state
+        if state != nil {
+            isPaused = false
+            isIdeating = false
+        }
+        syncOverrides()
+    }
+
     /// Publishing the overrides is what changes the animation: the reducer folds
     /// them into `MascotVisibleState`, which the observer above feeds to the
     /// controller. Setting a row directly from here would reintroduce the second
     /// source of truth this wiring exists to remove.
     private func syncOverrides() {
-        eventBridge.overrides = ManualOverrides(isPaused: isPaused, isIdeating: isIdeating)
+        eventBridge.overrides = ManualOverrides(
+            isPaused: isPaused,
+            isIdeating: isIdeating,
+            preview: previewState
+        )
         refreshDiagnostics()
     }
 
     func setRoaming(_ roaming: Bool) {
         isRoaming = roaming
         animationController?.setRoaming(roaming)
+        Preferences.roaming = roaming
         refreshDiagnostics()
     }
 
@@ -140,6 +166,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             // Says what to do about it, since this is now the state the app
             // launches in rather than an unusual one.
             diagnostics = "Not summoned — choose Summon Mascot"
+            return
+        }
+        // Named as a preview so a forced state is never mistaken for a real one.
+        if let previewState {
+            diagnostics = "Previewing \(previewState.displayName) — not a real agent state"
             return
         }
         let state = eventBridge.visibleState
@@ -175,6 +206,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(path, forType: .string)
         diagnostics = "Helper path copied"
+    }
+
+    /// Copies the exact hook configuration for a provider, so the user can read
+    /// every line before it goes anywhere near their settings file.
+    ///
+    /// Dock Pet never writes that file. Issue #10 asks for verify/disable/
+    /// uninstall actions per provider; those would all mean editing the file
+    /// that runs the user's actual agent, and a mascot getting that wrong breaks
+    /// the tool they work in. Preview-and-paste is the deliberate substitute.
+    func copyHookSetup(for provider: EventProvider) {
+        guard let path = EventHelperLocation.path else {
+            diagnostics = "Event helper is missing from this build"
+            return
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(
+            HookConfiguration.instructions(for: provider, helperPath: path),
+            forType: .string
+        )
+        diagnostics = "\(provider.rawValue) hook setup copied"
     }
 
     func quit() {

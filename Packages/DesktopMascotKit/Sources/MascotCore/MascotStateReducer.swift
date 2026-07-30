@@ -9,11 +9,30 @@ public struct ManualOverrides: Equatable, Sendable {
     /// action rather than anything inferred from the screen or a transcript.
     public var isIdeating: Bool
 
+    /// Forces one state so every animation can be inspected without an agent.
+    ///
+    /// This exists because the alternative is worse: previewing by injecting
+    /// synthetic events would put fabricated sessions in the registry, and a
+    /// fabricated session is indistinguishable from a real one after the fact.
+    /// A preview is therefore an override — it changes what is *shown* and
+    /// never what is *believed*, so the registry stays a record of real events
+    /// only.
+    ///
+    /// It outranks everything, including pause, because a preview that silently
+    /// showed something else would be useless for its one purpose. The caller is
+    /// expected to keep it mutually exclusive with the other overrides.
+    public var preview: MascotState?
+
     public static let none = ManualOverrides()
 
-    public init(isPaused: Bool = false, isIdeating: Bool = false) {
+    public init(
+        isPaused: Bool = false,
+        isIdeating: Bool = false,
+        preview: MascotState? = nil
+    ) {
         self.isPaused = isPaused
         self.isIdeating = isIdeating
+        self.preview = preview
     }
 }
 
@@ -77,6 +96,12 @@ public struct MascotStateReducer: Sendable {
         // longer present, so it must not hold the mascot in idle instead of offline.
         let present = sessions.filter { $0.activity != .stopped }
         let presentProviders = Self.providers(of: present)
+
+        // Above pause on purpose; see `ManualOverrides.preview`. No provider is
+        // reported, because none asserted this state.
+        if let preview = overrides.preview {
+            return MascotVisibleState(state: preview)
+        }
 
         if overrides.isPaused {
             return MascotVisibleState(state: .paused, providers: presentProviders)
