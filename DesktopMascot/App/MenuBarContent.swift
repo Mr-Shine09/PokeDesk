@@ -5,10 +5,15 @@ struct MenuBarContent: View {
     @ObservedObject var eventBridge: AgentEventBridge
 
     var body: some View {
+        // Named for the action rather than a state toggle: the mascot is summoned
+        // deliberately, and the app never puts one on screen by itself.
         Button {
             appDelegate.setVisible(!appDelegate.isVisible)
         } label: {
-            Label("Show Mascot", systemImage: appDelegate.isVisible ? "checkmark" : "minus")
+            Label(
+                appDelegate.isVisible ? "Dismiss Mascot" : "Summon Mascot",
+                systemImage: appDelegate.isVisible ? "arrow.down.left.circle" : "sparkles"
+            )
         }
         Button {
             appDelegate.setPaused(!appDelegate.isPaused)

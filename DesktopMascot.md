@@ -1322,6 +1322,22 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: **no live-session run has happened yet.** Every event above was synthesized by writing payloads to the helper, which proves the mapping and the transport but not that the providers fire the hooks as documented, with the fields documented, at the moments documented. That requires the owner to install the snippet and use Claude Code or Codex normally. Until that happens, "Dock Pet reflects real agent activity" remains unproven rather than true. The helper path in the snippet is still a DerivedData path, so any configuration installed today breaks on the next rebuild.
 - Next: owner installs the printed snippet and runs a real session, then records what the mascot actually did. After that, the remaining 0.1 work is packaging (#13), the menu-bar settings surface (#10), and the outstanding display-matrix QA.
 
+### 2026-07-30 — Summon on demand; launch-at-login declined
+
+- Objective: make the mascot appear only when the owner asks for it. Launching the app was putting a pet on screen unasked, which contradicts how the owner actually wants to use it.
+- Owner decisions, recorded because they narrow the product rather than implement it:
+  - **No launch-at-login, ever.** Previously listed as remaining 0.1 work under #13; it is now out of scope by decision, not deferred. Dock Pet is started deliberately.
+  - **Launching is not summoning.** The app starts with the menu-bar item and nothing else; the mascot appears only on an explicit Summon.
+  - Distribution is not a goal: this is a personal project, so an ad-hoc signed local install is the finished state and notarization is not worth a paid developer account.
+- Completed:
+  - `isVisible` now defaults to `false`, and launch calls `setVisible(false)` explicitly. That orders the panel out and leaves the animation timer stopped, so an unsummoned Dock Pet costs nothing but its menu-bar item.
+  - Renamed the action for what it does: **Summon Mascot** / **Dismiss Mascot**, in both the menu bar and the mascot's own right-click menu. The old "Show Mascot" checkmark read as a state toggle rather than a deliberate call.
+  - Idle diagnostics now say `Not summoned — choose Summon Mascot`, since this is the state the app launches in rather than an unusual one.
+- Verification: measured with `CGWindowListCopyWindowInfo` rather than by eye — at launch there are **0** on-screen Dock Pet windows; after a summon there is exactly one at `96x112` with alpha 1. 166 package tests still pass and the Debug build succeeds.
+- Public-repo audit, for the owner's stated goal of open-sourcing later: no tokens or email addresses are tracked, but 12 tracked files embed the owner's home path (`art/animation/frames/*/normalization.json` and the ledger), and **the mascot is a pixel-art likeness of the owner derived from their personal avatar**. Publishing the repository publishes that likeness. Both are the owner's call; neither is a blocker.
+- Risks or blockers: none introduced. The portal summon transition is now the only way a mascot ever reaches the screen, so any bug in it becomes a bug in the app's only entry point.
+- Next: the menu-bar settings surface (#10), and the outstanding hands-on display-matrix QA. Distribution and launch-at-login are both closed by decision rather than open.
+
 ## Next-session handoff
 
 1. Read this file in full.

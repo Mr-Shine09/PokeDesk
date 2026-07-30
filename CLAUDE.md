@@ -18,7 +18,8 @@ Welcome, Mr. C. This file is the mandatory entry point for work on Dock Pet.
 - Treat `art/animation/atlas-contract.json` as the machine-readable art contract. Revision 3 is 8 columns by 14 rows, `768x1568`, with `96x112` backing-pixel cells.
 - Render sprites with nearest-neighbor interpolation. Production alpha is binary and colors must remain within the frozen 12-color palette.
 - The hanging row has a distinct top grip at atlas coordinate `(48, 4)`, mapped to AppKit panel point `(48, 108)`. Do not ground-align it.
-- Keep the mascot non-activating and retain a menu-bar escape hatch for show/hide, pause, and quit.
+- Keep the mascot non-activating and retain a menu-bar escape hatch for summon/dismiss, pause, and quit.
+- The mascot appears only when summoned. Launching the app must never put one on screen, and there is no launch-at-login by owner decision (2026-07-30).
 - XcodeGen owns `DesktopMascot.xcodeproj`. Change `project.yml`, then regenerate; do not make durable project-file-only edits.
 - Do not claim that Dock Pet reflects real Claude/ChatGPT activity until a live provider session has been observed driving it. The full path — hooks, helper, transport, reducer, animation — is implemented and fixture-verified, but every event to date was synthesized by hand.
 - Update `DesktopMascot.md` at the end of every implementation session with decisions, evidence, risks, and the exact next step.

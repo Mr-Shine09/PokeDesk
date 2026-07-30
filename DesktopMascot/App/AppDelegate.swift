@@ -8,7 +8,13 @@ import SwiftUI
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published private(set) var diagnostics = "Starting"
-    @Published var isVisible = true
+    /// The mascot starts hidden and appears only when summoned.
+    ///
+    /// Owner decision, 2026-07-30: launching the app must not put a pet on the
+    /// screen. The app is a menu-bar accessory first, and the mascot is
+    /// something the user calls for — so launch leaves the menu-bar item ready
+    /// and nothing else. There is deliberately no launch-at-login either.
+    @Published var isVisible = false
     @Published var isPaused = false
     @Published var isIdeating = false
     @Published var isRoaming = true
@@ -69,7 +75,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                     self?.animationController?.setVisibleState(visibleState.state)
                     self?.refreshDiagnostics()
                 }
-            setVisible(isVisible)
+            // Deliberately not `setVisible(true)`: launching is not summoning.
+            // This orders the panel out and leaves the animation timer stopped,
+            // so an unsummoned Dock Pet costs nothing but the menu-bar item.
+            setVisible(false)
         } catch {
             diagnostics = error.localizedDescription
         }
@@ -93,7 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // Hide/Show and reopen must not snap it back to the default lane.
         windowCoordinator?.setVisible(visible, repositioning: isRoaming)
         animationController?.setVisible(visible)
-        diagnostics = visible ? "Opening Dock portal" : "Mascot hidden"
+        diagnostics = visible ? "Opening Dock portal" : "Not summoned"
         if !visible { refreshDiagnostics() }
     }
 
@@ -128,7 +137,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// with no provider behind it came from an agent.
     private func refreshDiagnostics() {
         guard isVisible else {
-            diagnostics = "Mascot hidden"
+            // Says what to do about it, since this is now the state the app
+            // launches in rather than an unusual one.
+            diagnostics = "Not summoned — choose Summon Mascot"
             return
         }
         let state = eventBridge.visibleState
@@ -175,7 +186,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         menu.addItem(withTitle: isPaused ? "Resume Animation" : "Pause Animation", action: #selector(togglePauseFromMascot), keyEquivalent: "")
         menu.addItem(withTitle: isRoaming ? "Stop Roaming" : "Resume Roaming", action: #selector(toggleRoamingFromMascot), keyEquivalent: "")
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Hide Mascot", action: #selector(hideMascotFromMenu), keyEquivalent: "")
+        menu.addItem(withTitle: "Dismiss Mascot", action: #selector(hideMascotFromMenu), keyEquivalent: "")
         menu.addItem(withTitle: "Quit Dock Pet", action: #selector(quitFromMascotMenu), keyEquivalent: "")
         for item in menu.items { item.target = self }
         guard let contentView = windowCoordinator?.panel.contentView else { return }
