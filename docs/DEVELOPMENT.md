@@ -212,6 +212,7 @@ Commit generated project and atlas outputs with their source definitions in the 
 ## Common failure modes
 
 - SwiftPM cannot write `~/.cache`: use the `/private/tmp` cache environment shown above or allow the tool appropriate local cache access.
+- Tests fail in an unrelated module right after a stored property is added to a public struct: the incremental build can keep a stale module with the old layout, so a dependent target reads the struct wrongly and produces convincing nonsense — a live session reducing to `offline`, for instance. Run `swift package clean` before believing the failure. This has already cost one debugging detour.
 - Xcode build embeds stale art: confirm `project.yml` resource entries, rebuild, and compare hashes.
 - Wrong atlas row appears: JSON row indices are top-origin; `SpriteAtlas` must crop using `row.index * cellHeight` without vertical inversion.
 - Hidden app seems impossible to reopen: Hide leaves the accessory process alive; reopening must invoke `applicationShouldHandleReopen`. Quit is separate.

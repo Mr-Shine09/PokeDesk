@@ -104,6 +104,21 @@ final class AgentEventBridge: ObservableObject {
         }
     }
 
+    /// The same information as `summary`, phrased to be heard rather than
+    /// scanned. The compact bullet form reads as noise through VoiceOver.
+    var spokenSummary: String {
+        switch status {
+        case .stopped:
+            return "Event socket is not running"
+        case .failed(let reason):
+            return "Event socket unavailable: \(reason)"
+        case .listening:
+            let sessions = diagnostics.trackedSessions
+            return "Event socket listening. \(diagnostics.acceptedEvents) events accepted, "
+                + "\(sessions) active \(sessions == 1 ? "session" : "sessions")."
+        }
+    }
+
     /// The reduced state and where it came from. `no provider` is the honest
     /// label for a state no agent asserted — including the offline default that
     /// every machine shows until a hook is installed.
