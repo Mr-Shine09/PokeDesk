@@ -18,7 +18,7 @@ Claude Code hooks ─┘                                      |
                                               animation + window controller
 ```
 
-As of 2026-07-30 this flow works end to end *except its input*: the app runs the socket server, reduces real events into `MascotVisibleState`, and animates from it — a delivered `active` event genuinely puts the pet at its computer. What does not exist is any provider adapter, and the helper is not bundled, so the only way to deliver an event today is to run `dockpet-event` by hand. Dock Pet must not yet be described as reflecting real Claude or ChatGPT activity.
+As of 2026-07-30 this flow works end to end *except its input*: the app runs the socket server, reduces real events into `MascotVisibleState`, animates from it, and ships the helper inside its own bundle. A delivered `active` event genuinely puts the pet at its computer. What does not exist is any provider adapter — nothing in Claude Code or Codex knows the helper is there — so a human invoking it by hand is still the only event source. Dock Pet must not yet be described as reflecting real Claude or ChatGPT activity.
 
 ## Current working state
 
@@ -73,7 +73,7 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 | Provider lifecycle adapters | not yet created | Planned issues #8 and #9 |
 | Local event reducer | `Packages/DesktopMascotKit/Sources/MascotCore/` | Registry and priority reducer implemented 2026-07-29; issue #6 closed 2026-07-30; still not consumed by the app |
 | Local event transport | `Packages/DesktopMascotKit/Sources/MascotTransport/` | Socket server, client, framing, and helper implemented 2026-07-29; run by the app since 2026-07-30 |
-| Event helper CLI | `Packages/DesktopMascotKit/Sources/dockpet-event/` | Works cross-process and reaches the running app; not bundled into the app and not installed for any hook |
+| Event helper CLI | `Packages/DesktopMascotKit/Sources/dockpet-event/` | Bundled into the app at `Contents/MacOS/dockpet-event` and invocable by absolute path; not yet installed for any hook |
 
 ## Product truths that must survive the handoff
 

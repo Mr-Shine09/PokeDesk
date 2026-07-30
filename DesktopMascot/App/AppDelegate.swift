@@ -153,6 +153,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         windowCoordinator?.reposition()
     }
 
+    /// Puts the bundled helper's absolute path on the clipboard, so it can be
+    /// pasted into a provider hook configuration. Copying is the whole action:
+    /// Dock Pet does not edit anyone's hook files.
+    func copyHelperPath() {
+        guard let path = EventHelperLocation.path else {
+            diagnostics = "Event helper is missing from this build"
+            return
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(path, forType: .string)
+        diagnostics = "Helper path copied"
+    }
+
     func quit() {
         NSApp.terminate(nil)
     }

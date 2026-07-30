@@ -25,7 +25,7 @@ Welcome, Mr. C. This file is the mandatory entry point for work on Dock Pet.
 
 ## Current priority
 
-1. Bundle the `dockpet-event` helper inside the app so a provider hook can invoke it by path, then add the privacy-preserving Claude Code and Codex hook adapters (#8, #9). The entire downstream path — event model, strict decoder, session registry, deterministic reducer, local socket transport, the helper, the socket server running inside the app, and animation selection from `MascotVisibleState` — is implemented, tested, and owner-verified as of 2026-07-30. The input side is the only thing still missing.
+1. Add the privacy-preserving Claude Code and Codex hook adapters (#8, #9). Everything else is done and verified as of 2026-07-30: event model, strict decoder, session registry, deterministic reducer, local socket transport, the socket server running inside the app, animation selection from `MascotVisibleState`, and the helper bundled at `Contents/MacOS/dockpet-event`. An adapter must map provider hooks onto the existing event vocabulary without widening the envelope, and must fail silently so it can never break the user's real agent session.
 2. Obtain/record owner hands-on QA for cursor hanging and the remaining display matrix (auto-hide, multiple displays, full-screen Spaces, sleep/wake). Placement is bottom-anchored only, so left/right Dock is no longer part of that matrix.
 3. Keep `MascotVisibleState` the single source of what the pet is doing. Anything that wants to change the animation goes through the reducer, never by setting an atlas row directly.
 
