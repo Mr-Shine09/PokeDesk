@@ -18,7 +18,7 @@ Claude Code hooks ─┘                                      |
                                               animation + window controller
 ```
 
-As of 2026-07-30 this flow works end to end *except its input*: the app runs the socket server, reduces real events into `MascotVisibleState`, animates from it, and ships the helper inside its own bundle. A delivered `active` event genuinely puts the pet at its computer. What does not exist is any provider adapter — nothing in Claude Code or Codex knows the helper is there — so a human invoking it by hand is still the only event source. Dock Pet must not yet be described as reflecting real Claude or ChatGPT activity.
+As of 2026-07-30 every stage of this flow is implemented: hook adapters for both providers (`dockpet-event --hook`), the bundled helper, the socket transport, the reducer, and animation driven by the result. What has *not* happened is a live provider session driving it — every event so far was synthesized by writing payloads to the helper. The mapping and transport are proven; the providers' documented hook behavior is trusted, not observed. Do not describe Dock Pet as reflecting real agent activity until that run happens.
 
 ## Current working state
 
@@ -32,12 +32,13 @@ As of 2026-07-30 this flow works end to end *except its input*: the app runs the
 - Launching, showing, or reopening the mascot plays a 1.25-second Dock portal transition before normal behavior resumes; Reduce Motion uses a stationary fade.
 - Manual Ideating, Pause, Show/Hide, Roaming, Reposition, diagnostics, and Quit controls exist in the menu bar.
 - Atlas revision 4 contains 14 rows, replaces the sit-shake ledges with small freestanding chairs, and validates structurally.
-- 143 Swift package tests pass, and unsigned Debug and Release Xcode builds both succeed.
-- The app runs the local event path as of 2026-07-30: it binds the owner-only socket at launch, ingests delivered events through `SessionRegistry` and `MascotStateReducer` via `EventPipeline`, shows listener status, counters, and the reduced state in the menu bar, and unlinks the socket on quit. What it still does *not* do is select animations from that state, and no provider hook can reach the helper, because the helper is not bundled and adapters #8/#9 do not exist.
+- 166 Swift package tests pass, and unsigned Debug and Release Xcode builds both succeed.
+- The app runs the local event path as of 2026-07-30: it binds the owner-only socket at launch, ingests delivered events through `SessionRegistry` and `MascotStateReducer` via `EventPipeline`, drives animation from the result, shows listener status and reduced state in the menu bar, and unlinks the socket on quit.
+- Both provider adapters exist as `dockpet-event --hook --provider <name>`, and `--print-hooks` emits the settings snippet to install them. Nothing has been installed into a real provider yet.
 
 ## Repository warning
 
-`main` is level with `origin/main` as of `970d316`, with PRs #14, #15, #16, #17, and #18 all merged and no feature branch outstanding. This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` at session start rather than trusting this file. The repository remains private.
+`main` was level with `origin/main` at `0b90cef` (PRs #14–#20 merged) when the adapter branch `agent/provider-hook-adapters` was cut. This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` at session start rather than trusting this file. The repository remains private.
 
 Merge and branch-delete commands are sometimes refused for the assistant by the auto-mode permission classifier and sometimes allowed; the outcome is not predictable in advance. When one is denied, give the owner the exact command to run in their own terminal instead of retrying or working around the denial.
 
@@ -53,7 +54,7 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 4. Build the app and confirm the bundled atlas/contract match the workspace versions.
 5. Ask the owner to drag the mascot from several body points and confirm the cursor snap/swing feels right.
 6. Record the QA result in `DesktopMascot.md`.
-7. The event model, reducer, transport, helper, and app-side server wiring are all done (issues #6 and most of #7). The open milestone is driving animation selection from `MascotVisibleState`; do not jump directly to hook installers.
+7. Every stage of the event path is implemented, including both hook adapters. The open milestone is observing a *live* provider session drive the mascot; do not treat the fixture evidence as a substitute for it.
 8. The two menu-bar lines (`Event socket:` and `Reduced state:`) were owner-verified on screen on 2026-07-30 and need no re-check.
 
 ## Key ownership boundaries
@@ -63,17 +64,17 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 | Product history and gates | `DesktopMascot.md` | Authoritative living ledger |
 | Xcode project definition | `project.yml` | Source of truth; Xcode project is generated |
 | App lifecycle/UI | `DesktopMascot/App/` | Prototype implemented |
-| State vocabulary | `Packages/DesktopMascotKit/Sources/MascotCore/` | Enum, envelope, decoder, registry, reducer, and `EventPipeline` implemented and tested; fed by the app since 2026-07-30, but not yet consumed for animation |
+| State vocabulary | `Packages/DesktopMascotKit/Sources/MascotCore/` | Enum, envelope, decoder, registry, reducer, and `EventPipeline` implemented and tested; fed by the app and consumed for animation since 2026-07-30 |
 | App-side event bridge | `DesktopMascot/App/AgentEventBridge.swift` | Runs the server, ingests on the main actor, refreshes on a timer, publishes diagnostics |
 | Atlas loading | `Packages/DesktopMascotKit/Sources/MascotAnimation/` | Implemented and tested |
 | Panel/Dock geometry | `Packages/DesktopMascotKit/Sources/MascotWindow/` | Implemented, bottom-anchored only as of 2026-07-30; hands-on display matrix incomplete |
 | Frozen base art | `art/production/` | Do not replace |
 | Atlas contract and output | `art/animation/` | Revision 4; chair sit-shake rows merged 2026-07-30 |
 | Deterministic art tooling | `tools/` | Implemented and reusable |
-| Provider lifecycle adapters | not yet created | Planned issues #8 and #9 |
-| Local event reducer | `Packages/DesktopMascotKit/Sources/MascotCore/` | Registry and priority reducer implemented 2026-07-29; issue #6 closed 2026-07-30; still not consumed by the app |
+| Provider lifecycle adapters | `Packages/DesktopMascotKit/Sources/MascotTransport/HookPayload.swift` | Implemented 2026-07-30 as helper `--hook` mode for both providers; awaiting a live session |
+| Local event reducer | `Packages/DesktopMascotKit/Sources/MascotCore/` | Registry and priority reducer implemented 2026-07-29; issue #6 closed 2026-07-30; drives animation since 2026-07-30 |
 | Local event transport | `Packages/DesktopMascotKit/Sources/MascotTransport/` | Socket server, client, framing, and helper implemented 2026-07-29; run by the app since 2026-07-30 |
-| Event helper CLI | `Packages/DesktopMascotKit/Sources/dockpet-event/` | Bundled into the app at `Contents/MacOS/dockpet-event` and invocable by absolute path; not yet installed for any hook |
+| Event helper CLI | `Packages/DesktopMascotKit/Sources/dockpet-event/` | Bundled at `Contents/MacOS/dockpet-event`; also the hook adapter via `--hook`, and prints its own install snippet via `--print-hooks` |
 
 ## Product truths that must survive the handoff
 
@@ -103,7 +104,8 @@ Build the core event system before provider-specific installers. Steps 1–6 are
 7. ~~Add a same-user local Unix-domain socket and small helper.~~
 8. ~~Run the server inside the app, feed the registry and reducer, and surface the result in menu-bar diagnostics before changing any animation.~~
 9. ~~Connect reducer output to animation selection, preserving manual pause/ideating behavior and keeping ambient roaming as the no-signal default.~~
-10. Bundle the helper inside the app bundle so a hook can invoke it by path, then add the Codex and Claude Code adapters (#8, #9).
+10. ~~Bundle the helper inside the app bundle so a hook can invoke it by path, then add the Codex and Claude Code adapters (#8, #9).~~
+11. Install the printed hook snippet and observe a real Claude Code or Codex session driving the mascot.
 
 Acceptance criteria are in the Phase 3 section of `DesktopMascot.md`.
 

@@ -21,6 +21,8 @@ public enum HelperCommand {
 
     public static let usage = """
     usage: dockpet-event --provider <claude-code|codex> --event <event> --session <id> [--detail <detail>] [--verbose]
+           dockpet-event --provider <claude-code|codex> --hook [--verbose]
+           dockpet-event --provider <claude-code|codex> --print-hooks
 
       events:  started active waiting completed failed stopped heartbeat
       details: tool permission input network timeout cancelled
@@ -29,10 +31,83 @@ public enum HelperCommand {
     private socket. Exits 0 when Dock Pet is not running, so a provider hook is
     never failed by the mascot being closed.
 
+    --hook reads a provider hook payload on stdin and maps it onto the event
+    vocabulary. Only `hook_event_name` and `session_id` are read; every other key
+    is dropped without being inspected, so the working directory, transcript
+    path, tool arguments, and tool output have nowhere to go.
+
+    --print-hooks writes a ready-to-paste configuration snippet to stdout. It
+    never edits a configuration file: installing the hook stays the user's action.
+
     The session value is hashed locally before it is sent; the raw value never
-    reaches the app. No other argument is accepted, so prompt text, file paths,
-    tool arguments, and tool output have nowhere to go.
+    reaches the app.
     """
+
+    /// What the caller asked for. Parsed before anything is sent, so an
+    /// unusable invocation cannot half-execute.
+    public enum Invocation: Equatable, Sendable {
+        case send(EventEnvelope)
+        /// Read a hook payload from stdin and map it.
+        case hook(provider: EventProvider)
+        case printHooks(provider: EventProvider)
+    }
+
+    public static func invocation(from arguments: [String], now: Date) throws -> Invocation {
+        if arguments.contains("--help") || arguments.contains("-h") {
+            throw ParseError.helpRequested
+        }
+        let wantsHook = arguments.contains("--hook")
+        let wantsPrint = arguments.contains("--print-hooks")
+        guard !(wantsHook && wantsPrint) else { throw ParseError.unknownFlag }
+
+        guard wantsHook || wantsPrint else {
+            return .send(try envelope(from: arguments, now: now))
+        }
+
+        // Both modes take exactly one other flag, so anything else is a mistake
+        // worth reporting rather than ignoring.
+        let mode = wantsHook ? "--hook" : "--print-hooks"
+        var provider: EventProvider?
+        var index = 0
+        while index < arguments.count {
+            let flag = arguments[index]
+            if flag == mode || flag == "--verbose" {
+                index += 1
+                continue
+            }
+            guard flag == "--provider" else { throw ParseError.unknownFlag }
+            guard index + 1 < arguments.count else { throw ParseError.missingValue }
+            guard provider == nil else { throw ParseError.repeatedFlag }
+            guard let resolved = EventProvider(rawValue: arguments[index + 1]) else {
+                throw ParseError.unknownProvider
+            }
+            provider = resolved
+            index += 2
+        }
+        guard let provider else { throw ParseError.missingProvider }
+        return wantsHook ? .hook(provider: provider) : .printHooks(provider: provider)
+    }
+
+    /// Maps an extracted hook payload onto an envelope.
+    ///
+    /// `nil` means the hook has no honest equivalent in the vocabulary and
+    /// nothing should be sent — not that anything went wrong.
+    public static func envelope(
+        forHook payload: HookPayload,
+        provider: EventProvider,
+        now: Date
+    ) -> EventEnvelope? {
+        guard let reaction = HookEventMapping.reaction(for: payload.hookEventName, provider: provider) else {
+            return nil
+        }
+        return EventEnvelope(
+            provider: provider,
+            sessionID: opaqueSessionID(from: payload.sessionID),
+            event: reaction.event,
+            occurredAt: now,
+            detail: reaction.detail
+        )
+    }
 
     public static func envelope(from arguments: [String], now: Date) throws -> EventEnvelope {
         var provider: String?

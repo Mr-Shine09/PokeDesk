@@ -17,7 +17,7 @@ let package = Package(
         .target(name: "MascotAnimation", dependencies: ["MascotCore"]),
         .target(name: "MascotWindow", dependencies: ["MascotCore"]),
         .target(name: "MascotTransport", dependencies: ["MascotCore"]),
-        .executableTarget(name: "dockpet-event", dependencies: ["MascotTransport"]),
+        .executableTarget(name: "dockpet-event", dependencies: ["MascotCore", "MascotTransport"]),
         .testTarget(name: "MascotCoreTests", dependencies: ["MascotCore"]),
         .testTarget(name: "MascotAnimationTests", dependencies: ["MascotAnimation"]),
         .testTarget(name: "MascotWindowTests", dependencies: ["MascotWindow"]),
