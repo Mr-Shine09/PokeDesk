@@ -4,10 +4,11 @@ import MascotTransport
 
 /// Runs the local event socket inside the app and keeps the pipeline current.
 ///
-/// This is the app's only owner of `EventSocketServer`. It deliberately does not
-/// touch animation: the reduced state is published and surfaced in menu-bar
-/// diagnostics, and wiring it into animation selection is a separate step, so a
-/// transport bug cannot be mistaken for an animation bug while the path is new.
+/// This is the app's only owner of `EventSocketServer`, and `visibleState` is the
+/// only input to animation selection — `AppDelegate` observes it and feeds it to
+/// `AmbientAnimationController`. Manual pause and ideating arrive here as
+/// `overrides` and come back out folded into the reduced state, so there is
+/// exactly one path from any cause to what the pet is doing.
 @MainActor
 final class AgentEventBridge: ObservableObject {
     enum Status: Equatable {
@@ -103,11 +104,13 @@ final class AgentEventBridge: ObservableObject {
         }
     }
 
-    /// The reduced state, labelled as observation rather than as behavior.
+    /// The reduced state and where it came from. `no provider` is the honest
+    /// label for a state no agent asserted — including the offline default that
+    /// every machine shows until a hook is installed.
     var reducedStateSummary: String {
         let providers = visibleState.providers.map(\.rawValue).joined(separator: ", ")
         let source = providers.isEmpty ? "no provider" : providers
-        return "Reduced state: \(visibleState.state.displayName) (\(source)) — not driving animation yet"
+        return "Reduced state: \(visibleState.state.displayName) (\(source))"
     }
 
     // MARK: - Private

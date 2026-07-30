@@ -1,24 +1,36 @@
 import AppKit
 import MascotAnimation
+import MascotCore
 import MascotWindow
 
+/// Plays whatever `MascotVisibleState` says, plus the two things that are not
+/// agent state at all: the summon transition and a direct drag.
+///
+/// The reduced state is the single source of truth for which row plays, manual
+/// pause and ideating included — those reach here as `.paused` and `.ideating`
+/// through the reducer's overrides, not as separate flags. `isRoaming` stays
+/// separate because it is about *placement*, not about what the agent is doing.
 @MainActor
 final class AmbientAnimationController {
     var onSummonCompleted: (() -> Void)?
 
     private enum Phase {
         case walking(direction: CGFloat, until: TimeInterval)
-        case offline(until: TimeInterval)
+        /// An ambient pause between walks. `.infinity` means roaming is off.
+        case resting(until: TimeInterval)
+        /// Holding one state's row in place.
+        case stationary
     }
 
     private let atlas: SpriteAtlas
     private let previewModel: MascotPreviewModel
     private let windowCoordinator: WindowCoordinator
     private let summonTimeline = PortalSummonTimeline()
+    private var selector = AnimationSelector()
     private var frameCache: [String: [NSImage]] = [:]
     private var timer: Timer?
     private var summonStartedAt: TimeInterval?
-    private var phase: Phase = .offline(until: 0)
+    private var phase: Phase = .resting(until: 0)
     private var currentState = "offline"
     private var frameIndex = 0
     private var nextFrameTime: TimeInterval = 0
@@ -26,19 +38,31 @@ final class AmbientAnimationController {
     private var lastWalkingDirection: CGFloat = 0
     private var isDragging = false
     private(set) var isVisible = false
-    private(set) var isPaused = false
-    private(set) var isIdeating = false
     private(set) var isRoaming = true
+
+    /// The state actually on screen, which lags the reduced state by at most the
+    /// selector's dwell.
+    private(set) var displayedState: MascotState = .offline
+
+    private var plan: AnimationPlan { AnimationSelector.plan(for: displayedState) }
 
     init(atlas: SpriteAtlas, previewModel: MascotPreviewModel, windowCoordinator: WindowCoordinator) throws {
         self.atlas = atlas
         self.previewModel = previewModel
         self.windowCoordinator = windowCoordinator
-        for state in ["offline", "walk-right", "walk-left", "hanging", "paused", "ideating"] {
-            guard let row = atlas.contract.row(named: state) else { continue }
-            frameCache[state] = try (0 ..< row.frames).map { try atlas.frame(state: state, index: $0) }
+        // Every declared row is cached, rather than a hand-listed subset: the
+        // reduced state can now select any of them, and a missing row would show
+        // up as a silently frozen pet.
+        for row in atlas.contract.rows {
+            frameCache[row.state] = try (0 ..< row.frames).map { try atlas.frame(state: row.state, index: $0) }
         }
         beginWalking(at: ProcessInfo.processInfo.systemUptime)
+    }
+
+    /// The only way agent state enters the animation.
+    func setVisibleState(_ state: MascotState) {
+        let now = ProcessInfo.processInfo.systemUptime
+        adopt(selector.update(to: state, at: Uptime(seconds: now)), at: now)
     }
 
     func setVisible(_ visible: Bool) {
@@ -53,39 +77,20 @@ final class AmbientAnimationController {
         }
     }
 
-    func setPaused(_ paused: Bool) {
-        isPaused = paused
-        if paused {
-            if summonStartedAt == nil {
-                show(state: "paused", frame: 0)
-                stopTimer()
-            }
-        } else if isVisible {
-            startTimer(resetPhase: summonStartedAt == nil)
-        }
-    }
-
-    func setIdeating(_ ideating: Bool) {
-        isIdeating = ideating
-        if ideating {
-            currentState = "ideating"
-            frameIndex = 0
-            nextFrameTime = 0
-        } else {
-            beginWalking(at: ProcessInfo.processInfo.systemUptime)
-        }
-        if isVisible, !isPaused { startTimer() }
-    }
-
     func setRoaming(_ roaming: Bool) {
         isRoaming = roaming
-        if roaming {
-            windowCoordinator.reposition()
-            beginWalking(at: ProcessInfo.processInfo.systemUptime)
-        } else {
-            beginOffline(at: ProcessInfo.processInfo.systemUptime, duration: .infinity)
+        let now = ProcessInfo.processInfo.systemUptime
+        // Roaming only governs the strolling states. A working or waiting pet is
+        // stationary either way, so toggling this must not yank it into a walk.
+        if plan.isAmbient {
+            if roaming {
+                windowCoordinator.reposition()
+                beginWalking(at: now)
+            } else {
+                beginResting(at: now, duration: .infinity)
+            }
         }
-        if isVisible, !isPaused { startTimer() }
+        if isVisible, displayedState != .paused { startTimer() }
     }
 
     func userDidBeginDrag() {
@@ -100,15 +105,50 @@ final class AmbientAnimationController {
     func userDidEndDrag() {
         isDragging = false
         setRoaming(false)
-        if isPaused {
+        if displayedState == .paused {
             show(state: "paused", frame: 0)
             stopTimer()
         }
     }
 
+    // MARK: - State adoption
+
+    /// Reconfigures playback when the displayed state actually changes.
+    private func adopt(_ state: MascotState, at now: TimeInterval) {
+        guard state != displayedState else { return }
+        displayedState = state
+
+        if state == .paused {
+            show(state: "paused", frame: 0)
+            stopTimer()
+            return
+        }
+
+        switch AnimationSelector.plan(for: state) {
+        case .ambient:
+            if isRoaming {
+                beginWalking(at: now)
+            } else {
+                beginResting(at: now, duration: .infinity)
+            }
+        case .stationary(let row):
+            phase = .stationary
+            currentState = row
+            frameIndex = 0
+            nextFrameTime = 0
+        }
+
+        if isVisible { startTimer() }
+    }
+
+    // MARK: - Timing
+
     private func startTimer(resetPhase: Bool = false) {
-        guard isVisible, !isPaused || isDragging || summonStartedAt != nil else { return }
-        if resetPhase, summonStartedAt == nil { beginWalking(at: ProcessInfo.processInfo.systemUptime) }
+        guard isVisible else { return }
+        guard displayedState != .paused || isDragging || summonStartedAt != nil else { return }
+        if resetPhase, summonStartedAt == nil, plan.isAmbient {
+            beginWalking(at: ProcessInfo.processInfo.systemUptime)
+        }
         guard timer == nil else { return }
         previousTickTime = ProcessInfo.processInfo.systemUptime
         timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 20.0, repeats: true) { [weak self] _ in
@@ -138,30 +178,32 @@ final class AmbientAnimationController {
             return
         }
 
+        // Direct interaction outranks every agent state.
         if isDragging {
             advanceFrames(state: "hanging", now: now)
             return
         }
 
-        if isIdeating {
-            advanceFrames(state: "ideating", now: now)
-            return
-        }
+        // Commits a state the dwell was holding back; inert when none is pending.
+        adopt(selector.tick(at: Uptime(seconds: now)), at: now)
+        guard displayedState != .paused else { return }
 
         switch phase {
+        case .stationary:
+            advanceFrames(state: plan.restingRow, now: now)
         case let .walking(direction, until):
             if !isRoaming {
-                beginOffline(at: now, duration: .infinity)
+                beginResting(at: now, duration: .infinity)
                 return
             }
             if now >= until {
-                beginOffline(at: now, duration: Double.random(in: 2.5 ... 5.0))
+                beginResting(at: now, duration: Double.random(in: 2.5 ... 5.0))
                 return
             }
             let visibleDirection = move(direction: direction, elapsed: elapsed, now: now)
             advanceFrames(state: visibleDirection > 0 ? "walk-right" : "walk-left", now: now)
-        case let .offline(until):
-            advanceFrames(state: "offline", now: now)
+        case let .resting(until):
+            advanceFrames(state: plan.restingRow, now: now)
             if isRoaming, now >= until {
                 beginWalking(at: now)
             }
@@ -211,16 +253,18 @@ final class AmbientAnimationController {
         previewModel.summonFrame = summonTimeline.frame(at: 0)
         summonStartedAt = now
 
-        if isPaused {
+        if displayedState == .paused {
             show(state: "paused", frame: 0)
-        } else if isIdeating {
-            show(state: "ideating", frame: 0)
-        } else if isRoaming {
+        } else if plan.isAmbient, isRoaming {
             beginWalking(at: now)
             show(state: currentState, frame: 0)
+        } else if plan.isAmbient {
+            beginResting(at: now, duration: .infinity)
+            show(state: plan.restingRow, frame: 0)
         } else {
-            beginOffline(at: now, duration: .infinity)
-            show(state: "offline", frame: 0)
+            phase = .stationary
+            currentState = plan.restingRow
+            show(state: currentState, frame: 0)
         }
         startTimer()
     }
@@ -232,23 +276,26 @@ final class AmbientAnimationController {
     }
 
     private func resumeAfterSummon(at now: TimeInterval) {
-        if isPaused {
+        if displayedState == .paused {
             show(state: "paused", frame: 0)
             stopTimer()
-        } else if isIdeating {
-            currentState = "ideating"
+        } else if plan.isAmbient {
+            if isRoaming {
+                beginWalking(at: now)
+            } else {
+                beginResting(at: now, duration: .infinity)
+            }
+        } else {
+            phase = .stationary
+            currentState = plan.restingRow
             frameIndex = 0
             nextFrameTime = 0
-        } else if isRoaming {
-            beginWalking(at: now)
-        } else {
-            beginOffline(at: now, duration: .infinity)
         }
     }
 
-    private func beginOffline(at now: TimeInterval, duration: TimeInterval) {
-        phase = .offline(until: now + duration)
-        currentState = "offline"
+    private func beginResting(at now: TimeInterval, duration: TimeInterval) {
+        phase = .resting(until: now + duration)
+        currentState = plan.restingRow
         frameIndex = 0
         nextFrameTime = 0
     }
