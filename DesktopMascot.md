@@ -10,8 +10,8 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-29 |
-| Status | Revision 3 cursor-hanging animation is integrated and build-verified; the strict local event envelope and decoder are implemented and fixture-tested |
-| Current gate | Owner-verify the physical cursor-hanging drag feel; then implement the session registry and deterministic reducer |
+| Status | Portal summon, revision 3 cursor-hanging, ambient animation, event engine, and local transport are implemented and build-verified |
+| Current gate | Owner-verify the portal summon and physical cursor-hanging feel; then wire the tested local event path into the app |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -406,7 +406,7 @@ Acceptance: both providers drive the state engine in fixture and live smoke test
 
 ### Phase 5 — Animation system and full sprite set (2026-08-06 to 2026-08-08)
 
-**Status: In progress; atlas playback and random ambient walk/offline phases were pulled forward at the owner's explicit request. Provider-driven transitions and Reduced Motion remain open.**
+**Status: In progress; atlas playback, random ambient walk/offline phases, and a Reduce-Motion-aware portal summon transition are implemented. Provider-driven transitions and broader Reduced Motion coverage remain open.**
 
 1. Implement sprite atlas loader and animation controller.
 2. Create idle, walk, work, ideate, wait, success, failure, sleep, offline, and paused frames plus the thought-cloud effect layer.
@@ -450,7 +450,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | [#8 Add the Codex lifecycle-hook adapter](https://github.com/Mr-Shine09/desktop-mascot/issues/8) | 4 | Open |
 | [#9 Add the Claude Code lifecycle-hook adapter](https://github.com/Mr-Shine09/desktop-mascot/issues/9) | 4 | Open |
 | [#10 Build menu-bar settings and integration management](https://github.com/Mr-Shine09/desktop-mascot/issues/10) | 2 / 4 | Open |
-| [#11 Integrate animations, transitions, and Reduced Motion](https://github.com/Mr-Shine09/desktop-mascot/issues/11) | 5 | In progress; cached frame playback and random bottom-lane walk/offline phases run locally; provider transitions and Reduced Motion remain open |
+| [#11 Integrate animations, transitions, and Reduced Motion](https://github.com/Mr-Shine09/desktop-mascot/issues/11) | 5 | In progress; cached ambient playback and the portal summon transition run locally; provider transitions and broader Reduced Motion coverage remain open |
 | [#12 Verify privacy, accessibility, performance, and multi-display behavior](https://github.com/Mr-Shine09/desktop-mascot/issues/12) | 6 | Open |
 | [#13 Add CI, signing, notarization, packaging, and release docs](https://github.com/Mr-Shine09/desktop-mascot/issues/13) | 6 | Open |
 
@@ -475,6 +475,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Window geometry | Automated fixtures plus manual multi-display matrix | Ten tests pass, including bottom/left/right/clamp, visibility, non-activating interaction, click routing, and drag begin/end routing; remaining display matrix pending |
 | Atlas runtime mapping | Every declared row crops to the matching frozen frame pixels | Passed 2026-07-29 for offline, idle, working, ideating, both walk directions, and both cliff-edge sit rows |
 | Ambient animation | Atlas timing, directional movement, alternating walk direction, random offline rests, and bounded bottom-lane motion | Corrected live samples show distinct right gait while x increases and left gait while x decreases; offline transition also visually verified |
+| Portal summon | Portal opens before mascot emergence, mascot is fully visible before closure, hide/show and reopen replay the transition, and Reduce Motion avoids translation/scale motion | Passed three deterministic timeline fixtures inside a 116-test package suite and an unsigned Debug build on 2026-07-29; owner visual QA pending |
 | Event envelope and decoder | Version/provider/event allowlists, opaque session-ID validation, payload ceiling, RFC 3339 parsing, injected-clock skew bounds | Passed 2026-07-29: 21 decoder fixtures inside a 31-test package suite |
 | State reducer | Unit tests for ordering, duplicates, expiry, concurrency | Passed 2026-07-29: 39 registry/reducer fixtures inside a 70-test package suite, covering the full documented priority order, duplicate idempotence, stale-event rejection, heartbeat expiry boundaries, bounded reaction boundaries, stopped grace, capacity eviction, wake reconciliation, sleep-window hours, and concurrent providers. Two mutation checks confirmed the heartbeat-refresh-only and stale-ordering guards are genuinely enforced. Not yet wired to the app |
 | Privacy | Forbidden fields absent from storage and diagnostic output | Partially passed 2026-07-29 at the decoder boundary: forbidden keys are discarded, the envelope exposes only six allowlisted fields, and no error carries payload text. Storage and diagnostics remain unverified because neither exists yet |
@@ -1174,6 +1175,20 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: the same three owner decisions remain open. Two new risks are recorded — `sun_path` headroom is about 17 bytes for this user, and the helper is not yet bundled anywhere a hook could invoke it. The app still does not run the server, so the end-to-end path is proven only between the helper and a test listener.
 - Next: run `EventSocketServer` inside the app, feed `SessionRegistry` and `MascotStateReducer`, and surface the result in menu-bar diagnostics *before* changing any animation. Then map `MascotVisibleState` onto animation rows with debounce, keeping ambient roaming as the no-signal behavior so the owner-approved default is not regressed. Bundle the helper and add the adapters (#8, #9) after that.
 
+### 2026-07-29 — Dock portal summon transition
+
+- Objective: make every mascot summon feel intentional by opening a portal at the Dock and having the pet emerge through it before normal behavior resumes.
+- Completed:
+  - Added a deterministic 1.25-second `PortalSummonTimeline` to `MascotAnimation`: the portal opens first, the pet emerges, the pet reaches its resting pose, and the portal then closes.
+  - Layered a cyan/violet portal behind and in front of the frozen mascot sprite without changing the approved atlas or character pixels.
+  - Routed initial launch, menu-bar Show, and application reopen through the summon transition while preserving paused, manual ideating, roaming, and manual-position outcomes afterward.
+  - Added a Reduce Motion path that replaces portal translation/scaling with a stationary fade.
+  - Added three timing fixtures covering ordering, full emergence before closure, clamping, and completion.
+- Decisions: keep the portal code-rendered and local to the existing `96x112` panel; do not add an atlas row or alter frozen art for this effect. A drag that begins during the transition cancels it immediately so direct interaction remains responsive.
+- Verification: 116 Swift package tests pass; the unsigned Debug Xcode build succeeds; atlas contract and pixels remain unchanged; `git diff --check` passes; the Debug app launched successfully in the background. Owner visual QA of color, scale, and timing remains pending.
+- Risks or blockers: the compact panel bounds intentionally clip the pet below the portal during emergence. The exact perceived alignment with different Dock configurations still needs hands-on QA alongside the existing display matrix.
+- Next: owner hides and shows the mascot (and reopens the running app) to approve the portal timing and Dock alignment, then resume the event-server app wiring milestone.
+
 ## Next-session handoff
 
 1. Read this file in full.
@@ -1182,7 +1197,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 4. `main` was published to `origin/main` at the owner's direction and is level with it as of `0ba5a85`. The registry/reducer commit `fda2298` and the transport commit that follows it are local and **unpushed**. Do not push without the owner's explicit direction.
 5. Treat the current presentation as `96x112` points with a 10-point transparent Dock inset. The frozen atlas itself remains unchanged.
 6. Ask the owner to test dragging from several body points and verify that the raised hand remains under the cursor while the body swings left/center/right; also retain the broader click, reopen, relaunch, and display-matrix QA.
-7. Preserve the honest capability boundary: ambient random walking/offline playback is implemented, but it does not yet know whether ChatGPT or Claude is working. The envelope, decoder, registry, reducer, transport, and helper all exist and are tested, but **the app itself still runs none of them** — it neither listens on the socket nor consumes reducer output, and no provider hook can reach the helper. The next steps are app wiring, then bundling the helper, then adapters #8 and #9. Until then, do not describe Dock Pet as reflecting real agent activity.
+7. Preserve the honest capability boundary: portal summon and ambient random walking/offline playback are implemented, but neither knows whether ChatGPT or Claude is working. The envelope, decoder, registry, reducer, transport, and helper all exist and are tested, but **the app itself still runs none of them** — it neither listens on the socket nor consumes reducer output, and no provider hook can reach the helper. The next steps are app wiring, then bundling the helper, then adapters #8 and #9. Until then, do not describe Dock Pet as reflecting real agent activity.
 8. Treat `EventEnvelope` as the privacy boundary and `EventDecoder` as fail-closed. Do not widen the envelope, relax the `SessionID` charset, or copy payload text into an error without a recorded product decision. `AgentSession` extends the same boundary and must gain no new field either. Keep the two clocks separate as well: wall-clock `occurredAt` orders events inside one session, monotonic `Uptime` drives expiry and reactions, and both stay caller-injected so fixtures remain deterministic. On the transport side, keep the helper's flag set closed, keep the session value hashed inside the helper, keep the `getpeereid` same-user check, and keep the socket path derived rather than passed in.
 9. Resolve the four onboarding discrepancies in the risk register. Side-Dock roaming and the Hide/Show position reset still need owner decisions. The unused-vocabulary risk is now the reducer-wiring task: `MascotVisibleState` must become the single typed source of visible state, replacing the raw atlas row strings in `AmbientAnimationController` — not growing beside them.
 10. Do not mistake direct `open` activation for automatic panel focus theft; the verified background launch (`open -g`) left ChatGPT/Codex frontmost. Do not use `open -j`, which intentionally hides the app.

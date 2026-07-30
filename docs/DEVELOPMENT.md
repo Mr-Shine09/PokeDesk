@@ -45,7 +45,7 @@ SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/mac-dock-pet-swiftpm-cache \
 swift test
 ```
 
-Expected handoff baseline: 113 Swift Testing tests pass as of 2026-07-29. A higher count is fine; a lower count requires investigation.
+Expected handoff baseline: 116 Swift Testing tests pass as of 2026-07-29. A higher count is fine; a lower count requires investigation.
 
 ## Exercise the event helper
 
@@ -135,4 +135,3 @@ Commit generated project and atlas outputs with their source definitions in the 
 - Hidden app seems impossible to reopen: Hide leaves the accessory process alive; reopening must invoke `applicationShouldHandleReopen`. Quit is separate.
 - Mascot slides instead of walks: verify runtime crop equality and that animation direction matches horizontal movement.
 - Drag artwork appears detached from cursor: preserve the hanging atlas grip `(48, 4)` to AppKit panel point `(48, 108)` mapping.
-

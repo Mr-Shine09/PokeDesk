@@ -4,6 +4,8 @@ import MascotWindow
 
 @MainActor
 final class AmbientAnimationController {
+    var onSummonCompleted: (() -> Void)?
+
     private enum Phase {
         case walking(direction: CGFloat, until: TimeInterval)
         case offline(until: TimeInterval)
@@ -12,8 +14,10 @@ final class AmbientAnimationController {
     private let atlas: SpriteAtlas
     private let previewModel: MascotPreviewModel
     private let windowCoordinator: WindowCoordinator
+    private let summonTimeline = PortalSummonTimeline()
     private var frameCache: [String: [NSImage]] = [:]
     private var timer: Timer?
+    private var summonStartedAt: TimeInterval?
     private var phase: Phase = .offline(until: 0)
     private var currentState = "offline"
     private var frameIndex = 0
@@ -21,7 +25,7 @@ final class AmbientAnimationController {
     private var previousTickTime: TimeInterval = 0
     private var lastWalkingDirection: CGFloat = 0
     private var isDragging = false
-    private(set) var isVisible = true
+    private(set) var isVisible = false
     private(set) var isPaused = false
     private(set) var isIdeating = false
     private(set) var isRoaming = true
@@ -35,21 +39,29 @@ final class AmbientAnimationController {
             frameCache[state] = try (0 ..< row.frames).map { try atlas.frame(state: state, index: $0) }
         }
         beginWalking(at: ProcessInfo.processInfo.systemUptime)
-        startTimer()
     }
 
     func setVisible(_ visible: Bool) {
         isVisible = visible
-        visible ? startTimer() : stopTimer()
+        if visible {
+            beginSummon(at: ProcessInfo.processInfo.systemUptime)
+        } else {
+            summonStartedAt = nil
+            previewModel.isSummoning = false
+            previewModel.summonFrame = .resting
+            stopTimer()
+        }
     }
 
     func setPaused(_ paused: Bool) {
         isPaused = paused
         if paused {
-            show(state: "paused", frame: 0)
-            stopTimer()
+            if summonStartedAt == nil {
+                show(state: "paused", frame: 0)
+                stopTimer()
+            }
         } else if isVisible {
-            startTimer(resetPhase: true)
+            startTimer(resetPhase: summonStartedAt == nil)
         }
     }
 
@@ -77,6 +89,7 @@ final class AmbientAnimationController {
     }
 
     func userDidBeginDrag() {
+        finishSummon()
         isDragging = true
         currentState = "hanging"
         frameIndex = 0
@@ -94,8 +107,8 @@ final class AmbientAnimationController {
     }
 
     private func startTimer(resetPhase: Bool = false) {
-        guard isVisible, !isPaused || isDragging else { return }
-        if resetPhase { beginWalking(at: ProcessInfo.processInfo.systemUptime) }
+        guard isVisible, !isPaused || isDragging || summonStartedAt != nil else { return }
+        if resetPhase, summonStartedAt == nil { beginWalking(at: ProcessInfo.processInfo.systemUptime) }
         guard timer == nil else { return }
         previousTickTime = ProcessInfo.processInfo.systemUptime
         timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 20.0, repeats: true) { [weak self] _ in
@@ -113,6 +126,17 @@ final class AmbientAnimationController {
         let now = ProcessInfo.processInfo.systemUptime
         let elapsed = min(0.2, max(0, now - previousTickTime))
         previousTickTime = now
+
+        if let summonStartedAt {
+            let frame = summonTimeline.frame(at: now - summonStartedAt)
+            previewModel.summonFrame = frame
+            if frame.isComplete {
+                finishSummon()
+                resumeAfterSummon(at: now)
+                onSummonCompleted?()
+            }
+            return
+        }
 
         if isDragging {
             advanceFrames(state: "hanging", now: now)
@@ -179,6 +203,47 @@ final class AmbientAnimationController {
         currentState = direction > 0 ? "walk-right" : "walk-left"
         frameIndex = 0
         nextFrameTime = 0
+    }
+
+    private func beginSummon(at now: TimeInterval) {
+        previewModel.usesReducedMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        previewModel.isSummoning = true
+        previewModel.summonFrame = summonTimeline.frame(at: 0)
+        summonStartedAt = now
+
+        if isPaused {
+            show(state: "paused", frame: 0)
+        } else if isIdeating {
+            show(state: "ideating", frame: 0)
+        } else if isRoaming {
+            beginWalking(at: now)
+            show(state: currentState, frame: 0)
+        } else {
+            beginOffline(at: now, duration: .infinity)
+            show(state: "offline", frame: 0)
+        }
+        startTimer()
+    }
+
+    private func finishSummon() {
+        summonStartedAt = nil
+        previewModel.isSummoning = false
+        previewModel.summonFrame = .resting
+    }
+
+    private func resumeAfterSummon(at now: TimeInterval) {
+        if isPaused {
+            show(state: "paused", frame: 0)
+            stopTimer()
+        } else if isIdeating {
+            currentState = "ideating"
+            frameIndex = 0
+            nextFrameTime = 0
+        } else if isRoaming {
+            beginWalking(at: now)
+        } else {
+            beginOffline(at: now, duration: .infinity)
+        }
     }
 
     private func beginOffline(at now: TimeInterval, duration: TimeInterval) {

@@ -28,9 +28,10 @@ Everything from the decoder through the transport and helper is implemented and 
 - Click/right-click opens Pause/Resume, Stop/Resume Roaming, Hide, and Quit actions.
 - Dragging switches to a six-frame one-handed hanging animation. The raised hand is fixed under the cursor; dropping stops roaming at the manual position.
 - Reopening an already-running hidden app restores the mascot panel.
+- Launching, showing, or reopening the mascot plays a 1.25-second Dock portal transition before normal behavior resumes; Reduce Motion uses a stationary fade.
 - Manual Ideating, Pause, Show/Hide, Roaming, Reposition, diagnostics, and Quit controls exist in the menu bar.
 - Atlas revision 3 contains 14 rows and validates structurally.
-- 113 Swift package tests pass and an unsigned Debug Xcode build succeeds.
+- 116 Swift package tests pass and an unsigned Debug Xcode build succeeds.
 - The local event path exists but the app does not run it: `EventEnvelope`, `EventDecoder`, `SessionRegistry`, `MascotStateReducer`, `MascotTransport`, and the `dockpet-event` helper are all implemented and tested, and the helper delivers events cross-process to a listener on the real socket path. The app itself neither listens nor consumes reducer output, and no provider hook can reach the helper yet.
 
 ## Repository warning
@@ -111,4 +112,3 @@ Acceptance criteria are in the Phase 3 section of `DesktopMascot.md`.
 ## Definition of a good handoff continuation
 
 A new change is complete only when code/art, automated checks, hands-on evidence where required, and `DesktopMascot.md` all agree. Do not mark a phase complete based solely on a successful build.
-
