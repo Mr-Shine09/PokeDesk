@@ -18,20 +18,21 @@ Claude Code hooks ─┘                                      |
                                               animation + window controller
 ```
 
-Everything from the decoder through the transport and helper is implemented and tested, and as of 2026-07-30 the app runs the socket server and reduces real events into `MascotVisibleState`, shown in menu-bar diagnostics. Nothing consumes that state for animation, and the provider adapters do not exist, so the prototype still alternates ambient walking and offline animations without knowing whether an agent is active — and the only way to deliver an event today is to run `dockpet-event` by hand.
+As of 2026-07-30 this flow works end to end *except its input*: the app runs the socket server, reduces real events into `MascotVisibleState`, and animates from it — a delivered `active` event genuinely puts the pet at its computer. What does not exist is any provider adapter, and the helper is not bundled, so the only way to deliver an event today is to run `dockpet-event` by hand. Dock Pet must not yet be described as reflecting real Claude or ChatGPT activity.
 
 ## Current working state
 
 - Native SwiftUI/AppKit app launches as an `LSUIElement` accessory.
 - Transparent `96x112`-point non-activating `NSPanel` remains visible across Spaces.
-- Mascot walks left/right along the bottom visible-frame lane, pauses randomly in `offline`, reverses at bounds, and renders at nearest-neighbor scale. Placement and roaming always anchor to the screen's bottom edge; Dock-edge tracking (left/right Dock) was tried, found buggy, and removed rather than fixed — see the Decision log in `DesktopMascot.md`, 2026-07-30.
+- The mascot animates from reduced state: working sits at a computer, waiting stops and turns, reactions play in place, and only the chilling/offline states stroll the lane. A 0.75-second dwell stops rapid state flips from thrashing; pause and resume bypass it.
+- While strolling, the mascot walks left/right along the bottom visible-frame lane, pauses randomly, reverses at bounds, and renders at nearest-neighbor scale. Placement and roaming always anchor to the screen's bottom edge; Dock-edge tracking (left/right Dock) was tried, found buggy, and removed rather than fixed — see the Decision log in `DesktopMascot.md`, 2026-07-30.
 - Click/right-click opens Pause/Resume, Stop/Resume Roaming, Hide, and Quit actions.
 - Dragging switches to a six-frame one-handed hanging animation. The raised hand is fixed under the cursor; dropping stops roaming at the manual position.
 - Reopening an already-running hidden app restores the mascot panel, preserving a manually dragged position rather than snapping back to the default lane.
 - Launching, showing, or reopening the mascot plays a 1.25-second Dock portal transition before normal behavior resumes; Reduce Motion uses a stationary fade.
 - Manual Ideating, Pause, Show/Hide, Roaming, Reposition, diagnostics, and Quit controls exist in the menu bar.
 - Atlas revision 4 contains 14 rows, replaces the sit-shake ledges with small freestanding chairs, and validates structurally.
-- 130 Swift package tests pass, and unsigned Debug and Release Xcode builds both succeed.
+- 143 Swift package tests pass, and unsigned Debug and Release Xcode builds both succeed.
 - The app runs the local event path as of 2026-07-30: it binds the owner-only socket at launch, ingests delivered events through `SessionRegistry` and `MascotStateReducer` via `EventPipeline`, shows listener status, counters, and the reduced state in the menu bar, and unlinks the socket on quit. What it still does *not* do is select animations from that state, and no provider hook can reach the helper, because the helper is not bundled and adapters #8/#9 do not exist.
 
 ## Repository warning
@@ -101,7 +102,8 @@ Build the core event system before provider-specific installers. Steps 1–6 are
 6. ~~Add deterministic clock injection and comprehensive unit fixtures.~~
 7. ~~Add a same-user local Unix-domain socket and small helper.~~
 8. ~~Run the server inside the app, feed the registry and reducer, and surface the result in menu-bar diagnostics before changing any animation.~~
-9. Connect reducer output to animation selection, preserving manual pause/ideating behavior and keeping ambient roaming as the no-signal default.
+9. ~~Connect reducer output to animation selection, preserving manual pause/ideating behavior and keeping ambient roaming as the no-signal default.~~
+10. Bundle the helper inside the app bundle so a hook can invoke it by path, then add the Codex and Claude Code adapters (#8, #9).
 
 Acceptance criteria are in the Phase 3 section of `DesktopMascot.md`.
 

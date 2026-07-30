@@ -45,7 +45,7 @@ SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/mac-dock-pet-swiftpm-cache \
 swift test
 ```
 
-Expected handoff baseline: 130 Swift Testing tests pass as of 2026-07-30. A higher count is fine; a lower count requires investigation.
+Expected handoff baseline: 143 Swift Testing tests pass as of 2026-07-30. A higher count is fine; a lower count requires investigation.
 
 ## Exercise the event helper
 
@@ -63,8 +63,11 @@ exits 0 when nothing is listening, so a provider hook is never failed by Dock Pe
 being closed. `--verbose` sends one line to stderr; without it the helper is
 silent. Usage errors exit 64.
 
-The reduced state appears in the menu bar under `Reduced state:`. It is
-observation only — it does not select animations yet.
+The reduced state appears in the menu bar under `Reduced state:`, and since
+2026-07-30 it also selects the animation. Sending `active` puts the pet at its
+computer; `completed` plays the success reaction and returns it to strolling.
+Note that a session expires after 120 seconds of silence, so a `completed` or
+`waiting` sent long after its `active` is ignored as an unknown session.
 
 ## Generate the Xcode project
 
@@ -102,6 +105,23 @@ open -g '/private/tmp/DesktopMascotDerivedData/Build/Products/Debug/Dock Pet.app
 
 Do not use `open -j`; it intentionally launches hidden and can make lifecycle debugging confusing.
 
+**`open -g` does not relaunch an app that is already running.** It sends a reopen
+event to the existing process, so a rebuild appears to have had no effect and you
+end up testing the previous binary. This has already cost one debugging session.
+Always quit first:
+
+```bash
+osascript -e 'quit app id "com.mrshine09.desktopmascot"'
+```
+
+Confirm the process actually restarted before trusting what you see — the start
+time must be later than the binary's build time:
+
+```bash
+ps -o pid,lstart -p $(pgrep -f "Dock Pet.app/Contents/MacOS" | head -1)
+ls -la '/private/tmp/DesktopMascotDerivedData/Build/Products/Debug/Dock Pet.app/Contents/MacOS/Dock Pet'
+```
+
 ## Verify bundled resources
 
 ```bash
@@ -138,5 +158,6 @@ Commit generated project and atlas outputs with their source definitions in the 
 - Xcode build embeds stale art: confirm `project.yml` resource entries, rebuild, and compare hashes.
 - Wrong atlas row appears: JSON row indices are top-origin; `SpriteAtlas` must crop using `row.index * cellHeight` without vertical inversion.
 - Hidden app seems impossible to reopen: Hide leaves the accessory process alive; reopening must invoke `applicationShouldHandleReopen`. Quit is separate.
+- A code change appears to do nothing at runtime: the old process is probably still running, because `open -g` reopens rather than relaunches. Quit, relaunch, and compare process start time against binary build time before concluding the change is broken.
 - Mascot slides instead of walks: verify runtime crop equality and that animation direction matches horizontal movement.
 - Drag artwork appears detached from cursor: preserve the hanging atlas grip `(48, 4)` to AppKit panel point `(48, 108)` mapping.

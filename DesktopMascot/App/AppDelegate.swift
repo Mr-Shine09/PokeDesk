@@ -13,14 +13,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published var isIdeating = false
     @Published var isRoaming = true
 
-    /// Listens for provider lifecycle events and reduces them. Observed by the
-    /// menu bar only; it does not select animations yet.
+    /// Listens for provider lifecycle events, reduces them, and is the single
+    /// source of the mascot's visible state — manual pause and ideating included,
+    /// since those reach the reducer as overrides.
     let eventBridge = AgentEventBridge()
 
     private let previewModel = MascotPreviewModel()
     private var atlas: SpriteAtlas?
     private var windowCoordinator: WindowCoordinator?
     private var animationController: AmbientAnimationController?
+    private var visibleStateObserver: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -57,17 +59,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 windowCoordinator: windowCoordinator
             )
             animationController?.onSummonCompleted = { [weak self] in
-                guard let self else { return }
-                if self.isPaused {
-                    self.diagnostics = "Animation paused"
-                } else if self.isIdeating {
-                    self.diagnostics = "Manual ideating"
-                } else if self.isRoaming {
-                    self.diagnostics = "Ambient roaming — no agent signal connected"
-                } else {
-                    self.diagnostics = "Offline at manual position"
-                }
+                self?.refreshDiagnostics()
             }
+            // The reduced state drives animation from here on. Nothing else may
+            // select a row, so manual pause and ideating go through the reducer's
+            // overrides rather than around it.
+            visibleStateObserver = eventBridge.$visibleState
+                .sink { [weak self] visibleState in
+                    self?.animationController?.setVisibleState(visibleState.state)
+                    self?.refreshDiagnostics()
+                }
             setVisible(isVisible)
         } catch {
             diagnostics = error.localizedDescription
@@ -93,34 +94,59 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         windowCoordinator?.setVisible(visible, repositioning: isRoaming)
         animationController?.setVisible(visible)
         diagnostics = visible ? "Opening Dock portal" : "Mascot hidden"
+        if !visible { refreshDiagnostics() }
     }
 
     func setPaused(_ paused: Bool) {
         isPaused = paused
         if paused { isIdeating = false }
-        animationController?.setIdeating(false)
-        animationController?.setPaused(paused)
         syncOverrides()
-        diagnostics = paused ? "Animation paused" : "Ambient roaming"
     }
 
     func setIdeating(_ ideating: Bool) {
         isIdeating = ideating
         if ideating { isPaused = false }
-        animationController?.setPaused(false)
-        animationController?.setIdeating(ideating)
         syncOverrides()
-        diagnostics = ideating ? "Manual ideating" : "Ambient roaming"
     }
 
+    /// Publishing the overrides is what changes the animation: the reducer folds
+    /// them into `MascotVisibleState`, which the observer above feeds to the
+    /// controller. Setting a row directly from here would reintroduce the second
+    /// source of truth this wiring exists to remove.
     private func syncOverrides() {
         eventBridge.overrides = ManualOverrides(isPaused: isPaused, isIdeating: isIdeating)
+        refreshDiagnostics()
     }
 
     func setRoaming(_ roaming: Bool) {
         isRoaming = roaming
         animationController?.setRoaming(roaming)
-        diagnostics = roaming ? "Ambient roaming" : "Offline at manual position"
+        refreshDiagnostics()
+    }
+
+    /// Describes what the pet is actually doing, without implying that a state
+    /// with no provider behind it came from an agent.
+    private func refreshDiagnostics() {
+        guard isVisible else {
+            diagnostics = "Mascot hidden"
+            return
+        }
+        let state = eventBridge.visibleState
+        let providers = state.providers.map(\.rawValue).joined(separator: ", ")
+        switch state.state {
+        case .paused:
+            diagnostics = "Animation paused"
+        case .ideating:
+            diagnostics = "Manual ideating"
+        case .offline:
+            diagnostics = isRoaming
+                ? "Ambient roaming — no agent signal connected"
+                : "Resting at manual position — no agent signal connected"
+        case .idle:
+            diagnostics = "Strolling — \(providers) idle"
+        case .working, .waiting, .success, .failure, .sleeping:
+            diagnostics = "\(state.state.displayName) — \(providers)"
+        }
     }
 
     func reposition() {
