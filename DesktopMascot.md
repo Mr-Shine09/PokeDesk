@@ -10,7 +10,7 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-30 |
-| Status | Portal summon, revision 4 chair sit-shake/cursor-hanging atlas, bottom-anchored window placement, ambient animation, event engine, local transport, and the app-side event socket server with menu-bar diagnostics are all merged to `main` (`970d316`, [PR #18](https://github.com/Mr-Shine09/desktop-mascot/pull/18)) |
+| Status | The entire local event path is merged to `main` (`70953f8`) and owner-verified: the app runs the socket server, reduces real events, animates from `MascotVisibleState`, and bundles an invocable `dockpet-event` helper. No provider adapter exists yet, so a human invoking the helper is still the only event source |
 | Current gate | Add the Claude Code and Codex hook adapters (#8, #9) — the last step before the mascot reflects real agent activity. The helper is bundled and invocable by absolute path as of 2026-07-30. Hands-on QA still outstanding for the physical cursor-hanging feel and the display matrix |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
@@ -1287,12 +1287,25 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: **embedding an executable creates a signing obligation that does not exist yet.** A notarized build must sign the helper as well as the app, and a hardened-runtime app will not launch an unsigned nested executable. That is new work for issue #13, not a detail of it. The bundle path is also still a DerivedData path, so any hook configured today breaks on the next rebuild — the menu item copies the current path rather than pretending a fixed one exists.
 - Next: adapters #8 and #9. They must map provider lifecycle hooks onto the existing event vocabulary without widening the envelope, and must fail silently so a hook never breaks the user's actual agent session.
 
+### 2026-07-30 — Session closure: the local event path is complete end to end
+
+- Objective: close the session with the ledger matching reality.
+- Completed this session, all merged to `main` at `70953f8`:
+  - [PR #18](https://github.com/Mr-Shine09/desktop-mascot/pull/18) — the app runs the event socket server, feeds the registry and reducer, and surfaces the result in menu-bar diagnostics.
+  - [PR #19](https://github.com/Mr-Shine09/desktop-mascot/pull/19) — `MascotVisibleState` drives animation selection, with a dwell so rapid flips do not thrash, and manual pause/ideating routed through the reducer instead of around it.
+  - [PR #20](https://github.com/Mr-Shine09/desktop-mascot/pull/20) — `dockpet-event` is built as a native tool target and bundled at `Contents/MacOS/dockpet-event`.
+  - The package suite grew from 118 to 143 tests across the three changes.
+- Owner-verified live, not just built: an `active` event stopped the pet at its computer, `completed` played the success sparkle and returned it to strolling, menu-bar Pause stopped it instantly, and Manual Ideating held the Thinker pose. The menu-bar event readout was confirmed on screen showing `listening • 1 accepted • 1 session` and `Working (claude-code)`.
+- Decisions recorded this session: `.offline` strolls rather than standing still, a deliberate departure from the animation inventory taken because every machine without an adapter would otherwise show a motionless pet; the helper is a plain bundled executable rather than a login item or XPC service, so Dock Pet still runs no background agent of its own.
+- Risks carried forward: **embedding an executable creates a signing obligation** that #13 must now handle — a hardened-runtime app will not launch an unsigned nested executable. The bundle path is a DerivedData path, so any hook configured today breaks on the next rebuild. A stale-process incident cost part of this session and produced one live claim that was wrong; `open -g` reopens rather than relaunches, and the quit-first procedure plus a start-time-versus-build-time check are now in `docs/DEVELOPMENT.md`.
+- Next: adapters #8 and #9. Read the official Codex and Claude Code hooks documentation first, because the event mapping depends on which lifecycle points each provider actually exposes. Two non-negotiables: map onto the existing event vocabulary without widening `EventEnvelope`, and fail silently — a hook that errors or hangs breaks the user's real agent session, which is far worse than a mascot that does not animate.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
 3. Treat atlas revision 4 as the current candidate: 14 rows, `768x1568`; the directional sit-shake rows now use a small freestanding chair, and the six-frame `hanging` row remains at index 13 with a `(48, 4)` top grip anchor.
-4. `main` and `origin/main` are level at `970d316`, which includes the event engine, the bottom-anchored window fixes, portal PR #15, chair PR #16, and the app-side event server wiring from PR #18. No feature branch is outstanding. Verify with `git status --short --branch` and `gh pr list` rather than trusting this line.
+4. `main` and `origin/main` are level at `70953f8`, which includes the event engine, the bottom-anchored window fixes, portal PR #15, chair PR #16, the app-side event server wiring from PR #18, animation selection from reduced state via PR #19, and helper bundling via PR #20. No feature branch is outstanding, though the merged `agent/animation-from-visible-state`, `agent/bundle-event-helper`, and `phase-3-event-engine` branches still exist on the remote and can be deleted. Verify with `git status --short --branch` and `gh pr list` rather than trusting this line.
 5. Treat the current presentation as `96x112` points with a 10-point transparent Dock inset. Revision 4 changes only the two sit-shake rows inside the existing atlas geometry.
 6. Ask the owner to test dragging from several body points and verify that the raised hand remains under the cursor while the body swings left/center/right; also retain the broader click, reopen, relaunch, and display-matrix QA.
 7. Preserve the honest capability boundary. As of 2026-07-30 the app listens on the socket, reduces real events, **animates from that state**, and ships an invocable helper inside its bundle. The one remaining gap is that **no adapter exists to call it**: nothing in Claude Code or Codex knows the helper is there, so a human invoking it by hand is still the only event source. Dock Pet must not be described as reflecting real Claude or ChatGPT activity until #8 and #9 land and are verified against a live session.
