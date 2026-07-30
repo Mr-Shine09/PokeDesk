@@ -1,6 +1,6 @@
 # Animation production status
 
-The revision 3 atlas contract is defined in `ATLAS.md` and `atlas-contract.json`.
+The revision 4 atlas contract is defined in `ATLAS.md` and `atlas-contract.json`.
 
 ## Approved rows
 
@@ -13,7 +13,7 @@ The revision 3 atlas contract is defined in `ATLAS.md` and `atlas-contract.json`
 
 These six rows passed deterministic checks, internal visual QA, and owner review on 2026-07-28.
 
-## Revision 3 candidate
+## Revision 4 candidate
 
 - `frames/offline/` — four bowed-pose frames with a rising/disappearing `Z` trail.
 - `frames/sleeping/` — six blanket-breathing frames with a rising/fading `Z` trail.
@@ -21,13 +21,13 @@ These six rows passed deterministic checks, internal visual QA, and owner review
 - `frames/success/` — the fist-pump reaction with bounded stars and sparkles above the head.
 - `frames/failure/` — the confused/dizzy reaction with a cracked light bulb above the head.
 - `frames/paused/` — two deterministic approved-idle frame reuses ending in a static hold.
-- `frames/sit-shake-right/` and `frames/sit-shake-left/` — two six-frame directional Dock-corner ambient clips with one dangling leg swinging.
+- `frames/sit-shake-right/` and `frames/sit-shake-left/` — two six-frame directional chair-idle clips with one raised lower leg swinging; the chair back, seat, and two legs stay fixed.
 - `frames/hanging/` — six cursor-hanging frames with a fixed raised-hand grip and a left/center/right pendulum swing, with no cliff or ledge.
-- `mascot-atlas@2x.png` — complete structurally validated `768x1568` revision 3 candidate atlas.
+- `mascot-atlas@2x.png` — complete structurally validated `768x1568` revision 4 candidate atlas.
 - `qa/contact-sheet-backing-1x-{light,dark}.png` and `qa/contact-sheet-inspection-8x-{light,dark}.png` — full contract review sheets.
 - `qa/silhouette-sheet-candidate.png` and `qa/previews/` — full silhouette and contract-timed motion review.
 
-The requested effects, two corner-sit clips, and expanded atlas passed deterministic validation, internal native-size visual QA, and owner review on 2026-07-28.
+The requested effects, expanded atlas, and original corner-sit clips passed deterministic validation, internal native-size visual QA, and owner review on 2026-07-28. Revision 4 replaces only the sit-shake ledge concept with a small chair at the owner's request; automated and internal visual QA pass, with owner review of the final chair pixels pending.
 
 Reproduction order for revised reaction rows is normalize body frames, apply any body-pose repair, then run `tools/author_status_effects.py`. The effect authoring step is idempotent and preserves every body pixel below the reserved upper effect area.
 
@@ -35,7 +35,7 @@ Reproduction order for revised reaction rows is normalize body frames, apply any
 
 Two generated idle rows and one generated single-blink repair were rejected because they changed the approved identity; their images were not admitted to the project. With owner authorization, the production idle row was authored directly at native resolution. Frames 0 and 3 preserve every frozen-base pixel; frames 1 and 2 change only the lens interiors.
 
-Revision 2 is frozen for app integration. Do not change row order, timing, geometry, or pixels without a recorded revision 3 decision.
+Revision 4 is the current app-integration candidate. Do not change row order, timing, geometry, or pixels without a recorded revision decision.
 
 ## Verification
 

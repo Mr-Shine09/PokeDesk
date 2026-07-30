@@ -10,8 +10,8 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-07-29 |
-| Status | Portal summon, revision 3 cursor-hanging, ambient animation, event engine, and local transport are implemented and build-verified |
-| Current gate | Owner-verify the portal summon and physical cursor-hanging feel; then wire the tested local event path into the app |
+| Status | Portal summon, revision 4 chair sit-shake/cursor-hanging atlas, ambient animation, event engine, and local transport are implemented and build-verified |
+| Current gate | Owner-verify the chair sit-shake, portal summon, and physical cursor-hanging feel; then wire the tested local event path into the app |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -91,7 +91,7 @@ These questions do not block the foundation or prototype. They do block a 1.0 re
 - Transparent, non-activating floating window in a bounded strolling lane immediately above or beside the Dock.
 - Menu-bar controls: show/hide, pause animation, manual ideating state, unlock position, launch at login, diagnostics, quit.
 - States: `offline`, `idle`, `working`, `ideating`, `waiting`, `success`, `failure`, `sleeping`, `paused`.
-- Idle animation variants include directional strolling and directional Dock-corner sitting with one dangling leg shaking.
+- Idle animation variants include directional strolling and directional sitting on a small chair with one lower leg shaking.
 - Reliable Codex and Claude Code event adapters based on supported lifecycle hooks.
 - A documented capability boundary for ordinary ChatGPT app/browser activity; no unsupported scraping or fabricated fine-grained states.
 - Local-only event transport.
@@ -150,7 +150,7 @@ Remove garment texture, zipper detail below one pixel, belt detail, hand anatomy
 | Failure | Agent turn or integration failed | 6 | Confused/dizzy reaction with a broken light bulb above the head, then ambient state |
 | Sleeping | Inactive during 23:00–06:00 local time | 6 | Sleep under a blanket with a looping `Z` trail; wake immediately for activity |
 | Paused | User disabled automatic behavior | 2 | Still pose |
-| Sit-shake right/left | Ambient idle at a Dock corner | 6 each | Sit on a compact Dock-edge ledge and casually swing one dangling leg |
+| Sit-shake right/left | Ambient idle on a chair | 6 each | Sit on a small freestanding chair and casually swing one lower leg |
 | Hanging | Direct mascot drag | 6 | One raised hand stays attached to the cursor while the body swings beneath it; no cliff or ledge |
 
 Detached effects should be sparse and bounded above the character. The approved effect vocabulary is the ideating cloud, offline/sleeping `Z` trails, waiting clock, success stars/sparkles, and failure bulb. All reuse the frozen palette, stay inside the cell guard, and must remain readable at native size without obscuring the face.
@@ -368,7 +368,7 @@ Acceptance: all artifacts exist, custom skills validate, repository URL resolves
 4. Approve one native grid, palette, identity hierarchy, and baseline.
 5. Write animation frame and atlas specification.
 
-Completed on 2026-07-28: the owner selected a 40-point footprint, rejected every native tall treatment, and explicitly ordered the secondary chibi fallback. `mascot-base-chibi-40pt-at2x-80px-final.png` is frozen as the base. The owner approved the 13-row revision 2 atlas, including the requested status effects and directional corner-sit clips. On 2026-07-29 the owner's explicit hanging request authorized revision 3, which adds one dedicated cursor-hanging row and top grip anchor. The current geometry, row order, palette, timing, anchors, acceptance rules, and QA outputs live in `art/animation/ATLAS.md` and `art/animation/atlas-contract.json`.
+Completed on 2026-07-28: the owner selected a 40-point footprint, rejected every native tall treatment, and explicitly ordered the secondary chibi fallback. `mascot-base-chibi-40pt-at2x-80px-final.png` is frozen as the base. The owner approved the 13-row revision 2 atlas, including the requested status effects and directional corner-sit clips. On 2026-07-29 the owner's explicit hanging request authorized revision 3, which added one dedicated cursor-hanging row and top grip anchor; the later chair request authorized revision 4, which replaces the two sit-shake ledges without changing atlas geometry or timing. The current geometry, row order, palette, timing, anchors, acceptance rules, and QA outputs live in `art/animation/ATLAS.md` and `art/animation/atlas-contract.json`.
 
 Acceptance: owner selects one concept; chosen sprite is recognizable at 1x; palette and frame geometry are frozen for 0.1. Passed on 2026-07-28.
 
@@ -468,8 +468,8 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Idle row | Four native frames preserve the base silhouette and change only lens interiors for a half/full blink | Passed deterministic, internal visual, and owner review on 2026-07-28 |
 | Working, ideating, waiting rows | Contract frame counts, shared baseline, frozen palette, light/dark contact sheet, silhouettes, and motion previews | Passed deterministic, internal visual, and owner review on 2026-07-28 |
 | Effect-revised offline, waiting, success, failure, sleeping rows | Contract frame counts, requested effects, shared baseline, frozen palette, silhouettes, and motion previews | Passed deterministic, internal visual, and owner review on 2026-07-28 |
-| Dock-corner sit-shake rows | Six frames each direction, stable seat/torso, one swinging leg, mirrored temporal order | Passed deterministic, internal visual, and owner review on 2026-07-28 |
-| Retina atlas assembly | Exact current grid, used/unused occupancy, palette, alpha, transparent RGB, and cell guards | Revision 3 `768x1568` candidate passes validator on 2026-07-29; owner drag QA pending |
+| Chair sit-shake rows | Six frames each direction, stable chair/torso, one swinging leg, mirrored temporal order | Revision 4 passes deterministic and internal native-size visual QA on 2026-07-29; owner review pending |
+| Retina atlas assembly | Exact current grid, used/unused occupancy, palette, alpha, transparent RGB, and cell guards | Revision 4 `768x1568` candidate passes validator on 2026-07-29; owner chair and drag QA pending |
 | Cursor-hanging row | Six frames, fixed top grip, frozen palette, binary alpha, no cliff/ledge, and cursor-attached drag geometry | Passed deterministic art validation, runtime pixel equality, drag geometry test, and Debug build on 2026-07-29; physical feel pending |
 | Native app scaffold | Generated Xcode project, modular package, embedded atlas resources, static nearest-neighbor render, and startup/reopen smoke tests | Passed initial scaffold on 2026-07-28; fresh Debug relaunch restored a visible `96x112` window on 2026-07-29 |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Rescoped 2026-07-30 to bottom-anchored-only placement; ten tests pass, including placement, clamp-with-guard, visibility, manual-position preservation across Hide/Show, non-activating interaction, click routing, and drag begin/end routing; remaining multi-display matrix pending |
@@ -511,7 +511,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | `MascotCore` state vocabulary is unused by the running app | Medium | `AmbientAnimationController` drives animation with raw atlas row strings; `MascotState`/`AmbientAnimation` are exercised only by tests. The reducer must become the single typed source of visible state instead of growing beside the string-keyed controller | Still open, and now larger: `MascotStateReducer` emits typed `MascotVisibleState` but nothing consumes it. Wiring was deliberately deferred because with no transport the reducer would report `offline` forever and would regress the owner-approved ambient roaming. Close this together with #7 |
 | The default socket path may not fit `sun_path` for every user | Medium | `AF_UNIX` allows 103 usable path bytes. The real path measured 86 bytes for an 11-character user name on 2026-07-29, leaving roughly 17 bytes of headroom, so a much longer home directory path would fail. The failure is fail-closed and explicit (`socketPathTooLong`), not a truncated bind, but the bridge would be unavailable | Open; found 2026-07-29. If it ever bites, shorten the directory or socket name rather than truncating the path |
 | The helper is not installed anywhere a hook can reach | Medium | `dockpet-event` builds as a package executable but is not bundled into `Dock Pet.app` and has no install flow, so no provider hook can invoke it yet. Bundling requires a `project.yml` change plus regeneration and belongs with the adapter work | Open; deliberate scope boundary for issues #8 and #9 |
-| Atlas revision is tracked only in prose | Low | `atlas-contract.json` carries `schema_version` but no revision field, so no tool can assert which revision is loaded. Geometry itself validates and matches documented revision 3 | Open; low impact while one contract ships |
+| Atlas revision is tracked only in prose | Low | `atlas-contract.json` carries `schema_version` but no revision field, so no tool can assert which revision is loaded. Geometry itself validates and matches documented revision 4 | Open; low impact while one contract ships |
 
 ## Decision log
 
@@ -568,6 +568,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Repair only the failing success and failure scopes: hold the first fist-pump peak through the last three success frames, and remove detached generated failure symbols through a stricter connected-component threshold.
 - Supersede the earlier ban on detached sleep text with the owner's explicit revision: add looping `Z` trails to offline and sleeping, a clock to waiting, stars/sparkles to success, and a cracked bulb to failure.
 - Interpret the requested two Dock-corner leg-shake animations as right- and left-facing ambient idle clips. Generate the right-facing source and derive the left row by per-frame mirroring without reversing time.
+- Supersede the Dock-corner ledge art with atlas revision 4: both sit-shake rows use one small freestanding chair with a visible backrest, seat, and two grounded legs. Preserve the existing seated identity and leg-swing cadence, and continue deriving the left row by per-frame mirroring without reversing time.
 - Treat the owner's “Ok good. Now let's continue” after reviewing all revision 2 previews as final approval. Freeze the 13-row `768x1456` atlas as the app-integration contract.
 - Use XcodeGen for a reproducible SwiftUI app shell backed by local `MascotCore`, `MascotAnimation`, and `MascotWindow` Swift package products.
 - Keep the first native checkpoint static: prove atlas decoding, nearest-neighbor frame extraction, transparent non-activating panel behavior, Dock geometry, and menu-bar recovery controls before adding timers or lifecycle signals.
