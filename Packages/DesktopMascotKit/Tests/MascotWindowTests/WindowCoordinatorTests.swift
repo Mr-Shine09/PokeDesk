@@ -25,6 +25,33 @@ import Testing
 }
 
 @MainActor
+@Test func repositioningFalsePreservesAManuallyDraggedPosition() {
+    let coordinator = WindowCoordinator(contentView: NSView())
+    defer { coordinator.setVisible(false) }
+
+    let manualOrigin = NSPoint(x: 200, y: 400)
+    coordinator.panel.setFrameOrigin(manualOrigin)
+
+    coordinator.setVisible(false)
+    coordinator.setVisible(true, repositioning: false)
+
+    #expect(coordinator.panel.frame.origin == manualOrigin)
+}
+
+@MainActor
+@Test func repositioningTrueRestoresTheDefaultLane() {
+    let coordinator = WindowCoordinator(contentView: NSView())
+    defer { coordinator.setVisible(false) }
+    let defaultOrigin = coordinator.panel.frame.origin
+
+    coordinator.panel.setFrameOrigin(NSPoint(x: 200, y: 400))
+    coordinator.setVisible(false)
+    coordinator.setVisible(true, repositioning: true)
+
+    #expect(coordinator.panel.frame.origin == defaultOrigin)
+}
+
+@MainActor
 @Test func panelRoutesAPlainClickToMascotOptions() throws {
     let coordinator = WindowCoordinator(contentView: NSView())
     var clickCount = 0

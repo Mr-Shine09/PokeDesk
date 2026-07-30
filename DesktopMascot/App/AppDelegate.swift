@@ -74,7 +74,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func setVisible(_ visible: Bool) {
         isVisible = visible
-        windowCoordinator?.setVisible(visible)
+        // Roaming off means the user dragged the mascot to a manual spot;
+        // Hide/Show and reopen must not snap it back to the default lane.
+        windowCoordinator?.setVisible(visible, repositioning: isRoaming)
         animationController?.setVisible(visible)
         diagnostics = visible ? "Opening Dock portal" : "Mascot hidden"
     }

@@ -24,23 +24,23 @@ Everything from the decoder through the transport and helper is implemented and 
 
 - Native SwiftUI/AppKit app launches as an `LSUIElement` accessory.
 - Transparent `96x112`-point non-activating `NSPanel` remains visible across Spaces.
-- Mascot walks left/right along the bottom visible-frame lane, pauses randomly in `offline`, reverses at bounds, and renders at nearest-neighbor scale.
+- Mascot walks left/right along the bottom visible-frame lane, pauses randomly in `offline`, reverses at bounds, and renders at nearest-neighbor scale. Placement and roaming always anchor to the screen's bottom edge; Dock-edge tracking (left/right Dock) was tried, found buggy, and removed rather than fixed — see the Decision log in `DesktopMascot.md`, 2026-07-30.
 - Click/right-click opens Pause/Resume, Stop/Resume Roaming, Hide, and Quit actions.
 - Dragging switches to a six-frame one-handed hanging animation. The raised hand is fixed under the cursor; dropping stops roaming at the manual position.
-- Reopening an already-running hidden app restores the mascot panel.
+- Reopening an already-running hidden app restores the mascot panel, preserving a manually dragged position rather than snapping back to the default lane.
 - Launching, showing, or reopening the mascot plays a 1.25-second Dock portal transition before normal behavior resumes; Reduce Motion uses a stationary fade.
 - Manual Ideating, Pause, Show/Hide, Roaming, Reposition, diagnostics, and Quit controls exist in the menu bar.
-- Atlas revision 3 contains 14 rows and validates structurally.
-- 116 Swift package tests pass and an unsigned Debug Xcode build succeeds.
+- Atlas revision 4 contains 14 rows, replaces the sit-shake ledges with small freestanding chairs, and validates structurally.
+- 118 Swift package tests pass, and unsigned Debug and Release Xcode builds both succeed.
 - The local event path exists but the app does not run it: `EventEnvelope`, `EventDecoder`, `SessionRegistry`, `MascotStateReducer`, `MascotTransport`, and the `dockpet-event` helper are all implemented and tested, and the helper delivers events cross-process to a listener on the real socket path. The app itself neither listens nor consumes reducer output, and no provider hook can reach the helper yet.
 
 ## Repository warning
 
-At the original handoff, `main` was five commits ahead of `origin/main` with the interactive animation/window work and revision 3 hanging assets uncommitted.
+`main` is level with `origin/main` as of `2b8dfbd` (PR #14, merged 2026-07-30). This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` at session start rather than trusting this file. The repository remains private.
 
-As of the 2026-07-29 maintainer session that work is committed (`46bd324`), the event decoder was added (`39074b2`), and `main` was published to `origin/main` at the owner's explicit direction. The repository remains private.
+The assistant's `gh pr merge` / `gh pr ready` / branch-delete calls are blocked by the auto-mode permission classifier as sensitive actions. Give the owner the exact command to run in their own terminal instead of retrying or working around the denial.
 
-Run `git status --short --branch` and preserve every current modification/untracked file. Do not reset, clean, checkout over, or regenerate blindly. Make a deliberate checkpoint commit before risky refactors, but do not publish or change repository visibility without the owner’s approval.
+Preserve every current modification/untracked file. Do not reset, clean, checkout over, or regenerate blindly. Make a deliberate checkpoint commit before risky refactors, but do not publish or change repository visibility without the owner's approval.
 
 ## First hour checklist
 

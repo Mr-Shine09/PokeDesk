@@ -24,9 +24,14 @@ public final class WindowCoordinator: NSObject {
         reposition()
     }
 
-    public func setVisible(_ visible: Bool) {
+    /// `repositioning` defaults to `true` for the common case (launch, Show
+    /// with no prior manual placement). Pass `false` to preserve wherever the
+    /// user last dragged the panel — otherwise every Hide/Show or reopen
+    /// would silently discard a manual position by snapping back to the
+    /// default lane.
+    public func setVisible(_ visible: Bool, repositioning: Bool = true) {
         if visible {
-            reposition()
+            if repositioning { reposition() }
             panel.orderFrontRegardless()
         } else {
             panel.orderOut(nil)
