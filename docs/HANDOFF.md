@@ -36,7 +36,7 @@ Everything from the decoder through the transport and helper is implemented and 
 
 ## Repository warning
 
-`main` is level with `origin/main` as of `a351aed`, with PRs #14, #15, #16, and #17 all merged. Branch `agent/event-server-app-wiring` (`bc6af4f`) is outstanding, unmerged and unpushed. This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` at session start rather than trusting this file. The repository remains private.
+`main` is level with `origin/main` as of `970d316`, with PRs #14, #15, #16, #17, and #18 all merged and no feature branch outstanding. This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` at session start rather than trusting this file. The repository remains private.
 
 Merge and branch-delete commands are sometimes refused for the assistant by the auto-mode permission classifier and sometimes allowed; the outcome is not predictable in advance. When one is denied, give the owner the exact command to run in their own terminal instead of retrying or working around the denial.
 
