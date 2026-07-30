@@ -21,13 +21,13 @@ Welcome, Mr. C. This file is the mandatory entry point for work on Dock Pet.
 - Keep the mascot non-activating and retain a menu-bar escape hatch for summon/dismiss, pause, and quit.
 - The mascot appears only when summoned. Launching the app must never put one on screen, and there is no launch-at-login by owner decision (2026-07-30).
 - XcodeGen owns `DesktopMascot.xcodeproj`. Change `project.yml`, then regenerate; do not make durable project-file-only edits.
-- Do not claim that Dock Pet reflects real Claude/ChatGPT activity until a live provider session has been observed driving it. The full path — hooks, helper, transport, reducer, animation — is implemented and fixture-verified, but every event to date was synthesized by hand.
+- Dock Pet reflects real Claude Code activity, observed 2026-07-30 from a live session. Two limits still hold: **Codex has never been run live** (it shares the adapter, which is inference, not evidence), and `waiting` and `failed` are fixture-covered but have never been seen from a real provider. Do not describe either as proven.
 - Update `DesktopMascot.md` at the end of every implementation session with decisions, evidence, risks, and the exact next step.
 
 ## Current priority
 
-1. Get a live provider session observed. The Claude Code and Codex adapters are implemented as `dockpet-event --hook --provider <name>` and fixture-verified, but no real agent session has driven the mascot yet — every event so far was synthesized. Until the owner installs the `--print-hooks` snippet and uses Claude Code or Codex normally, treat the providers' documented hook behavior as trusted rather than observed.
-2. Obtain/record owner hands-on QA for cursor hanging and the remaining display matrix (auto-hide, multiple displays, full-screen Spaces, sleep/wake). Placement is bottom-anchored only, so left/right Dock is no longer part of that matrix.
+1. Owner hands-on QA is the only remaining 0.1 work: the new menu (especially Preview State), the cursor-hanging feel, and the display matrix. Everything else is built and verified — the Claude Code adapter was observed driving the mascot from a real session on 2026-07-30 (`started -> active -> completed -> stopped`). Codex shares the adapter but has never been run live, and `waiting`/`failed` remain fixture-only, so do not describe either as proven.
+2. Verify documentation claims against the committed file, not against an edit script's output. Several ledger rows were reported updated on 2026-07-30 and were not — a string replacement whose target does not match fails silently. `git show HEAD:<file> | grep` is the check that would have caught it.
 3. Keep `MascotVisibleState` the single source of what the pet is doing. Anything that wants to change the animation goes through the reducer, never by setting an atlas row directly.
 
 Detailed procedures:
