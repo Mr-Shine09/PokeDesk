@@ -1322,6 +1322,21 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: **no live-session run has happened yet.** Every event above was synthesized by writing payloads to the helper, which proves the mapping and the transport but not that the providers fire the hooks as documented, with the fields documented, at the moments documented. That requires the owner to install the snippet and use Claude Code or Codex normally. Until that happens, "Dock Pet reflects real agent activity" remains unproven rather than true. The helper path in the snippet is still a DerivedData path, so any configuration installed today breaks on the next rebuild.
 - Next: owner installs the printed snippet and runs a real session, then records what the mascot actually did. After that, the remaining 0.1 work is packaging (#13), the menu-bar settings surface (#10), and the outstanding display-matrix QA.
 
+### 2026-07-30 — Durable local install and signed nested helper
+
+- Objective: stop the installed hook path from dying on every rebuild and reboot. The adapters worked, but they pointed into `/private/tmp`, which macOS clears — so a configured hook was guaranteed to break.
+- Completed:
+  - Added `tools/install_app.sh`: builds Release, signs, installs to `~/Applications/Dock Pet.app`, and prints the durable helper path. `~/Applications` rather than `/Applications` so no administrator password is needed.
+  - Signs the **nested helper before the enclosing bundle**. The reverse order leaves the app's seal describing a helper that is then modified, and the app fails its own validation — this is the concrete form of the signing obligation flagged when the helper was first bundled.
+  - Repointed the installed Claude Code hooks at the durable path, preserving the seven pre-existing statusbar handlers.
+- Decisions and constraints found:
+  - **Notarization is not possible on this machine.** The keychain holds only `Apple Development` certificates; a distributable notarized build needs a `Developer ID Application` certificate from the paid Apple Developer Program. Recorded as a hard blocker on the distribution half of #13, not a task that was skipped.
+  - Identity signing fails with `errSecInternalComponent` from a non-interactive shell, because `codesign` cannot reach the private key without a keychain prompt nothing can answer. The script falls back to ad-hoc signing, which needs no key and is sufficient for a self-built local app; running the script from an interactive terminal signs with the real identity instead.
+  - Certificates are selected by hash, not common name: three certificates share one name here, and passing the name fails as "ambiguous".
+- Verification: the installed bundle passes `codesign --verify --deep --strict` and satisfies its designated requirement; the nested helper verifies independently. A real `claude -p` session run against the **installed** helper produced `started -> active -> active(tool) -> active(tool) -> completed -> stopped` in order, captured on the production socket path. The app relaunches from `~/Applications` and binds the socket at `0600`.
+- Risks or blockers: the install is ad-hoc signed and unnotarized, so it is trustworthy only on the machine that built it — it cannot be given to anyone else. Launch-at-login still does not exist, so the app must be started manually after a reboot even though its path now survives one. The owner reverted the first hook install and reported no problems; the reinstall at the durable path was made only after confirming that.
+- Next: launch-at-login so the durable install actually runs after a restart, then the menu-bar settings surface (#10). Distribution stays blocked on a Developer ID certificate.
+
 ## Next-session handoff
 
 1. Read this file in full.

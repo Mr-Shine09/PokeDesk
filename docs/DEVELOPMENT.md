@@ -107,6 +107,25 @@ The helper exits 0 for every outcome except a usage error: unmapped hook,
 unparsable payload, Dock Pet closed, or stdin held open past its 2-second
 deadline. A hook must never fail or stall the user's real agent session.
 
+## Install durably
+
+```bash
+./tools/install_app.sh
+```
+
+Builds Release, signs the nested helper and then the bundle, and installs to
+`~/Applications/Dock Pet.app`. That path survives reboots, unlike the DerivedData
+build, so provider hooks configured against it keep working.
+
+The script signs with a real identity when it can and falls back to ad-hoc
+otherwise. `codesign` cannot reach a private key from a non-interactive shell
+(`errSecInternalComponent`), so run the script from an interactive terminal if
+you want the Apple Development identity used. Ad-hoc is sufficient for a
+self-built local app; it is **not** sufficient for distribution.
+
+Notarization needs a `Developer ID Application` certificate, which this machine
+does not have. Distribution remains open work under issue #13.
+
 ## Generate the Xcode project
 
 Only required after changing `project.yml`, adding/removing app source files, dependencies, resources, or build settings:
