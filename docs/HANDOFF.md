@@ -53,7 +53,7 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 5. Ask the owner to drag the mascot from several body points and confirm the cursor snap/swing feels right.
 6. Record the QA result in `DesktopMascot.md`.
 7. The event model, reducer, transport, helper, and app-side server wiring are all done (issues #6 and most of #7). The open milestone is driving animation selection from `MascotVisibleState`; do not jump directly to hook installers.
-8. Confirm the two new menu-bar lines (`Event socket:` and `Reduced state:`) read correctly while `dockpet-event` is invoked — they were never seen on screen, only tested behind the interface.
+8. The two menu-bar lines (`Event socket:` and `Reduced state:`) were owner-verified on screen on 2026-07-30 and need no re-check.
 
 ## Key ownership boundaries
 
