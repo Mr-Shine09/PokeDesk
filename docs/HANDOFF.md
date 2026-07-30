@@ -38,7 +38,7 @@ As of 2026-07-30 every stage of this flow is implemented: hook adapters for both
 
 ## Repository warning
 
-`main` was level with `origin/main` at `0b90cef` (PRs #14–#20 merged) when the adapter branch `agent/provider-hook-adapters` was cut. This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` at session start rather than trusting this file. The repository remains private.
+`main` is at `d31b893` as of 2026-07-30, including everything through PR #22. PR #23 is open and carries both the summon-on-demand change and the menu-bar settings surface, because PR #24 merged into its branch rather than into `main`. This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` rather than trusting this line.
 
 Merge and branch-delete commands are sometimes refused for the assistant by the auto-mode permission classifier and sometimes allowed; the outcome is not predictable in advance. When one is denied, give the owner the exact command to run in their own terminal instead of retrying or working around the denial.
 
