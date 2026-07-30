@@ -1338,6 +1338,23 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: none introduced. The portal summon transition is now the only way a mascot ever reaches the screen, so any bug in it becomes a bug in the app's only entry point.
 - Next: the menu-bar settings surface (#10), and the outstanding hands-on display-matrix QA. Distribution and launch-at-login are both closed by decision rather than open.
 
+### 2026-07-30 — Menu-bar settings surface (#10)
+
+- Objective: give the user a control surface that works whether or not the mascot is on screen, and make every animation inspectable without an agent.
+- Completed:
+  - **State preview.** `ManualOverrides` gained `preview: MascotState?`, and the reducer returns it above every other rule. Selecting a state from **Preview State** forces that animation; `Off` returns to whatever the reducer actually believes.
+  - **Preference persistence.** `Preferences` stores exactly one key — roaming — in `UserDefaults`, restored at launch.
+  - **Hook setup from the menu.** `Agent Hook Setup` copies the full configuration for either provider, or just the helper path.
+  - **VoiceOver.** Status lines carry spoken labels, because the compact form a sighted user scans (`3 accepted • 1 session`) reads as noise aloud. `AgentEventBridge.spokenSummary` says what the numbers mean.
+- Decisions:
+  - **A preview is an override, not a synthetic event.** Injecting fake events would put fabricated sessions in the registry, and a fabricated session is indistinguishable from a real one afterwards. A preview changes what is *shown* and never what is *believed*, so the registry stays a record of real events only. It also outranks pause — a preview that silently showed something else would be useless — and is mutually exclusive with the other overrides.
+  - **A preview is never persisted**, and neither is visibility. Restoring a forced state on launch would strand the pet in a fabrication the user has no memory of choosing.
+  - **Issue #10 asks for verify, disable, and uninstall actions per provider; those are deliberately not built.** Each means editing the file that runs the user's actual agent, and a mascot getting that wrong breaks the tool they work in. Preview-and-paste is the substitute: Dock Pet shows every line it would add and the user installs it. This is a narrowing of #10, recorded rather than quietly dropped.
+- Verification: 172 package tests pass, up from 166 — six preview fixtures covering every state, provider attribution, precedence over pause, restoration, and that a preview leaves the registry empty. Debug and Release build. Persistence measured directly: roaming survives a relaunch, and the app's entire `UserDefaults` domain contains one key and nothing else.
+- **Debugging note worth keeping.** Six unrelated transport tests failed convincingly — a live session reducing to `offline` — and the cause was a stale incremental build holding the old `ManualOverrides` layout after a stored property was added. `swift package clean` fixed it. Recorded in `docs/DEVELOPMENT.md`; the failure was entirely believable and cost a detour.
+- Risks or blockers: the preview menu itself has not been clicked by the owner — the reducer path is fixture-verified and the app wiring is the same path pause uses, but the submenu has not been exercised on screen. Animation speed and display selection from #10's task list are not built; they are not required by any acceptance criterion and are recorded as deferred.
+- Next: owner clicks through the new menu, especially Preview State. Then the outstanding hands-on display matrix, which is the last item standing between 0.1 and done.
+
 ## Next-session handoff
 
 1. Read this file in full.

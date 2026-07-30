@@ -21,6 +21,7 @@
 		A2DCBDEDC3591F16897F322C /* MascotTransport in Frameworks */ = {isa = PBXBuildFile; productRef = 009FAC47CE5C44C4027811FB /* MascotTransport */; };
 		B10178104EA43107B06D0605 /* atlas-contract.json in Resources */ = {isa = PBXBuildFile; fileRef = 36F19CD414F513BEB1E5C61F /* atlas-contract.json */; };
 		B5BB339F15768A7AEBDE530A /* MascotCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2FAFE898A052D128C6B0B88D /* MascotCore */; };
+		C44951A55914E6DF1A642D1C /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301E146D1688456CCA61F9BD /* Preferences.swift */; };
 		DD9EB096AB5328CC3E340FA6 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3AF38AC31ECC3ACAED12504 /* main.swift */; };
 		E3C852E43F8538F388F4F0FC /* MascotPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1836E78848D6B2FD49EC9424 /* MascotPreviewView.swift */; };
 		E5D6163B8CCE3A6711603684 /* dockpet-event in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 514E6BEB81D4C9764CA433E8 /* dockpet-event */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -56,6 +57,7 @@
 		08C465D303E5B8C09D23D596 /* EventHelperLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventHelperLocation.swift; sourceTree = "<group>"; };
 		16245A1009483229670E5018 /* AppResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppResources.swift; sourceTree = "<group>"; };
 		1836E78848D6B2FD49EC9424 /* MascotPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MascotPreviewView.swift; sourceTree = "<group>"; };
+		301E146D1688456CCA61F9BD /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		36F19CD414F513BEB1E5C61F /* atlas-contract.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "atlas-contract.json"; sourceTree = "<group>"; };
 		41EE1C1DD5A7A2FCDDF08B3C /* DesktopMascotApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopMascotApp.swift; sourceTree = "<group>"; };
 		514E6BEB81D4C9764CA433E8 /* dockpet-event */ = {isa = PBXFileReference; includeInIndex = 0; path = "dockpet-event"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -145,6 +147,7 @@
 				08C465D303E5B8C09D23D596 /* EventHelperLocation.swift */,
 				1836E78848D6B2FD49EC9424 /* MascotPreviewView.swift */,
 				C0860DC47188B80AA1AE618B /* MenuBarContent.swift */,
+				301E146D1688456CCA61F9BD /* Preferences.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -305,6 +308,7 @@
 				0A3053C7B6F222316337ACD3 /* EventHelperLocation.swift in Sources */,
 				E3C852E43F8538F388F4F0FC /* MascotPreviewView.swift in Sources */,
 				1BEF9E2C39FC7E61326C3549 /* MenuBarContent.swift in Sources */,
+				C44951A55914E6DF1A642D1C /* Preferences.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
