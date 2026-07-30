@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import MascotAnimation
+import MascotCore
 import MascotWindow
 import SwiftUI
 
@@ -12,6 +13,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published var isIdeating = false
     @Published var isRoaming = true
 
+    /// Listens for provider lifecycle events and reduces them. Observed by the
+    /// menu bar only; it does not select animations yet.
+    let eventBridge = AgentEventBridge()
+
     private let previewModel = MascotPreviewModel()
     private var atlas: SpriteAtlas?
     private var windowCoordinator: WindowCoordinator?
@@ -19,6 +24,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        // Started before the mascot loads so a resource failure below still
+        // leaves the event path diagnosable from the menu bar.
+        eventBridge.start()
         do {
             let resources = try AppResources.load()
             let contractData = try Data(contentsOf: resources.contractURL)
@@ -66,6 +74,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        // Removes the socket file, so the next launch does not have to decide
+        // whether a leftover one belongs to a live instance.
+        eventBridge.stop()
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         setVisible(true)
         diagnostics = "Mascot reopened"
@@ -86,6 +100,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         if paused { isIdeating = false }
         animationController?.setIdeating(false)
         animationController?.setPaused(paused)
+        syncOverrides()
         diagnostics = paused ? "Animation paused" : "Ambient roaming"
     }
 
@@ -94,7 +109,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         if ideating { isPaused = false }
         animationController?.setPaused(false)
         animationController?.setIdeating(ideating)
+        syncOverrides()
         diagnostics = ideating ? "Manual ideating" : "Ambient roaming"
+    }
+
+    private func syncOverrides() {
+        eventBridge.overrides = ManualOverrides(isPaused: isPaused, isIdeating: isIdeating)
     }
 
     func setRoaming(_ roaming: Bool) {

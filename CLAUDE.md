@@ -20,12 +20,12 @@ Welcome, Mr. C. This file is the mandatory entry point for work on Dock Pet.
 - The hanging row has a distinct top grip at atlas coordinate `(48, 4)`, mapped to AppKit panel point `(48, 108)`. Do not ground-align it.
 - Keep the mascot non-activating and retain a menu-bar escape hatch for show/hide, pause, and quit.
 - XcodeGen owns `DesktopMascot.xcodeproj`. Change `project.yml`, then regenerate; do not make durable project-file-only edits.
-- Do not claim that random roaming reflects real Claude/ChatGPT activity. The local event bridge and provider adapters are not implemented yet.
+- Do not claim that roaming reflects real Claude/ChatGPT activity. The app reduces real events into `MascotVisibleState`, but no animation consumes it and no provider adapter exists, so the only source of events today is a developer running `dockpet-event` by hand.
 - Update `DesktopMascot.md` at the end of every implementation session with decisions, evidence, risks, and the exact next step.
 
 ## Current priority
 
-1. Run the event socket server inside the app, feed the registry and reducer, and surface the result in menu-bar diagnostics before changing any animation. Then wire `MascotVisibleState` into animation selection with ambient roaming as the no-signal default. Everything upstream of this — event model, strict decoder, session registry, deterministic reducer, local socket transport, and the `dockpet-event` helper — is implemented, tested, and merged.
+1. Wire `MascotVisibleState` into animation selection with ambient roaming as the no-signal default, replacing the raw atlas row strings in `AmbientAnimationController` rather than growing beside them. Everything upstream — event model, strict decoder, session registry, deterministic reducer, local socket transport, the `dockpet-event` helper, and (as of 2026-07-30, on branch `agent/event-server-app-wiring`) the socket server running inside the app with menu-bar diagnostics — is implemented and tested.
 2. Obtain/record owner hands-on QA for cursor hanging and the remaining display matrix (auto-hide, multiple displays, full-screen Spaces, sleep/wake). Placement is bottom-anchored only, so left/right Dock is no longer part of that matrix.
 3. Add privacy-preserving Claude Code and Codex hook adapters only after the core event path is tested.
 

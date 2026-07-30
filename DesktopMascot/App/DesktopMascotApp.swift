@@ -6,7 +6,7 @@ struct DesktopMascotApp: App {
 
     var body: some Scene {
         MenuBarExtra("Dock Pet", systemImage: "pawprint.fill") {
-            MenuBarContent(appDelegate: appDelegate)
+            MenuBarContent(appDelegate: appDelegate, eventBridge: appDelegate.eventBridge)
         }
         .menuBarExtraStyle(.menu)
     }
