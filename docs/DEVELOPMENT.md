@@ -45,7 +45,7 @@ SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/mac-dock-pet-swiftpm-cache \
 swift test
 ```
 
-Expected handoff baseline: 118 Swift Testing tests pass as of 2026-07-30. A higher count is fine; a lower count requires investigation.
+Expected handoff baseline: 130 Swift Testing tests pass as of 2026-07-30. A higher count is fine; a lower count requires investigation.
 
 ## Exercise the event helper
 
@@ -57,9 +57,14 @@ from the package:
 swift run dockpet-event --provider claude-code --event active --session demo --verbose
 ```
 
-It exits 0 when nothing is listening, which is the normal case while the app does
-not yet run the server. `--verbose` sends one line to stderr; without it the
-helper is silent so a provider hook is never disturbed. Usage errors exit 64.
+The running app listens as of 2026-07-30, so with Dock Pet launched the event is
+delivered and the menu bar's `Event socket:` line advances. The helper still
+exits 0 when nothing is listening, so a provider hook is never failed by Dock Pet
+being closed. `--verbose` sends one line to stderr; without it the helper is
+silent. Usage errors exit 64.
+
+The reduced state appears in the menu bar under `Reduced state:`. It is
+observation only — it does not select animations yet.
 
 ## Generate the Xcode project
 
