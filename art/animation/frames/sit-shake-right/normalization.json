@@ -1,47 +1,49 @@
 {
   "state": "sit-shake-right",
   "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/sit-shake-right-row.png",
+  "decision_note": "Owner replaced the Dock-corner ledge with a small freestanding chair while preserving the six-frame leg-swing cadence.",
   "frames": 6,
   "source_slot_bounds": [
     [
-      85,
-      172,
-      328,
-      540
+      87,
+      173,
+      324,
+      532
     ],
     [
-      85,
+      82,
       177,
-      273,
-      540
+      269,
+      533
     ],
     [
-      76,
-      181,
-      309,
-      540
+      78,
+      180,
+      307,
+      533
     ],
     [
-      68,
+      71,
       177,
-      258,
-      540
+      257,
+      533
     ],
     [
-      59,
+      63,
       177,
-      302,
-      540
+      301,
+      533
     ],
     [
-      56,
+      61,
       178,
-      245,
-      540
+      244,
+      533
     ]
   ],
-  "shared_scale": 0.21195652173913043,
+  "shared_scale": 0.21727019498607242,
   "bounds_mode": "normal",
   "minimum_component_ratio": 0.005,
+  "anchor_mode": "grounded",
   "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/sit-shake-right"
 }

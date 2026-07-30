@@ -1,6 +1,6 @@
 # Desktop Mascot animation atlas contract
 
-Status: revision 3 adds the owner-requested cursor-hanging drag row on 2026-07-29. This is the app-integration contract.
+Status: revision 4 replaces the sit-shake ledges with owner-requested freestanding chairs on 2026-07-29. Revision 3 added the cursor-hanging drag row. This is the app-integration contract.
 
 The machine-readable source of truth is [`atlas-contract.json`](atlas-contract.json). If this document and the JSON disagree, stop and reconcile them before producing or loading art.
 
@@ -39,8 +39,8 @@ Unused cells after a row's final frame are fully transparent with zero RGB. Dura
 | 8 | `paused` | 2 | intro-hold | `140, hold` | Settle into a still neutral pose and stop the frame timer on the last frame. |
 | 9 | `walk-right` | 6 | loop | `140, 120, 140, 120, 140, 120` | Right-facing contact, down, passing, up cadence with alternating feet and no floor effects. |
 | 10 | `walk-left` | 6 | loop | `140, 120, 140, 120, 140, 120` | Left-facing equivalent. A mirror is allowed only if glasses, hair, clothing, light direction, and temporal frame order remain correct. |
-| 11 | `sit-shake-right` | 6 | loop | `220, 180, 220, 180, 220, 360` | Ambient right-facing corner pose: sit on a compact Dock-edge ledge and casually swing one dangling lower leg while the torso and ledge stay stable. |
-| 12 | `sit-shake-left` | 6 | loop | `220, 180, 220, 180, 220, 360` | Mirrored left-facing corner pose with temporal order preserved. |
+| 11 | `sit-shake-right` | 6 | loop | `220, 180, 220, 180, 220, 360` | Ambient right-facing chair pose: sit on a small freestanding chair and casually swing one lower leg while the torso and chair stay stable. |
+| 12 | `sit-shake-left` | 6 | loop | `220, 180, 220, 180, 220, 360` | Mirrored left-facing chair pose with temporal order preserved. |
 | 13 | `hanging` | 6 | loop | `160, 160, 220, 160, 160, 220` | One raised hand grips the cursor anchor while the body, free arm, and legs swing left through center to right; no ledge, rope, cursor art, or ground contact. |
 
 `hold` is not a millisecond value: the controller displays that frame until the visible state changes. `intro-hold` and `once-hold` play frames `0...n-1` exactly once; neither restarts while the state remains unchanged.
@@ -54,7 +54,7 @@ All frames use only transparency plus the frozen 12-color subject palette:
 - Alpha is binary: only `0` or `255`.
 - Fully transparent pixels have RGB `(0, 0, 0)`.
 - No antialiasing, semitransparent fringe, chroma spill, shadow, glow, smear, or single-pixel noise.
-- Props and effects reuse the frozen palette. The computer, blanket, cloud, `Z` trail, clock, stars, bulb, and Dock-edge ledge do not introduce new colors.
+- Props and effects reuse the frozen palette. The computer, blanket, cloud, `Z` trail, clock, stars, bulb, and freestanding chair do not introduce new colors.
 - The identity anchors remain readable in every applicable frame: asymmetric dark hair, separate square glasses/lenses, navy torso with white side panels, gray trousers, and navy shoes.
 
 Intentional detached effects are limited to the owner-requested offline/sleeping `Z` trails, waiting clock, success stars/sparkles, failure bulb, and the existing ideating cloud. They must stay inside the guard, remain legible at native size, and never overlap the face.
@@ -71,7 +71,7 @@ Each frame must pass in isolation and in motion:
 6. Walk loops alternate feet, preserve temporal order, avoid foot sliding during contact, and loop without a teleport.
 7. Working, ideating, waiting, success, failure, sleeping, and offline remain visually distinct; only the approved `Z` trails may use letterforms.
 8. First frames of `idle`, `sleeping`, `waiting`, and `paused` are acceptable static Reduced Motion substitutions. Reduced Motion never scales or rapidly flashes the panel.
-9. `sit-shake-right` and `sit-shake-left` keep the seat, hip, torso, head, and supporting leg stable; only the dangling lower leg swings.
+9. `sit-shake-right` and `sit-shake-left` keep the chair back, seat, legs, hip, torso, head, and supporting leg stable; only the raised lower leg swings.
 10. `hanging` keeps an opaque hand pixel fixed at `(48, 4)` while the body swings beneath it; neither foot touches the ground and no cliff, ledge, rope, or cursor is drawn.
 
 Repair the smallest failing scope: one frame, then one row, and only then a broader redraw. Identity drift is a blocker even if automated checks pass.
@@ -95,7 +95,8 @@ The dedicated `@1x` asset remains an explicit experiment. It must be authored an
 2. Produce and review `idle`, `walk-right`, and `walk-left` first. Directional gait and identity must pass before props obscure the body.
 3. Produce `working`, `ideating`, and `waiting`.
 4. Produce `success`, `failure`, `sleeping`, `offline`, and `paused`.
-5. Apply the owner-directed effect revision and add the two corner-sit leg-shake ambient clips.
+5. Apply the owner-directed effect revision and add the two directional sit-shake ambient clips.
 6. Add the revision 3 cursor-hanging row with its separate top grip anchor.
-7. Assemble the atlas deterministically, run `tools/validate_animation_atlas.py`, render contact sheets and previews, and repair only failing rows.
-8. Obtain owner review before closing issue #3 merely because the atlas is structurally valid.
+7. Apply revision 4 by replacing the sit-shake ledge with one stable freestanding chair, then derive the left row by mirroring without reversing time.
+8. Assemble the atlas deterministically, run `tools/validate_animation_atlas.py`, render contact sheets and previews, and repair only failing rows.
+9. Obtain owner review before closing issue #3 merely because the atlas is structurally valid.
