@@ -1378,12 +1378,25 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Guard added to `CLAUDE.md`: verify documentation claims against the committed file (`git show HEAD:<file> | grep`), not against an edit script's output.
 - No code was affected. This was a documentation-accuracy failure, which matters here because the ledger is what the next session trusts instead of re-deriving.
 
+### 2026-07-30 — Session closure: 0.1 feature-complete, QA outstanding
+
+- Objective: close the session with the ledger matching the repository.
+- Landed on `main` this session: [PR #18](https://github.com/Mr-Shine09/desktop-mascot/pull/18) app-side event server, [#19](https://github.com/Mr-Shine09/desktop-mascot/pull/19) animation from reduced state, [#20](https://github.com/Mr-Shine09/desktop-mascot/pull/20) bundled helper, [#21](https://github.com/Mr-Shine09/desktop-mascot/pull/21) provider hook adapters, [#22](https://github.com/Mr-Shine09/desktop-mascot/pull/22) durable install with signed nested helper. [PR #24](https://github.com/Mr-Shine09/desktop-mascot/pull/24) merged into `agent/summon-on-demand` rather than `main`, so [PR #23](https://github.com/Mr-Shine09/desktop-mascot/pull/23) now carries both summon-on-demand and the menu-bar settings surface and is the one merge outstanding.
+- The single most important change: **Dock Pet went from a mascot that knew nothing to one driven by real Claude Code activity**, verified from a live session rather than synthesized events. The package suite grew 118 -> 172 tests across the session.
+- Owner decisions recorded, each of which closed open work rather than adding it: no launch-at-login ever; launching is not summoning; distribution is not a goal, so an ad-hoc signed local install is the finished state.
+- Verification at session end: 172 package tests pass, Debug and Release build, atlas and contract validate, `git diff --check` clean, and the conflict-resolved branch was re-tested after merging `origin/main`.
+- Risks carried forward:
+  - **Codex has never been run live.** It shares the adapter with Claude Code and its snippet generates correctly, but that is inference. `waiting` and `failed` are likewise fixture-only.
+  - The install is ad-hoc signed and unnotarized, so it is trustworthy only on the machine that built it. Distribution needs a Developer ID certificate, which is a purchase, not an engineering task.
+  - A documentation-accuracy failure occurred and is recorded in the entry above; the guard against a repeat is in `CLAUDE.md`.
+- Next: owner hands-on QA is the only remaining 0.1 work — the Preview State menu, the cursor-hanging feel, and the display matrix (auto-hide, multiple displays, full-screen Spaces, sleep/wake). If open-sourcing later, scrub the owner's home path from 12 tracked files and decide deliberately about publishing a likeness derived from a personal avatar.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
 3. Treat atlas revision 4 as the current candidate: 14 rows, `768x1568`; the directional sit-shake rows now use a small freestanding chair, and the six-frame `hanging` row remains at index 13 with a `(48, 4)` top grip anchor.
-4. `main` and `origin/main` are level at `70953f8`, which includes the event engine, the bottom-anchored window fixes, portal PR #15, chair PR #16, the app-side event server wiring from PR #18, animation selection from reduced state via PR #19, and helper bundling via PR #20. No feature branch is outstanding, though the merged `agent/animation-from-visible-state`, `agent/bundle-event-helper`, and `phase-3-event-engine` branches still exist on the remote and can be deleted. Verify with `git status --short --branch` and `gh pr list` rather than trusting this line.
+4. `main` is at `d31b893` and includes everything through [PR #22](https://github.com/Mr-Shine09/desktop-mascot/pull/22). **[PR #23](https://github.com/Mr-Shine09/desktop-mascot/pull/23) is open and carries the summon-on-demand change plus the whole menu-bar settings surface**, because #24 merged into its branch instead of `main`. Merge it first. Verify with `git status --short --branch` and `gh pr list` rather than trusting this line.
 5. Treat the current presentation as `96x112` points with a 10-point transparent Dock inset. Revision 4 changes only the two sit-shake rows inside the existing atlas geometry.
 6. Ask the owner to test dragging from several body points and verify that the raised hand remains under the cursor while the body swings left/center/right; also retain the broader click, reopen, relaunch, and display-matrix QA.
 7. Preserve the honest capability boundary. As of 2026-07-30 the app listens on the socket, reduces real events, **animates from that state**, and ships an invocable helper inside its bundle. The one remaining gap is that **no adapter exists to call it**: nothing in Claude Code or Codex knows the helper is there, so a human invoking it by hand is still the only event source. Dock Pet must not be described as reflecting real Claude or ChatGPT activity until #8 and #9 land and are verified against a live session.
