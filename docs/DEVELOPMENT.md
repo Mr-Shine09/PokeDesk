@@ -45,7 +45,7 @@ SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/mac-dock-pet-swiftpm-cache \
 swift test
 ```
 
-Expected handoff baseline: 143 Swift Testing tests pass as of 2026-07-30. A higher count is fine; a lower count requires investigation.
+Expected handoff baseline: 166 Swift Testing tests pass as of 2026-07-30. A higher count is fine; a lower count requires investigation.
 
 ## Exercise the event helper
 
@@ -79,6 +79,33 @@ The reduced state appears in the menu bar under `Reduced state:`, and since
 computer; `completed` plays the success reaction and returns it to strolling.
 Note that a session expires after 120 seconds of silence, so a `completed` or
 `waiting` sent long after its `active` is ignored as an unknown session.
+
+## Install the provider hooks
+
+The adapter is a mode of the helper rather than a separate script, so there is
+nothing to install but configuration. Print a ready-to-paste snippet:
+
+```bash
+'/private/tmp/DesktopMascotDerivedData/Build/Products/Debug/Dock Pet.app/Contents/MacOS/dockpet-event' --print-hooks --provider claude-code
+```
+
+Merge the result into `~/.claude/settings.json` (or `~/.codex/hooks.json` for
+`--provider codex`). Dock Pet never writes those files itself.
+
+Each hook invokes the helper with `--hook`, which reads the provider's payload on
+stdin and maps `hook_event_name` onto the event vocabulary. Only
+`hook_event_name` and `session_id` are read; every other key is dropped without
+being inspected, and the session value is hashed before it leaves the process.
+
+To check a mapping without configuring anything:
+
+```bash
+echo '{"hook_event_name":"Stop","session_id":"demo"}' | dockpet-event --hook --provider claude-code --verbose
+```
+
+The helper exits 0 for every outcome except a usage error: unmapped hook,
+unparsable payload, Dock Pet closed, or stdin held open past its 2-second
+deadline. A hook must never fail or stall the user's real agent session.
 
 ## Generate the Xcode project
 

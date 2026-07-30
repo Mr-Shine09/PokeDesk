@@ -20,12 +20,12 @@ Welcome, Mr. C. This file is the mandatory entry point for work on Dock Pet.
 - The hanging row has a distinct top grip at atlas coordinate `(48, 4)`, mapped to AppKit panel point `(48, 108)`. Do not ground-align it.
 - Keep the mascot non-activating and retain a menu-bar escape hatch for show/hide, pause, and quit.
 - XcodeGen owns `DesktopMascot.xcodeproj`. Change `project.yml`, then regenerate; do not make durable project-file-only edits.
-- Do not claim that roaming reflects real Claude/ChatGPT activity. The app reduces real events into `MascotVisibleState`, but no animation consumes it and no provider adapter exists, so the only source of events today is a developer running `dockpet-event` by hand.
+- Do not claim that Dock Pet reflects real Claude/ChatGPT activity until a live provider session has been observed driving it. The full path — hooks, helper, transport, reducer, animation — is implemented and fixture-verified, but every event to date was synthesized by hand.
 - Update `DesktopMascot.md` at the end of every implementation session with decisions, evidence, risks, and the exact next step.
 
 ## Current priority
 
-1. Add the privacy-preserving Claude Code and Codex hook adapters (#8, #9). Everything else is done and verified as of 2026-07-30: event model, strict decoder, session registry, deterministic reducer, local socket transport, the socket server running inside the app, animation selection from `MascotVisibleState`, and the helper bundled at `Contents/MacOS/dockpet-event`. An adapter must map provider hooks onto the existing event vocabulary without widening the envelope, and must fail silently so it can never break the user's real agent session.
+1. Get a live provider session observed. The Claude Code and Codex adapters are implemented as `dockpet-event --hook --provider <name>` and fixture-verified, but no real agent session has driven the mascot yet — every event so far was synthesized. Until the owner installs the `--print-hooks` snippet and uses Claude Code or Codex normally, treat the providers' documented hook behavior as trusted rather than observed.
 2. Obtain/record owner hands-on QA for cursor hanging and the remaining display matrix (auto-hide, multiple displays, full-screen Spaces, sleep/wake). Placement is bottom-anchored only, so left/right Dock is no longer part of that matrix.
 3. Keep `MascotVisibleState` the single source of what the pet is doing. Anything that wants to change the animation goes through the reducer, never by setting an atlas row directly.
 

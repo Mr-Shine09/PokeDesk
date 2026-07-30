@@ -18,8 +18,9 @@
 		7C8BF032D548B5B5DB46D8C4 /* AmbientAnimationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A4711FDCED703588195AEA2 /* AmbientAnimationController.swift */; };
 		90CE6F844A663B5EB7EE75DF /* MascotWindow in Frameworks */ = {isa = PBXBuildFile; productRef = 169CC0F70261FBB9E36D2069 /* MascotWindow */; };
 		A0C7761B78F4DEF1ADC87AC8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8B44BFF4D72CB7D7C4C556 /* AppDelegate.swift */; };
+		A2DCBDEDC3591F16897F322C /* MascotTransport in Frameworks */ = {isa = PBXBuildFile; productRef = 009FAC47CE5C44C4027811FB /* MascotTransport */; };
 		B10178104EA43107B06D0605 /* atlas-contract.json in Resources */ = {isa = PBXBuildFile; fileRef = 36F19CD414F513BEB1E5C61F /* atlas-contract.json */; };
-		B5BB339F15768A7AEBDE530A /* MascotTransport in Frameworks */ = {isa = PBXBuildFile; productRef = 009FAC47CE5C44C4027811FB /* MascotTransport */; };
+		B5BB339F15768A7AEBDE530A /* MascotCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2FAFE898A052D128C6B0B88D /* MascotCore */; };
 		DD9EB096AB5328CC3E340FA6 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3AF38AC31ECC3ACAED12504 /* main.swift */; };
 		E3C852E43F8538F388F4F0FC /* MascotPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1836E78848D6B2FD49EC9424 /* MascotPreviewView.swift */; };
 		E5D6163B8CCE3A6711603684 /* dockpet-event in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 514E6BEB81D4C9764CA433E8 /* dockpet-event */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -83,7 +84,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B5BB339F15768A7AEBDE530A /* MascotTransport in Frameworks */,
+				B5BB339F15768A7AEBDE530A /* MascotCore in Frameworks */,
+				A2DCBDEDC3591F16897F322C /* MascotTransport in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -223,6 +225,7 @@
 			);
 			name = "dockpet-event";
 			packageProductDependencies = (
+				2FAFE898A052D128C6B0B88D /* MascotCore */,
 				009FAC47CE5C44C4027811FB /* MascotTransport */,
 			);
 			productName = "dockpet-event";
@@ -554,6 +557,10 @@
 		169CC0F70261FBB9E36D2069 /* MascotWindow */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = MascotWindow;
+		};
+		2FAFE898A052D128C6B0B88D /* MascotCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MascotCore;
 		};
 		9BB733919D3F300907589D2A /* MascotAnimation */ = {
 			isa = XCSwiftPackageProductDependency;

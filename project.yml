@@ -22,6 +22,8 @@ targets:
       - path: Packages/DesktopMascotKit/Sources/dockpet-event
     dependencies:
       - package: DesktopMascotKit
+        product: MascotCore
+      - package: DesktopMascotKit
         product: MascotTransport
     settings:
       base:
