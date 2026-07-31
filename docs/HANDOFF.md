@@ -50,7 +50,7 @@ git branch -a
 
 This paragraph used to name a specific `main` revision and PR number. That claim went stale three times — twice by several merges, and once within minutes, because the commit correcting it was itself merged immediately afterward. A hash written into a file that the next merge invalidates cannot be kept accurate by being more careful; it was removed rather than corrected a fourth time. The commands above are always right.
 
-What is durable as of 2026-07-30: the repository is private, `main` is the only long-lived branch, and work lands through short-lived `agent/*` branches and squash-merged PRs.
+What is durable as of 2026-07-31: the repository is private, `main` is the only long-lived branch, and work lands through short-lived `agent/*` branches and squash-merged PRs.
 
 Merge and branch-delete commands are sometimes refused for the assistant by the auto-mode permission classifier and sometimes allowed; the outcome is not predictable in advance. When one is denied, give the owner the exact command to run in their own terminal instead of retrying or working around the denial.
 
