@@ -40,7 +40,17 @@ As of 2026-07-30 every stage of this flow is implemented **and verified against 
 
 ## Repository warning
 
-`main` is at `6a7e631` as of 2026-07-30, including everything through PR #26. No PR is open and no branch is outstanding. This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` rather than trusting this line. It has been wrong before: the revision it named previously was three merges behind and described an open PR that had already landed.
+**Do not trust any revision written here. Run the commands instead:**
+
+```bash
+git status --short --branch
+gh pr list
+git branch -a
+```
+
+This paragraph used to name a specific `main` revision and PR number. That claim went stale three times — twice by several merges, and once within minutes, because the commit correcting it was itself merged immediately afterward. A hash written into a file that the next merge invalidates cannot be kept accurate by being more careful; it was removed rather than corrected a fourth time. The commands above are always right.
+
+What is durable as of 2026-07-30: the repository is private, `main` is the only long-lived branch, and work lands through short-lived `agent/*` branches and squash-merged PRs.
 
 Merge and branch-delete commands are sometimes refused for the assistant by the auto-mode permission classifier and sometimes allowed; the outcome is not predictable in advance. When one is denied, give the owner the exact command to run in their own terminal instead of retrying or working around the denial.
 
