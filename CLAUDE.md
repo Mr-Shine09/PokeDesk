@@ -19,6 +19,7 @@ Welcome, Mr. C. This file is the mandatory entry point for work on Dock Pet.
 - Render sprites with nearest-neighbor interpolation. Production alpha is binary and colors must remain within the frozen 12-color palette.
 - The hanging row has a distinct top grip at atlas coordinate `(48, 4)`, mapped to AppKit panel point `(48, 108)`. Do not ground-align it.
 - Keep the mascot non-activating and retain a menu-bar escape hatch for summon/dismiss, pause, and quit.
+- Dragging is a placement gesture only: it never changes roaming. The mascot roams at whatever height it was dropped at (owner decision, 2026-07-30), and Reposition is the only way back to the default bottom lane. Do not restore lane-snapping on drop without a fresh owner decision.
 - The mascot appears only when summoned. Launching the app must never put one on screen, and there is no launch-at-login by owner decision (2026-07-30).
 - XcodeGen owns `DesktopMascot.xcodeproj`. Change `project.yml`, then regenerate; do not make durable project-file-only edits.
 - Dock Pet reflects real Claude Code activity, observed 2026-07-30 from a live session. Two limits still hold: **Codex has never been run live** (it shares the adapter, which is inference, not evidence), and `waiting` and `failed` are fixture-covered but have never been seen from a real provider. Do not describe either as proven.
@@ -26,7 +27,7 @@ Welcome, Mr. C. This file is the mandatory entry point for work on Dock Pet.
 
 ## Current priority
 
-1. Owner hands-on QA is the only remaining 0.1 work: the new menu (especially Preview State), the cursor-hanging feel, and the display matrix. Everything else is built and verified — the Claude Code adapter was observed driving the mascot from a real session on 2026-07-30 (`started -> active -> completed -> stopped`). Codex shares the adapter but has never been run live, and `waiting`/`failed` remain fixture-only, so do not describe either as proven.
+1. Owner hands-on QA is the only remaining 0.1 work, in this order: listen to the two reaction cues (never heard by anyone — they are measured non-silent, which is not the same as correct), drop the mascot from several heights to confirm the drop-and-roam feel, then the display matrix. Everything else is built and verified — the Claude Code adapter was observed driving the mascot from a real session on 2026-07-30 (`started -> active -> completed -> stopped`). Codex shares the adapter but has never been run live, and `waiting`/`failed` remain fixture-only, so do not describe either as proven.
 2. Verify documentation claims against the committed file, not against an edit script's output. Several ledger rows were reported updated on 2026-07-30 and were not — a string replacement whose target does not match fails silently. `git show HEAD:<file> | grep` is the check that would have caught it.
 3. Keep `MascotVisibleState` the single source of what the pet is doing. Anything that wants to change the animation goes through the reducer, never by setting an atlas row directly.
 
