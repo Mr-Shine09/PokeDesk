@@ -39,6 +39,17 @@ struct MenuBarContent: View {
             Label("Manual Ideating", systemImage: appDelegate.isIdeating ? "checkmark" : "minus")
         }
 
+        Button {
+            appDelegate.setMuted(!appDelegate.isMuted)
+        } label: {
+            Label("Reaction Sounds", systemImage: appDelegate.isMuted ? "minus" : "checkmark")
+        }
+        .accessibilityLabel(
+            appDelegate.isMuted
+                ? "Turn on the success and failure sounds"
+                : "Silence the success and failure sounds"
+        )
+
         Divider()
 
         Button {

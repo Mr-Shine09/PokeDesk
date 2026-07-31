@@ -16,6 +16,7 @@ import Foundation
 enum Preferences {
     private enum Key {
         static let roaming = "com.mrshine09.desktopmascot.roaming"
+        static let reactionSoundsMuted = "com.mrshine09.desktopmascot.reactionSoundsMuted"
     }
 
     /// `UserDefaults.standard` is read through a computed property rather than
@@ -32,6 +33,19 @@ enum Preferences {
         }
         set {
             defaults.set(newValue, forKey: Key.roaming)
+        }
+    }
+
+    /// Whether the success/failure cues are silenced. Defaults to `false`, so
+    /// the cues work on first launch without hunting for a switch — but the
+    /// choice to silence them persists, because being re-surprised by a sound
+    /// you already turned off is the worse failure of the two.
+    static var reactionSoundsMuted: Bool {
+        get {
+            defaults.bool(forKey: Key.reactionSoundsMuted)
+        }
+        set {
+            defaults.set(newValue, forKey: Key.reactionSoundsMuted)
         }
     }
 }

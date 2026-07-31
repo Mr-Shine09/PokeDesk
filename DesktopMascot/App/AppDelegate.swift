@@ -30,6 +30,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// since those reach the reducer as overrides.
     let eventBridge = AgentEventBridge()
 
+    /// Mirrors the player's own persisted setting so the menu can bind to it.
+    @Published var isMuted = Preferences.reactionSoundsMuted
+
+    private let reactionSounds = ReactionSoundPlayer()
     private let previewModel = MascotPreviewModel()
     private var atlas: SpriteAtlas?
     private var windowCoordinator: WindowCoordinator?
@@ -60,10 +64,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 self?.animationController?.userDidBeginDrag()
                 self?.diagnostics = "Dragging — hanging pose"
             }
+            // A drop no longer switches roaming off. Dragging places the mascot;
+            // whether it walks afterwards stays the user's separate choice, made
+            // in the menu. See `userDidEndDrag()` for why.
             windowCoordinator.panel.onDragEnded = { [weak self] in
                 self?.animationController?.userDidEndDrag()
-                self?.isRoaming = false
-                self?.diagnostics = "Manual position — click mascot to resume roaming"
+                self?.refreshDiagnostics()
             }
             animationController = try AmbientAnimationController(
                 atlas: atlas,
@@ -72,6 +78,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             )
             animationController?.onSummonCompleted = { [weak self] in
                 self?.refreshDiagnostics()
+            }
+            // Gated on visibility: a dismissed mascot is one the user chose not
+            // to have on screen, and a chime from an invisible pet is a sound
+            // with nothing to explain it.
+            animationController?.onStateAppeared = { [weak self] state in
+                guard let self, self.isVisible else { return }
+                self.reactionSounds.stateDidAppear(state)
             }
             // The reduced state drives animation from here on. Nothing else may
             // select a row, so manual pause and ideating go through the reducer's
@@ -104,9 +117,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func setVisible(_ visible: Bool) {
         isVisible = visible
-        // Roaming off means the user dragged the mascot to a manual spot;
-        // Hide/Show and reopen must not snap it back to the default lane.
-        windowCoordinator?.setVisible(visible, repositioning: isRoaming)
+        // A dropped height is a deliberate placement, so Hide/Show and reopen
+        // must preserve it. Roaming no longer signals this: dragging leaves
+        // roaming on, so the coordinator's own record of the drop is the only
+        // reliable answer to "did the user place this themselves?".
+        let placed = windowCoordinator?.hasManualPlacement ?? false
+        windowCoordinator?.setVisible(visible, repositioning: !placed)
         animationController?.setVisible(visible)
         diagnostics = visible ? "Opening Dock portal" : "Not summoned"
         if !visible { refreshDiagnostics() }
@@ -150,6 +166,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             preview: previewState
         )
         refreshDiagnostics()
+    }
+
+    func setMuted(_ muted: Bool) {
+        isMuted = muted
+        reactionSounds.isMuted = muted
     }
 
     func setRoaming(_ roaming: Bool) {

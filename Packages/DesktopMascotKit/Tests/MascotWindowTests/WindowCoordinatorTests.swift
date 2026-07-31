@@ -114,6 +114,76 @@ import Testing
 }
 
 @MainActor
+@Test func aDropKeepsBothTheColumnAndTheHeightItLandedAt() {
+    let coordinator = WindowCoordinator(contentView: NSView())
+    defer { coordinator.setVisible(false) }
+
+    coordinator.reposition()
+    let laneY = coordinator.panel.frame.minY
+    let dropped = NSPoint(x: (coordinator.horizontalMovementBounds()?.upperBound ?? 400) - 30, y: laneY + 260)
+
+    coordinator.panel.setFrameOrigin(dropped)
+    coordinator.settleAfterDrop()
+
+    // The owner's requirement: roam from wherever it was dropped, not from the
+    // bottom lane.
+    #expect(coordinator.panel.frame.origin == dropped)
+    #expect(coordinator.hasManualPlacement)
+}
+
+@MainActor
+@Test func aDropPastAnEdgeIsClampedBackIntoView() {
+    let coordinator = WindowCoordinator(contentView: NSView())
+    defer { coordinator.setVisible(false) }
+
+    guard
+        let horizontal = coordinator.horizontalMovementBounds(),
+        let vertical = coordinator.verticalPlacementBounds()
+    else { return }
+
+    coordinator.panel.setFrameOrigin(NSPoint(x: horizontal.upperBound + 500, y: vertical.upperBound + 500))
+    coordinator.settleAfterDrop()
+
+    // Otherwise a pet dropped off the edge would roam somewhere it cannot be
+    // seen or grabbed back.
+    #expect(coordinator.panel.frame.minX == horizontal.upperBound)
+    #expect(coordinator.panel.frame.minY == vertical.upperBound)
+}
+
+@MainActor
+@Test func horizontalRoamingPreservesADroppedHeight() {
+    let coordinator = WindowCoordinator(contentView: NSView())
+    defer { coordinator.setVisible(false) }
+
+    coordinator.reposition()
+    let droppedY = coordinator.panel.frame.minY + 200
+    coordinator.panel.setFrameOrigin(NSPoint(x: coordinator.panel.frame.minX, y: droppedY))
+    coordinator.settleAfterDrop()
+
+    coordinator.setHorizontalPosition(coordinator.panel.frame.minX + 40)
+
+    #expect(coordinator.panel.frame.minY == droppedY)
+}
+
+@MainActor
+@Test func repositioningIsTheWayBackToTheDefaultLane() {
+    let coordinator = WindowCoordinator(contentView: NSView())
+    defer { coordinator.setVisible(false) }
+
+    coordinator.reposition()
+    let laneOrigin = coordinator.panel.frame.origin
+
+    coordinator.panel.setFrameOrigin(NSPoint(x: laneOrigin.x + 60, y: laneOrigin.y + 220))
+    coordinator.settleAfterDrop()
+    #expect(coordinator.hasManualPlacement)
+
+    coordinator.reposition()
+
+    #expect(coordinator.hasManualPlacement == false)
+    #expect(coordinator.panel.frame.origin == laneOrigin)
+}
+
+@MainActor
 private func mouseEvent(type: NSEvent.EventType, location: NSPoint, panel: NSPanel) -> NSEvent? {
     NSEvent.mouseEvent(
         with: type,

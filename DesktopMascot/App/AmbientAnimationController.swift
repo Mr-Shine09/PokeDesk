@@ -13,6 +13,10 @@ import MascotWindow
 @MainActor
 final class AmbientAnimationController {
     var onSummonCompleted: (() -> Void)?
+    /// Fires when a state reaches the screen, after the selector's dwell — not
+    /// when it is reduced. Anything that accompanies an animation (today, the
+    /// reaction cues) hangs off this so it stays in step with the frames.
+    var onStateAppeared: ((MascotState) -> Void)?
 
     private enum Phase {
         case walking(direction: CGFloat, until: TimeInterval)
@@ -84,7 +88,11 @@ final class AmbientAnimationController {
         // stationary either way, so toggling this must not yank it into a walk.
         if plan.isAmbient {
             if roaming {
-                windowCoordinator.reposition()
+                // Resuming roaming must not yank a dropped pet back down to the
+                // lane; it only recovers placement for one that never moved.
+                if !windowCoordinator.hasManualPlacement {
+                    windowCoordinator.reposition()
+                }
                 beginWalking(at: now)
             } else {
                 beginResting(at: now, duration: .infinity)
@@ -102,13 +110,42 @@ final class AmbientAnimationController {
         startTimer()
     }
 
+    /// Resumes whatever the mascot was doing, from wherever it was dropped.
+    ///
+    /// Owner decision, 2026-07-30: a drop used to force `setRoaming(false)`, so
+    /// the pet stopped where it was released and — with no agent connected —
+    /// held the `offline` row's dozing Z-trail indefinitely. That read as the
+    /// mascot breaking rather than as a manual placement. Dragging is now a
+    /// placement gesture only: it moves the pet, it does not switch roaming off.
+    ///
+    /// The dropped height is kept, so the pet roams along X wherever it landed
+    /// rather than falling back to the bottom lane. The owner asked for this
+    /// after seeing the lane-snapping version and accepted that it means the
+    /// mascot can walk through open air. Reposition returns it to the lane.
     func userDidEndDrag() {
         isDragging = false
-        setRoaming(false)
+        windowCoordinator.settleAfterDrop()
+        let now = ProcessInfo.processInfo.systemUptime
+
         if displayedState == .paused {
             show(state: "paused", frame: 0)
             stopTimer()
+            return
         }
+
+        if plan.isAmbient {
+            if isRoaming {
+                beginWalking(at: now)
+            } else {
+                beginResting(at: now, duration: .infinity)
+            }
+        } else {
+            phase = .stationary
+            currentState = plan.restingRow
+            frameIndex = 0
+            nextFrameTime = 0
+        }
+        startTimer()
     }
 
     // MARK: - State adoption
@@ -117,6 +154,7 @@ final class AmbientAnimationController {
     private func adopt(_ state: MascotState, at now: TimeInterval) {
         guard state != displayedState else { return }
         displayedState = state
+        onStateAppeared?(state)
 
         if state == .paused {
             show(state: "paused", frame: 0)
