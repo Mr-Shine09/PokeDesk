@@ -8,7 +8,7 @@
 
 `MenuBarContent.swift` is the reliable control surface. `MascotPreviewView.swift` renders the current `NSImage` with `.interpolation(.none)`.
 
-`AmbientAnimationController.swift` is intentionally temporary orchestration. It caches frames, advances contract timing at 20 Hz, moves at 24 points/second, alternates walk direction, pauses randomly in `offline`, handles manual ideating/pause/roaming, and plays `hanging` during drag.
+`AmbientAnimationController.swift` is intentionally temporary orchestration. It caches frames, advances contract timing at 20 Hz, moves at 24 points/second, alternates walk direction, pauses randomly in `offline`, and plays `hanging` during drag. It does **not** own pause or ideating: those reach it as `.paused` and `.ideating` through the reducer's overrides, and `MascotVisibleState` is the single source of what plays. Roaming stays a separate flag because it is about placement, not about what the agent is doing. `onStateAppeared` fires when a state reaches the screen, after the selector's dwell, and is what the reaction cues hang off.
 
 ### MascotCore
 
@@ -30,9 +30,9 @@ The session registry and reducer are not implemented.
 
 `MascotPanel.swift` is a transparent, borderless, non-activating floating panel. It routes click/right-click and custom drag behavior. Once drag threshold is crossed, the cursor attaches to the hanging hand anchor.
 
-`DockGeometry.swift` infers bottom/left/right Dock exclusion from `NSScreen.frame` and `visibleFrame`, computes a safe origin, and clamps placement.
+`DockGeometry.swift` computes a bottom-anchored origin from `NSScreen.frame` and `visibleFrame` and clamps placement. It does **not** infer the Dock's edge: that code path was deleted on 2026-07-30 rather than fixed, so left/right Dock support means restoring it from git history, not re-enabling something dormant.
 
-`WindowCoordinator.swift` owns panel visibility, positioning, bottom-lane horizontal bounds, backing-pixel-aligned movement, and screen/wake repositioning.
+`WindowCoordinator.swift` owns panel visibility, positioning, horizontal roaming bounds, backing-pixel-aligned movement, and screen/wake reconciliation. It also owns the one exception to bottom-anchored placement: `settleAfterDrop()` adopts the height the user dropped the mascot at, `hasManualPlacement` reports whether that happened, and `reposition()` is what discards it. A display change re-clamps a dropped height into the new bounds instead of resetting it.
 
 ## Runtime ownership
 
@@ -116,8 +116,9 @@ paused > failure-recent > waiting > working > ideating > success-recent > schedu
 - Animation never activates the app.
 - Menu-bar controls remain usable even when the panel is off-screen or hidden.
 - Hide and Quit remain semantically distinct.
-- Dragging is always available, plays hanging, and stops roaming on drop.
-- Resume Roaming repositions into the current display's safe lane.
+- Dragging is always available, plays hanging, and is a placement gesture only — it does not change roaming.
+- Resume Roaming repositions into the current display's safe lane only when the user has not placed the mascot themselves.
+- Only `success` and `failure` produce sound, only while summoned, and the cue fires when a state reaches the screen rather than when it is reduced.
 - Screen, scale, Dock orientation, and wake changes trigger placement reconciliation.
 - Reduced Motion work must replace motion with stable/fade behavior, not merely speed up or shrink the same loop.
 

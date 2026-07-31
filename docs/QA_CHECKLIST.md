@@ -35,8 +35,20 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 - [ ] Body swings left/center/right and both feet remain off the ground.
 - [ ] No cliff, ledge, rope, cursor art, shadow, or ground is visible.
 - [ ] Snap to the overhead grip feels acceptable to the owner.
-- [ ] Dropping stops roaming and preserves the manual position.
-- [ ] Resume Roaming returns mascot to a valid current-display lane.
+- [ ] Dropping leaves roaming on and the mascot carries on walking from where it landed.
+- [ ] The mascot roams horizontally at the height it was dropped at, not at the bottom lane.
+- [ ] A drop near any screen edge is clamped back into view rather than stranded.
+- [ ] The dropped position survives Dismiss/Summon, application reopen, and toggling roaming off and on.
+- [ ] Reposition on Current Display returns the mascot to the default bottom lane.
+
+## Reaction cue acceptance
+
+- [ ] Success plays the sparkle row and its cue together, neither ahead of the other.
+- [ ] Failure plays the cracked-bulb row and its cue together.
+- [ ] Both cues are audible over a laptop speaker without being startling.
+- [ ] Back-to-back turns restart the cue rather than overlapping into a drone.
+- [ ] Reaction Sounds off silences both, and the choice survives relaunch.
+- [ ] A dismissed mascot makes no sound.
 
 ## Window/display matrix
 
