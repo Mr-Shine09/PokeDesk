@@ -45,22 +45,30 @@ SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/mac-dock-pet-swiftpm-cache \
 swift test
 ```
 
-Expected handoff baseline: 166 Swift Testing tests pass as of 2026-07-30. A higher count is fine; a lower count requires investigation.
+Expected handoff baseline: 176 Swift Testing tests pass as of 2026-07-30. A higher count is fine; a lower count requires investigation.
+
+If the suite fails only some of the time, check the clock before the code. One
+fixture family reduces against the sleep window (23:00–06:00 local), and a
+fixture that reduces against the real `Date()` instead of an injected instant
+passes all day and fails all evening. Pin the instant and verify its UTC hour.
 
 ## Exercise the event helper
 
 `dockpet-event` sends one lifecycle event to a running Dock Pet over the current
 user's private socket. Since 2026-07-30 it is built as a native tool target and
-copied into the app bundle, so the copy a hook should invoke is:
+copied into the app bundle, so the copy a hook should invoke is the one inside
+the installed bundle:
 
 ```text
-/private/tmp/DesktopMascotDerivedData/Build/Products/Debug/Dock Pet.app/Contents/MacOS/dockpet-event
+~/Applications/Dock Pet.app/Contents/MacOS/dockpet-event
 ```
 
-That path is not durable — it lives in DerivedData and changes whenever the build
-location does, which is why the menu bar offers **Copy Event Helper Path** rather
-than documenting a fixed string. It becomes stable only once the app is installed
-somewhere permanent (issue #13).
+That path is durable — `tools/install_app.sh` puts the bundle there and it
+survives reboot, which is why the hooks installed into `~/.claude/settings.json`
+keep working. A Debug build also produces a copy under
+`/private/tmp/DesktopMascotDerivedData/...`, but that location moves whenever the
+build location does, so prefer the installed bundle. The menu bar offers **Copy
+Event Helper Path** for whichever copy is actually running.
 
 For quick iteration the package copy still works and is identical in behavior:
 

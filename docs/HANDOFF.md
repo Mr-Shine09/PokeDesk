@@ -33,14 +33,14 @@ As of 2026-07-30 every stage of this flow is implemented **and verified against 
 - The mascot appears only when summoned: launching the app leaves the menu-bar item and nothing else. Summoning or reopening plays a 1.25-second Dock portal transition; Reduce Motion uses a stationary fade. There is no launch-at-login, by owner decision.
 - The menu bar carries Summon/Dismiss, Pause, Manual Ideating, Roaming, Reposition, **Preview State** (forces any animation without an agent), **Agent Hook Setup** (copies the install snippet), diagnostics with VoiceOver labels, and Quit.
 - Atlas revision 4 contains 14 rows, replaces the sit-shake ledges with small freestanding chairs, and validates structurally.
-- 172 Swift package tests pass, and unsigned Debug and Release Xcode builds both succeed. Run `swift package clean` before believing a failure that appears right after a stored property is added to a public struct.
+- 176 Swift package tests pass, and unsigned Debug and Release Xcode builds both succeed. Run `swift package clean` before believing a failure that appears right after a stored property is added to a public struct.
 - The app runs the local event path as of 2026-07-30: it binds the owner-only socket at launch, ingests delivered events through `SessionRegistry` and `MascotStateReducer` via `EventPipeline`, drives animation from the result, shows listener status and reduced state in the menu bar, and unlinks the socket on quit.
 - Both provider adapters exist as `dockpet-event --hook --provider <name>`, and `--print-hooks` emits the settings snippet. The Claude Code hooks were installed into `~/.claude/settings.json` and observed driving the mascot; Codex has not been installed or run.
 - The app installs durably to `~/Applications/Dock Pet.app` via `tools/install_app.sh`, ad-hoc signed with the nested helper signed first. It is not notarized and cannot be given to anyone else.
 
 ## Repository warning
 
-`main` is at `d31b893` as of 2026-07-30, including everything through PR #22. PR #23 is open and carries both the summon-on-demand change and the menu-bar settings surface, because PR #24 merged into its branch rather than into `main`. This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` rather than trusting this line.
+`main` is at `6a7e631` as of 2026-07-30, including everything through PR #26. No PR is open and no branch is outstanding. This is a snapshot, not a promise — check `git status --short --branch` and `gh pr list` rather than trusting this line. It has been wrong before: the revision it named previously was three merges behind and described an open PR that had already landed.
 
 Merge and branch-delete commands are sometimes refused for the assistant by the auto-mode permission classifier and sometimes allowed; the outcome is not predictable in advance. When one is denied, give the owner the exact command to run in their own terminal instead of retrying or working around the denial.
 
@@ -54,9 +54,9 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 2. Inspect `git status --short --branch` and `git log --oneline --decorate -12`.
 3. Run the atlas and Swift checks from `docs/DEVELOPMENT.md`.
 4. Build the app and confirm the bundled atlas/contract match the workspace versions.
-5. Ask the owner to drag the mascot from several body points and confirm the cursor snap/swing feels right.
+5. Ask the owner to drag the mascot from several body points and confirm the cursor snap/swing feels right, then to drop it from several heights and confirm it carries on roaming at the height it landed at.
 6. Record the QA result in `DesktopMascot.md`.
-7. The event path is complete and live-verified for Claude Code. The only remaining 0.1 work is owner hands-on QA: the Preview State menu, the cursor-hanging feel, and the display matrix.
+7. The event path is complete and live-verified for Claude Code. The only remaining 0.1 work is owner hands-on QA, in this priority order: **listen to the two reaction cues** (nobody has ever heard them — they are measured non-silent, which is not the same as correct), **drop the mascot from several heights** to confirm the drop-and-roam feel, then the display matrix. The Preview State menu and cursor-hanging feel ride along with those passes. The full list is in `docs/QA_CHECKLIST.md`.
 8. The two menu-bar lines (`Event socket:` and `Reduced state:`) were owner-verified on screen on 2026-07-30 and need no re-check.
 
 ## Key ownership boundaries
@@ -107,7 +107,7 @@ Build the core event system before provider-specific installers. Steps 1–6 are
 8. ~~Run the server inside the app, feed the registry and reducer, and surface the result in menu-bar diagnostics before changing any animation.~~
 9. ~~Connect reducer output to animation selection, preserving manual pause/ideating behavior and keeping ambient roaming as the no-signal default.~~
 10. ~~Bundle the helper inside the app bundle so a hook can invoke it by path, then add the Codex and Claude Code adapters (#8, #9).~~
-11. Install the printed hook snippet and observe a real Claude Code or Codex session driving the mascot.
+11. ~~Install the printed hook snippet and observe a real Claude Code or Codex session driving the mascot.~~ Done 2026-07-30 for **Claude Code only**. Codex shares the adapter but has never been run live, and `waiting`/`failed` have never been seen from a real provider.
 
 Acceptance criteria are in the Phase 3 section of `DesktopMascot.md`.
 
