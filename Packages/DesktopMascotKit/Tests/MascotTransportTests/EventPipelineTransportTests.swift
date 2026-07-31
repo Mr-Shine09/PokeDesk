@@ -22,19 +22,19 @@ private final class PipelineSink: @unchecked Sendable {
     }
 
     func ingest(_ envelope: EventEnvelope) {
-        lock.withLock { pipeline.ingest(envelope, now: Date(), uptime: uptime) }
+        lock.withLock { pipeline.ingest(envelope, now: middayUTC, uptime: uptime) }
         semaphore.signal()
     }
 
     func noteRejection() {
-        lock.withLock { pipeline.noteRejectedFrame(now: Date(), uptime: uptime) }
+        lock.withLock { pipeline.noteRejectedFrame(now: middayUTC, uptime: uptime) }
         semaphore.signal()
     }
 
     func advance(by seconds: TimeInterval) {
         lock.withLock {
             uptime = uptime.advanced(by: seconds)
-            pipeline.refresh(now: Date(), uptime: uptime)
+            pipeline.refresh(now: middayUTC, uptime: uptime)
         }
     }
 
@@ -58,6 +58,17 @@ private func temporarySocketURL() -> URL {
         .appendingPathComponent("dp-\(unique)", isDirectory: true)
         .appendingPathComponent("events.sock", isDirectory: false)
 }
+
+/// A fixed midday instant, so these fixtures cannot fall into the sleep window.
+///
+/// Pinning the reducer's time zone below is not enough on its own: the sink used
+/// to reduce against the real `Date()`, so the suite passed all day and then
+/// failed once the wall clock crossed 23:00 *UTC* — 16:00 PDT on the machine
+/// this was found on. The wall clock is only read for the sleep window and for
+/// `lastAcceptedAt` diagnostics; event ordering uses each envelope's
+/// `occurredAt` and expiry uses `Uptime`, so freezing it here changes nothing
+/// else these tests exercise.
+private let middayUTC = Date(timeIntervalSince1970: 1_770_033_600) // 2026-02-02 12:00 UTC
 
 /// Fixed time zone so the sleep window cannot depend on the test machine.
 private let daytimeReducer = MascotStateReducer(
