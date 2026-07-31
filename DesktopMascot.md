@@ -11,7 +11,7 @@
 | Started | 2026-07-28 |
 | Last updated | 2026-07-31 |
 | Status | Feature-complete for 0.1 and verified against a **real Claude Code session**: provider hooks drive the bundled helper, which feeds the socket server, the reducer, and animation. Installed durably at `~/Applications/Dock Pet.app`. The mascot appears only when summoned, and the menu bar carries the full control surface including state preview |
-| Current gate | Owner hands-on QA, in priority order: listen to the two reaction cues (never heard by anyone — measured non-silent is not the same as correct), drop the mascot from several heights to confirm the drop-and-roam feel, then the display matrix (auto-hide, multiple displays, full-screen Spaces, sleep/wake). Preview State and the cursor-hanging feel ride along with those passes. That QA is the last thing standing between this and a finished 0.1. Launch-at-login and distribution are closed by owner decision |
+| Current gate | Owner hands-on QA, in priority order: listen to the two reaction cues (never heard by anyone — measured non-silent is not the same as correct), drop the mascot from several heights to confirm the drop-and-roam feel, then the display matrix (auto-hide, multiple displays, full-screen Spaces, sleep/wake). Preview State and the cursor-hanging feel ride along with those passes. Alongside it, one owner decision is outstanding: the **animation speed control** has been in 0.1 scope since 2026-07-28, was never built, and was never dropped — build it or strike it. Those two things are what stand between this and a finished 0.1. Launch-at-login and distribution are closed by owner decision |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -88,15 +88,17 @@ These questions do not block the foundation or prototype. They do block a 1.0 re
 ### Version 0.1 — smallest lovable prototype
 
 - One miniature owner mascot.
-- Transparent, non-activating floating window in a bounded strolling lane immediately above or beside the Dock.
-- Menu-bar controls: show/hide, pause animation, manual ideating state, unlock position, launch at login, diagnostics, quit.
+- Transparent, non-activating floating window in a bounded strolling lane immediately above the Dock. *Beside* the Dock left with the removal of Dock-edge tracking (2026-07-30); the lane is bottom-anchored by default, and a dropped mascot roams at the height it landed at.
+- Menu-bar controls: summon/dismiss, pause animation, manual ideating state, reposition, reaction-sound mute, state preview, hook-setup snippet, diagnostics, quit. **No launch at login** (owner decision, 2026-07-30).
 - States: `offline`, `idle`, `working`, `ideating`, `waiting`, `success`, `failure`, `sleeping`, `paused`.
 - Idle animation variants include directional strolling and directional sitting on a small chair with one lower leg shaking.
 - Reliable Codex and Claude Code event adapters based on supported lifecycle hooks.
 - A documented capability boundary for ordinary ChatGPT app/browser activity; no unsupported scraping or fabricated fine-grained states.
 - Local-only event transport.
 - Multiple simultaneous agent sessions reduced to one deterministic mascot state.
-- Reduced Motion support and an animation speed control.
+- Reduced Motion support. Honored by the portal summon transition only; broader coverage is open under [#11](https://github.com/Mr-Shine09/desktop-mascot/issues/11).
+- An animation speed control. **Never built, and never explicitly dropped** — see the open scope question below. This is the only 0.1 scope line with no implementation and no decision behind its absence.
+- Short success and failure reaction cues (added 2026-07-30; this reverses an original non-goal, see below).
 - No network dependency after installation.
 
 ### Explicit non-goals for 0.1
@@ -108,8 +110,22 @@ These questions do not block the foundation or prototype. They do block a 1.0 re
 - Private macOS APIs.
 - General-purpose pet marketplace or arbitrary user-imported sprites.
 - Cloud sync, user accounts, analytics, or remote control.
-- Cursor-following, desktop roaming, sound effects, speech, or notifications.
-- App Store distribution. Direct notarized distribution is the first packaging target.
+- Cursor-following, free desktop roaming, speech, or notifications. **Sound effects were on this list and no longer are**: two short reaction cues for `success` and `failure` were added on 2026-07-30, muted by a persisted menu toggle and silent while dismissed. Nothing else in the app makes sound. "Free desktop roaming" still means what it always did — the mascot walks a bounded horizontal lane; letting the user choose that lane's height by dropping it is not free roaming.
+- App Store distribution — and, since 2026-07-30, **any** distribution. Notarization needs a Developer ID certificate, which the owner classified as a purchase rather than an engineering task. An ad-hoc signed local install is the finished state for 0.1.
+
+### Scope changes since the original contract
+
+The list above is the current contract. It differs from the 2026-07-28 original in five places, recorded here because a definition of done that drifts silently is worse than one that is merely out of date. Four are owner decisions; one is an unanswered question.
+
+| Change | Direction | Date | Basis |
+| --- | --- | --- | --- |
+| Launch at login removed | Narrowed | 2026-07-30 | Owner decision; nothing should start the app for you |
+| Placement beside the Dock removed | Narrowed | 2026-07-30 | Dock-edge tracking was buggy and was deleted rather than fixed |
+| Distribution and notarization removed | Narrowed | 2026-07-30 | Owner decision; a certificate purchase, not engineering |
+| Reaction cues added | **Widened** | 2026-07-30 | Owner asked for a success cue; reverses the original sound-effects non-goal |
+| Animation speed control | **Undecided** | — | In scope since 2026-07-28, never implemented, never dropped |
+
+**Open scope question, for the owner:** the animation speed control is the only 0.1 commitment that is neither built nor consciously abandoned. `grep -ri speed` across the Swift sources returns nothing, and `Preferences` stores only `roaming` and `reactionSoundsMuted`. It should either be built or struck from scope; leaving it unanswered is what lets 0.1 be "finished" and incomplete at the same time. Until it is answered, treat 0.1 as feature-complete *except* for this line.
 
 ## Mascot art direction
 
@@ -1455,6 +1471,21 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - A third documentation error, found by re-reading this entry after the merges: every date in it was written as `2026-07-30`, but the session ran on **2026-07-31**. The dates were carried over from the previous session's entries instead of checked. Corrected here, in the snapshot's `Last updated`, in `docs/HANDOFF.md`, and in the `DEVELOPMENT.md` test baseline; dates describing *earlier* sessions' work were left alone, since those were accurate. Worth recording rather than quietly fixing: this is the third distinct way one session's documentation went wrong while the session's whole subject was documentation accuracy. The edits were applied with a script that asserts each target matches exactly once, which is the guard against the silent-no-op failure recorded on 2026-07-30.
 - Immediately afterward, the fix demonstrated the defect it was fixing. Two of the nine corrections were revision snapshots naming `6a7e631`/PR #26; merging PR #27 made both wrong the moment it landed. The line had now rotted three times across three sessions. It was removed rather than corrected a fourth time: `docs/HANDOFF.md` and next-session item 4 now give the commands (`git status --short --branch`, `gh pr list`, `git branch -a`) and name no revision at all. **The general lesson, which applies past this one line: a documentation claim that the next ordinary action invalidates cannot be fixed by writing it more carefully. Either it stops being written down, or it rots on a schedule.** The test-count baselines have the same shape and are the next candidate if they drift again.
 - Next: unchanged. Owner hands-on QA is the only remaining 0.1 work, in the order now recorded identically in `CLAUDE.md`, the snapshot gate, and `docs/HANDOFF.md`.
+
+### 2026-07-31 — Reconcile Scope with the decisions that overtook it
+
+- Objective: the owner asked when the project will be finished *as planned*. Answering it honestly meant checking whether the plan still described the product. It did not, so this entry fixes the definition of done rather than estimating against a stale one.
+- The `Scope` section still described the 2026-07-28 contract. Five discrepancies, now recorded in a table there rather than silently rewritten:
+  - **Launch at login** listed as an in-scope menu-bar control; closed by owner decision 2026-07-30.
+  - **Placement "above or beside the Dock"**; side-Dock tracking was deleted rather than fixed 2026-07-30.
+  - **"Direct notarized distribution is the first packaging target"**; distribution was closed 2026-07-30 as a certificate purchase, not engineering.
+  - **Sound effects listed as an explicit non-goal** — while 0.1 now ships two reaction cues that are currently the top QA item. A shipped feature sat on the non-goals list for a day.
+  - **An animation speed control** listed in scope, never built.
+- The first four are owner decisions that were simply never written back, and are now annotated with direction and date. The fifth is different in kind and is called out as such: `grep -ri speed` across the Swift sources returns nothing and `Preferences` stores only `roaming` and `reactionSoundsMuted`, so the control does not exist — but no decision ever dropped it either. **It is the only 0.1 commitment that is neither built nor consciously abandoned**, and it is recorded as an open owner question in `Scope`, the snapshot gate, and `CLAUDE.md` rather than being quietly deleted. An agent tidying scope must not resolve this by deletion.
+- Why this matters beyond bookkeeping: the project has been described as "feature-complete for 0.1 pending QA" since 2026-07-30, and that claim was measured against a scope list containing an unbuilt item and excluding a shipped one. The finish line was not where the ledger said it was.
+- No code changed. Verification: 176 package tests pass, contract and atlas validate, and each scope claim was checked against the sources (`grep -ri speed`, `Preferences.swift`, `MenuBarContent.swift`) rather than against other prose.
+- Risks carried forward, unchanged: the reaction cues are unheard, drop-and-roam is unconfirmed on screen, the display matrix is untouched, `waiting`/`failed` are fixture-only, and **Codex has never been run live**.
+- Next: unchanged for implementation — owner hands-on QA, cues first. Newly added alongside it: decide the animation speed control.
 
 ## Next-session handoff
 
