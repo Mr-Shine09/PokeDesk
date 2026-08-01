@@ -23,6 +23,7 @@
 		A2DCBDEDC3591F16897F322C /* MascotTransport in Frameworks */ = {isa = PBXBuildFile; productRef = 009FAC47CE5C44C4027811FB /* MascotTransport */; };
 		B10178104EA43107B06D0605 /* atlas-contract.json in Resources */ = {isa = PBXBuildFile; fileRef = 36F19CD414F513BEB1E5C61F /* atlas-contract.json */; };
 		B5BB339F15768A7AEBDE530A /* MascotCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2FAFE898A052D128C6B0B88D /* MascotCore */; };
+		C0C7969EE34EA67C5E2C01FA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A03AAF40D6F4F138DDBA1C62 /* Assets.xcassets */; };
 		C44951A55914E6DF1A642D1C /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301E146D1688456CCA61F9BD /* Preferences.swift */; };
 		DD9EB096AB5328CC3E340FA6 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3AF38AC31ECC3ACAED12504 /* main.swift */; };
 		E3C852E43F8538F388F4F0FC /* MascotPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1836E78848D6B2FD49EC9424 /* MascotPreviewView.swift */; };
@@ -70,6 +71,7 @@
 		57A93096D8C2E8C08FC98012 /* AgentEventBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentEventBridge.swift; sourceTree = "<group>"; };
 		8A4711FDCED703588195AEA2 /* AmbientAnimationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientAnimationController.swift; sourceTree = "<group>"; };
 		8D8B44BFF4D72CB7D7C4C556 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A03AAF40D6F4F138DDBA1C62 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B3AF38AC31ECC3ACAED12504 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C0860DC47188B80AA1AE618B /* MenuBarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarContent.swift; sourceTree = "<group>"; };
 		EBB02BFF34AC70D56636144E /* DesktopMascotKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DesktopMascotKit; path = Packages/DesktopMascotKit; sourceTree = SOURCE_ROOT; };
@@ -150,6 +152,7 @@
 				8A4711FDCED703588195AEA2 /* AmbientAnimationController.swift */,
 				8D8B44BFF4D72CB7D7C4C556 /* AppDelegate.swift */,
 				16245A1009483229670E5018 /* AppResources.swift */,
+				A03AAF40D6F4F138DDBA1C62 /* Assets.xcassets */,
 				41EE1C1DD5A7A2FCDDF08B3C /* DesktopMascotApp.swift */,
 				08C465D303E5B8C09D23D596 /* EventHelperLocation.swift */,
 				1836E78848D6B2FD49EC9424 /* MascotPreviewView.swift */,
@@ -297,6 +300,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0C7969EE34EA67C5E2C01FA /* Assets.xcassets in Resources */,
 				B10178104EA43107B06D0605 /* atlas-contract.json in Resources */,
 				21EBACB22CFA0C5F13FBBBDE /* failure.wav in Resources */,
 				74712B8AF062BC80039ACD7C /* mascot-atlas@2x.png in Resources */,

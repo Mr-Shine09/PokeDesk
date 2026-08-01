@@ -1,0 +1,13 @@
+{
+  "state": "hand-sign",
+  "method": "approved-idle-cell-with-redrawn-arms",
+  "source_base_sha256": "954f4b19cf352808e89c2e197849c16e58409f107a4b5dfd681aa9dac432abc6",
+  "body_source": "idle/idle-00.png",
+  "frame_count": 4,
+  "frame_notes": [
+    "hands lift from the hips with the elbows swinging out",
+    "palms meet at the lower chest and the seal fingers start to rise",
+    "seal formed at the chest with both finger pairs extended",
+    "held seal, the frame the dismiss smoke covers"
+  ]
+}

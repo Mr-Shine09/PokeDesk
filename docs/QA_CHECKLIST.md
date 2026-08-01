@@ -9,7 +9,7 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 - [ ] Complete atlas validates.
 - [ ] Every changed frame row validates.
 - [ ] Full QA sheets and motion previews are regenerated after atlas changes.
-- [ ] Swift package tests pass (current baseline: 31; original handoff baseline: 10).
+- [ ] Swift package tests pass (current baseline: 183; original handoff baseline: 10).
 - [ ] Unsigned Debug Xcode build succeeds.
 - [ ] Built atlas hash matches workspace atlas.
 - [ ] Built JSON contract byte-matches workspace contract.
@@ -40,6 +40,29 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 - [ ] A drop near any screen edge is clamped back into view rather than stranded.
 - [ ] The dropped position survives Dismiss/Summon, application reopen, and toggling roaming off and on.
 - [ ] Reposition on Current Display returns the mascot to the default bottom lane.
+
+## Dismiss transition acceptance
+
+Nothing in this section has been seen on screen by anyone. It is built and unit-tested only.
+
+- [ ] Dismiss plays the ninja seal: hands lift, palms join, two finger pairs rise.
+- [ ] The seal is finished and held before the smoke starts, not cut off by it.
+- [ ] The smoke covers the whole mascot, feet included, at its densest.
+- [ ] The mascot is never seen fading in the open — it is gone when the smoke clears.
+- [ ] The smoke clears completely; no haze is left behind on the desktop.
+- [ ] Total transition feels quick rather than something to wait through.
+- [ ] Reduce Motion replaces the whole thing with a short stationary fade, no seal and no smoke.
+- [ ] Re-summoning part-way through the poof brings the mascot back rather than hiding it a moment later.
+- [ ] Dismissing a paused mascot still plays the transition.
+- [ ] Quitting during the transition does not leave an orphaned panel.
+- [ ] The transition reads on both light and dark desktop backgrounds.
+
+## App icon acceptance
+
+- [ ] The icon shows the mascot headshot in Finder, Get Info, and the Applications folder.
+- [ ] Pixel edges are crisp at 128pt and above.
+- [ ] The 16pt and 32pt sizes are legible rather than mush.
+- [ ] The icon reads on both light and dark Finder backgrounds.
 
 ## Reaction cue acceptance
 

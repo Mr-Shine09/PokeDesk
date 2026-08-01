@@ -3,8 +3,9 @@ import MascotAnimation
 import MascotCore
 import MascotWindow
 
-/// Plays whatever `MascotVisibleState` says, plus the two things that are not
-/// agent state at all: the summon transition and a direct drag.
+/// Plays whatever `MascotVisibleState` says, plus the three things that are not
+/// agent state at all: the summon transition, the dismiss transition, and a
+/// direct drag.
 ///
 /// The reduced state is the single source of truth for which row plays, manual
 /// pause and ideating included — those reach here as `.paused` and `.ideating`
@@ -34,6 +35,11 @@ final class AmbientAnimationController {
     private var frameCache: [String: [NSImage]] = [:]
     private var timer: Timer?
     private var summonStartedAt: TimeInterval?
+    private var dismissStartedAt: TimeInterval?
+    /// Built per dismiss rather than once, because Reduce Motion can change
+    /// between one summon and the next.
+    private var dismissTimeline: PoofDismissTimeline?
+    private var onDismissCompleted: (() -> Void)?
     private var phase: Phase = .resting(until: 0)
     private var currentState = "offline"
     private var frameIndex = 0
@@ -77,8 +83,49 @@ final class AmbientAnimationController {
             summonStartedAt = nil
             previewModel.isSummoning = false
             previewModel.summonFrame = .resting
+            cancelDismiss()
             stopTimer()
         }
+    }
+
+    /// Plays the ninja seal and smoke poof, then calls `completion` so the caller
+    /// can order the panel out.
+    ///
+    /// The mascot is still on screen for the whole transition, so the panel must
+    /// not be hidden until the completion fires. Re-summoning part-way through
+    /// cancels the transition and the completion is never called — the pet the
+    /// user just asked for again must not be hidden a moment later.
+    func beginDismiss(completion: @escaping () -> Void) {
+        guard isVisible else {
+            completion()
+            return
+        }
+        // A second Dismiss during the transition adopts the newer completion
+        // rather than restarting the poof.
+        guard dismissStartedAt == nil else {
+            onDismissCompleted = completion
+            return
+        }
+
+        finishSummon()
+        let usesReducedMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        let timeline = usesReducedMotion ? PoofDismissTimeline.reducedMotion() : PoofDismissTimeline()
+        previewModel.usesReducedMotion = usesReducedMotion
+        previewModel.isDismissing = true
+        previewModel.dismissFrame = timeline.frame(at: 0)
+        dismissTimeline = timeline
+        dismissStartedAt = ProcessInfo.processInfo.systemUptime
+        onDismissCompleted = completion
+
+        if timeline.playsSeal {
+            isDragging = false
+            phase = .stationary
+            currentState = "hand-sign"
+            frameIndex = 0
+            nextFrameTime = 0
+            show(state: "hand-sign", frame: 0)
+        }
+        startTimer()
     }
 
     func setRoaming(_ roaming: Bool) {
@@ -102,6 +149,9 @@ final class AmbientAnimationController {
     }
 
     func userDidBeginDrag() {
+        // Grabbing a mascot that is already mid-poof does not rescue it; the
+        // transition owns the panel until it finishes.
+        guard dismissStartedAt == nil else { return }
         finishSummon()
         isDragging = true
         currentState = "hanging"
@@ -183,7 +233,12 @@ final class AmbientAnimationController {
 
     private func startTimer(resetPhase: Bool = false) {
         guard isVisible else { return }
-        guard displayedState != .paused || isDragging || summonStartedAt != nil else { return }
+        guard
+            displayedState != .paused
+                || isDragging
+                || summonStartedAt != nil
+                || dismissStartedAt != nil
+        else { return }
         if resetPhase, summonStartedAt == nil, plan.isAmbient {
             beginWalking(at: ProcessInfo.processInfo.systemUptime)
         }
@@ -204,6 +259,22 @@ final class AmbientAnimationController {
         let now = ProcessInfo.processInfo.systemUptime
         let elapsed = min(0.2, max(0, now - previousTickTime))
         previousTickTime = now
+
+        // Outranks everything, including a paused pet: the user asked for the
+        // mascot to leave, so it leaves.
+        if let dismissStartedAt, let dismissTimeline {
+            let frame = dismissTimeline.frame(at: now - dismissStartedAt)
+            previewModel.dismissFrame = frame
+            if dismissTimeline.playsSeal {
+                advanceFrames(state: "hand-sign", now: now)
+            }
+            if frame.isComplete {
+                let completion = onDismissCompleted
+                finishDismiss()
+                completion?()
+            }
+            return
+        }
 
         if let summonStartedAt {
             let frame = summonTimeline.frame(at: now - summonStartedAt)
@@ -286,6 +357,7 @@ final class AmbientAnimationController {
     }
 
     private func beginSummon(at now: TimeInterval) {
+        cancelDismiss()
         previewModel.usesReducedMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         previewModel.isSummoning = true
         previewModel.summonFrame = summonTimeline.frame(at: 0)
@@ -311,6 +383,21 @@ final class AmbientAnimationController {
         summonStartedAt = nil
         previewModel.isSummoning = false
         previewModel.summonFrame = .resting
+    }
+
+    private func finishDismiss() {
+        dismissStartedAt = nil
+        dismissTimeline = nil
+        onDismissCompleted = nil
+        previewModel.isDismissing = false
+        previewModel.dismissFrame = .resting
+    }
+
+    /// Drops a dismiss in flight *without* calling its completion, so the panel
+    /// the user is looking at is not hidden behind their back.
+    private func cancelDismiss() {
+        guard dismissStartedAt != nil else { return }
+        finishDismiss()
     }
 
     private func resumeAfterSummon(at now: TimeInterval) {

@@ -15,12 +15,13 @@ Welcome, Mr. C. This file is the mandatory entry point for work on Dock Pet.
 - This is a native macOS 14+ SwiftUI/AppKit accessory app. Do not replace it with Electron, a browser overlay, Dock injection, or private APIs.
 - Preserve privacy: never read or store prompts, transcripts, source code, tool arguments/output, repository paths, tokens, or screen content. Agent integrations accept only coarse lifecycle events.
 - Preserve the frozen character identity in `art/production/mascot-base-chibi-40pt-at2x-80px-final.png`. Do not revive rejected tall variants.
-- Treat `art/animation/atlas-contract.json` as the machine-readable art contract. Revision 3 is 8 columns by 14 rows, `768x1568`, with `96x112` backing-pixel cells.
+- Treat `art/animation/atlas-contract.json` as the machine-readable art contract. Revision 5 is 8 columns by 15 rows, `768x1680`, with `96x112` backing-pixel cells. Row 14 is the dismiss `hand-sign` seal, added 2026-08-01.
 - Render sprites with nearest-neighbor interpolation. Production alpha is binary and colors must remain within the frozen 12-color palette.
 - The hanging row has a distinct top grip at atlas coordinate `(48, 4)`, mapped to AppKit panel point `(48, 108)`. Do not ground-align it.
 - Keep the mascot non-activating and retain a menu-bar escape hatch for summon/dismiss, pause, and quit.
 - Dragging is a placement gesture only: it never changes roaming. The mascot roams at whatever height it was dropped at (owner decision, 2026-07-30), and Reposition is the only way back to the default bottom lane. Do not restore lane-snapping on drop without a fresh owner decision.
 - The mascot appears only when summoned. Launching the app must never put one on screen, and there is no launch-at-login by owner decision (2026-07-30).
+- Summon and dismiss are both transitions, not instant state changes. Summon opens the Dock portal; dismiss plays the `hand-sign` seal and a smoke poof, and the panel is ordered out only when `beginDismiss`'s completion fires (owner request, 2026-08-01). Do not hide the panel synchronously from `setVisible(false)`.
 - XcodeGen owns `DesktopMascot.xcodeproj`. Change `project.yml`, then regenerate; do not make durable project-file-only edits.
 - Dock Pet reflects real Claude Code activity, observed 2026-07-30 from a live session. Two limits still hold: **Codex has never been run live** (it shares the adapter, which is inference, not evidence), and `waiting` and `failed` are fixture-covered but have never been seen from a real provider. Do not describe either as proven.
 - Update `DesktopMascot.md` at the end of every implementation session with decisions, evidence, risks, and the exact next step.

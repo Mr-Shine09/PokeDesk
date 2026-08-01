@@ -117,15 +117,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func setVisible(_ visible: Bool) {
         isVisible = visible
-        // A dropped height is a deliberate placement, so Hide/Show and reopen
-        // must preserve it. Roaming no longer signals this: dragging leaves
-        // roaming on, so the coordinator's own record of the drop is the only
-        // reliable answer to "did the user place this themselves?".
-        let placed = windowCoordinator?.hasManualPlacement ?? false
-        windowCoordinator?.setVisible(visible, repositioning: !placed)
-        animationController?.setVisible(visible)
-        diagnostics = visible ? "Opening Dock portal" : "Not summoned"
-        if !visible { refreshDiagnostics() }
+
+        if visible {
+            // A dropped height is a deliberate placement, so Hide/Show and
+            // reopen must preserve it. Roaming no longer signals this: dragging
+            // leaves roaming on, so the coordinator's own record of the drop is
+            // the only reliable answer to "did the user place this themselves?".
+            let placed = windowCoordinator?.hasManualPlacement ?? false
+            windowCoordinator?.setVisible(true, repositioning: !placed)
+            animationController?.setVisible(true)
+            diagnostics = "Opening Dock portal"
+            return
+        }
+
+        // The pet leaves the way it arrived, through a transition rather than by
+        // blinking out: it forms a ninja hand seal and vanishes in a smoke poof.
+        // The panel therefore stays on screen until the animation says it is
+        // finished, so hiding is deferred into the completion below. `isVisible`
+        // flips immediately regardless, so the menu never offers to dismiss a
+        // mascot that is already leaving.
+        guard let animationController, animationController.isVisible else {
+            completeHiding()
+            return
+        }
+        diagnostics = "Dismissing — hand sign and smoke poof"
+        animationController.beginDismiss { [weak self] in
+            self?.completeHiding()
+        }
+    }
+
+    private func completeHiding() {
+        windowCoordinator?.setVisible(false)
+        animationController?.setVisible(false)
+        refreshDiagnostics()
     }
 
     func setPaused(_ paused: Bool) {

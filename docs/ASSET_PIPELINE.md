@@ -11,13 +11,14 @@
 | `art/animation/mascot-atlas@2x.png` | app-consumed atlas | Generated output; never hand-patch alone |
 | `art/animation/mascot-atlas@2x.manifest.json` | per-frame hashes | Regenerate with atlas |
 | `art/animation/qa/` | contact sheets, silhouettes, GIFs | Regenerate for visual review |
+| `DesktopMascot/App/Assets.xcassets/AppIcon.appiconset/` | app icon | Generated from the frozen base by `tools/render_app_icon.py`; never hand-edit |
 
 The original owner source path in `DesktopMascot.md` is external to the repository. Current production work must start from the promoted in-repository frozen base.
 
-## Revision 3 contract
+## Revision 5 contract
 
-- Atlas: `768x1568` RGBA PNG
-- Grid: 8 columns × 14 rows
+- Atlas: `768x1680` RGBA PNG
+- Grid: 8 columns × 15 rows
 - Cell: `96x112` backing pixels (`48x56` logical points in the original contract)
 - App presentation: `96x112` points, giving the cell a deliberate 2x visual presentation
 - Ground anchor: `(48, 102)` top-origin
@@ -36,7 +37,7 @@ python3 tools/assemble_animation_atlas.py
 python3 tools/validate_animation_atlas.py --atlas art/animation/mascot-atlas@2x.png
 python3 tools/render_animation_qa.py \
   --states offline idle working ideating waiting success failure sleeping paused \
-           walk-right walk-left sit-shake-right sit-shake-left hanging \
+           walk-right walk-left sit-shake-right sit-shake-left hanging hand-sign \
   --full-contract \
   --scale 4
 ```
@@ -55,6 +56,14 @@ python3 tools/prepare_animation_frames.py \
   --state <state> \
   --frames <count> \
   --bounds-mode guard
+```
+
+The dismiss seal is not generated art at all. It is composed from the approved
+`idle-00` cell by removing the arms and redrawing them, so the head, torso,
+trousers, and shoes are the approved pixels rather than a new drawing:
+
+```bash
+python3 tools/author_hand_sign_frames.py
 ```
 
 Hanging uses the dedicated top anchor:
@@ -88,6 +97,25 @@ Reject a candidate if any of these fail:
 - motion GIF shows no baseline/grip drift, temporal reversal, sliding contact, or loop teleport;
 - runtime crop matches the corresponding frame PNG;
 - owner approves any material new visual direction.
+
+## App icon
+
+The icon is a headshot of the same character, cropped straight out of the frozen
+base so it cannot drift from the mascot:
+
+```bash
+python3 tools/render_app_icon.py
+```
+
+Sizes at 64px and above land on an exact integer scale of the source pixels and
+use nearest neighbor. The 16px and 32px slots cannot hold that grid at all and
+are resampled from the 1024px master — a nearest-neighbor version of them is
+illegible rather than faithful. This is the one sanctioned exception to the
+nearest-neighbor rule, and it applies to the icon only, never to atlas art.
+
+Regenerating changes files inside the asset catalog, so re-run `xcodegen
+generate` only if the slot list itself changed; the PNG contents are picked up
+without it.
 
 ## Revision discipline
 

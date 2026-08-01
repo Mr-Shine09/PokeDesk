@@ -116,6 +116,8 @@ paused > failure-recent > waiting > working > ideating > success-recent > schedu
 - Animation never activates the app.
 - Menu-bar controls remain usable even when the panel is off-screen or hidden.
 - Hide and Quit remain semantically distinct.
+- Summon and dismiss are transitions, not instant visibility changes. Summon opens the Dock portal (`PortalSummonTimeline`); dismiss plays the `hand-sign` seal row and a smoke poof (`PoofDismissTimeline`), and the panel is ordered out only when the transition reports completion. Neither is agent state, so neither goes through the reducer — they sit alongside dragging as the things `AmbientAnimationController` drives directly.
+- Re-summoning during a dismiss cancels it and the pending hide never runs. A dismiss that has been cancelled must not hide the panel afterwards.
 - Dragging is always available, plays hanging, and is a placement gesture only — it does not change roaming.
 - Resume Roaming repositions into the current display's safe lane only when the user has not placed the mascot themselves.
 - Only `success` and `failure` produce sound, only while summoned, and the cue fires when a state reaches the screen rather than when it is reduced.

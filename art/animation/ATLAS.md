@@ -1,13 +1,13 @@
 # Desktop Mascot animation atlas contract
 
-Status: revision 4 replaces the sit-shake ledges with owner-requested freestanding chairs on 2026-07-29. Revision 3 added the cursor-hanging drag row. This is the app-integration contract.
+Status: revision 5 adds the owner-requested dismiss hand-sign row on 2026-08-01. Revision 4 replaced the sit-shake ledges with owner-requested freestanding chairs on 2026-07-29. Revision 3 added the cursor-hanging drag row. This is the app-integration contract.
 
 The machine-readable source of truth is [`atlas-contract.json`](atlas-contract.json). If this document and the JSON disagree, stop and reconcile them before producing or loading art.
 
 ## Geometry
 
-- Production atlas: `mascot-atlas@2x.png`, RGBA PNG, `768x1568` pixels.
-- Grid: 8 columns by 14 rows, row-major, with no gutters or margins.
+- Production atlas: `mascot-atlas@2x.png`, RGBA PNG, `768x1680` pixels.
+- Grid: 8 columns by 15 rows, row-major, with no gutters or margins.
 - Cell: `96x112` backing pixels (`48x56` macOS points on a 2x display).
 - Character footprint: the approved `80x80`-pixel body canvas remains `40x40` points. The larger cell reserves room for poses and the approved ideating effect; it does not enlarge the mascot.
 - Cell coordinates use a top-left origin. Pixel ranges are inclusive unless stated otherwise.
@@ -42,6 +42,7 @@ Unused cells after a row's final frame are fully transparent with zero RGB. Dura
 | 11 | `sit-shake-right` | 6 | loop | `220, 180, 220, 180, 220, 360` | Ambient right-facing chair pose: sit on a small freestanding chair and casually swing one lower leg while the torso and chair stay stable. |
 | 12 | `sit-shake-left` | 6 | loop | `220, 180, 220, 180, 220, 360` | Mirrored left-facing chair pose with temporal order preserved. |
 | 13 | `hanging` | 6 | loop | `160, 160, 220, 160, 160, 220` | One raised hand grips the cursor anchor while the body, free arm, and legs swing left through center to right; no ledge, rope, cursor art, or ground contact. |
+| 14 | `hand-sign` | 4 | once-hold | `110, 110, 130, hold` | Dismiss-only ninja seal: the hands lift from the hips, the palms join at the chest, two finger pairs rise, and the last frame holds under the smoke poof. |
 
 `hold` is not a millisecond value: the controller displays that frame until the visible state changes. `intro-hold` and `once-hold` play frames `0...n-1` exactly once; neither restarts while the state remains unchanged.
 
@@ -73,6 +74,7 @@ Each frame must pass in isolation and in motion:
 8. First frames of `idle`, `sleeping`, `waiting`, and `paused` are acceptable static Reduced Motion substitutions. Reduced Motion never scales or rapidly flashes the panel.
 9. `sit-shake-right` and `sit-shake-left` keep the chair back, seat, legs, hip, torso, head, and supporting leg stable; only the raised lower leg swings.
 10. `hanging` keeps an opaque hand pixel fixed at `(48, 4)` while the body swings beneath it; neither foot touches the ground and no cliff, ledge, rope, or cursor is drawn.
+11. `hand-sign` keeps the head, torso core, trousers, and shoes exactly as authored in `idle-00`; only the arms and hands are redrawn. Both white torso side panels keep visible pixels, the seal fingers stay clear of the chin and lenses, and the seam between the two hands stays one pixel wide.
 
 Repair the smallest failing scope: one frame, then one row, and only then a broader redraw. Identity drift is a blocker even if automated checks pass.
 
@@ -98,5 +100,6 @@ The dedicated `@1x` asset remains an explicit experiment. It must be authored an
 5. Apply the owner-directed effect revision and add the two directional sit-shake ambient clips.
 6. Add the revision 3 cursor-hanging row with its separate top grip anchor.
 7. Apply revision 4 by replacing the sit-shake ledge with one stable freestanding chair, then derive the left row by mirroring without reversing time.
-8. Assemble the atlas deterministically, run `tools/validate_animation_atlas.py`, render contact sheets and previews, and repair only failing rows.
-9. Obtain owner review before closing issue #3 merely because the atlas is structurally valid.
+8. Apply revision 5 by running `tools/author_hand_sign_frames.py`, which rebuilds the dismiss seal row from the approved `idle-00` cell.
+9. Assemble the atlas deterministically, run `tools/validate_animation_atlas.py`, render contact sheets and previews, and repair only failing rows.
+10. Obtain owner review before closing issue #3 merely because the atlas is structurally valid.
