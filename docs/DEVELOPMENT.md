@@ -134,6 +134,27 @@ self-built local app; it is **not** sufficient for distribution.
 Notarization needs a `Developer ID Application` certificate, which this machine
 does not have. Distribution remains open work under issue #13.
 
+## Clean up merged branches
+
+```bash
+tools/list_merged_branches.sh
+```
+
+**Do not use `git branch -r --merged main` here.** Every PR in this repository is
+squash-merged, so a merged branch's tip never becomes an ancestor of `main`. On
+2026-07-31 that command reported three branches merged minutes earlier as
+unmerged while listing others as merged — wrong in both directions, and unsafe
+for deciding what to delete.
+
+The script classifies each remote branch against GitHub's merge record:
+
+- `SAFE` — merged, and the tip still matches what was merged.
+- `KEEP` — has an open PR.
+- `REVIEW` — merged but the branch moved afterwards, or has no PR at all.
+  Those later commits are not in `main`; look before deleting.
+
+It prints the delete command and never deletes anything itself.
+
 ## Generate the Xcode project
 
 Only required after changing `project.yml`, adding/removing app source files, dependencies, resources, or build settings:
