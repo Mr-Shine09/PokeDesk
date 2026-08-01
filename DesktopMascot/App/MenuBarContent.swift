@@ -42,12 +42,12 @@ struct MenuBarContent: View {
         Button {
             appDelegate.setMuted(!appDelegate.isMuted)
         } label: {
-            Label("Reaction Sounds", systemImage: appDelegate.isMuted ? "minus" : "checkmark")
+            Label("Sounds", systemImage: appDelegate.isMuted ? "minus" : "checkmark")
         }
         .accessibilityLabel(
             appDelegate.isMuted
-                ? "Turn on the success and failure sounds"
-                : "Silence the success and failure sounds"
+                ? "Turn on the mascot sounds"
+                : "Silence the mascot sounds"
         )
 
         Divider()

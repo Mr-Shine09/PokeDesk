@@ -2,8 +2,9 @@ import Foundation
 
 public struct PoofDismissFrame: Equatable, Sendable {
     public let progress: Double
-    /// How far the smoke cloud has billowed out, `0` before the poof.
-    public let smokeExpansion: Double
+    /// Whether the smoke bomb has gone off. Drives both the `poof` row and the
+    /// cue, so the sound lands with the burst rather than with the seal.
+    public let hasBurst: Bool
     public let smokeOpacity: Double
     /// `1` while the mascot is still forming the seal, falling to `0` inside the
     /// smoke.
@@ -12,7 +13,7 @@ public struct PoofDismissFrame: Equatable, Sendable {
 
     public static let resting = PoofDismissFrame(
         progress: 0,
-        smokeExpansion: 0,
+        hasBurst: false,
         smokeOpacity: 0,
         petReveal: 1,
         isComplete: true
@@ -20,13 +21,13 @@ public struct PoofDismissFrame: Equatable, Sendable {
 
     public init(
         progress: Double,
-        smokeExpansion: Double,
+        hasBurst: Bool,
         smokeOpacity: Double,
         petReveal: Double,
         isComplete: Bool
     ) {
         self.progress = progress
-        self.smokeExpansion = smokeExpansion
+        self.hasBurst = hasBurst
         self.smokeOpacity = smokeOpacity
         self.petReveal = petReveal
         self.isComplete = isComplete
@@ -48,7 +49,7 @@ public struct PoofDismissTimeline: Sendable {
     public static let reducedMotionDuration: TimeInterval = 0.3
 
     /// Fraction of the run at which the smoke bursts.
-    private static let poofStart = 0.40
+    public static let poofStart = 0.40
 
     public let duration: TimeInterval
     public let usesReducedMotion: Bool
@@ -56,6 +57,15 @@ public struct PoofDismissTimeline: Sendable {
     /// Whether the `hand-sign` row should play. False under Reduce Motion, where
     /// the pet simply fades where it stands.
     public var playsSeal: Bool { !usesReducedMotion }
+
+    /// Whether the `poof` row should play. Reduce Motion gets neither the seal
+    /// nor the smoke — but it still gets the cue, which is why `hasBurst` is
+    /// reported either way.
+    public var showsSmoke: Bool { !usesReducedMotion }
+
+    /// How long the smoke is on screen, which is what the `poof` row's declared
+    /// durations have to fit inside.
+    public var smokeDuration: TimeInterval { duration * (1 - Self.poofStart) }
 
     public init(
         duration: TimeInterval = PoofDismissTimeline.defaultDuration,
@@ -74,19 +84,17 @@ public struct PoofDismissTimeline: Sendable {
         let isComplete = elapsed >= duration
 
         guard !usesReducedMotion else {
+            // No seal to wait for, so the exit is under way from the first
+            // frame; the cue fires immediately rather than 40% in.
             return PoofDismissFrame(
                 progress: progress,
-                smokeExpansion: 0,
+                hasBurst: true,
                 smokeOpacity: 0,
                 petReveal: 1 - smoothstep(progress),
                 isComplete: isComplete
             )
         }
 
-        let poofed = clamp((progress - Self.poofStart) / (1 - Self.poofStart))
-        // The burst is near-instant and the drift is slow, so the cloud reads as
-        // smoke rather than as a growing circle.
-        let smokeExpansion = 1 - pow(1 - poofed, 3)
         let smokeOpacity = min(
             smoothstep(clamp((progress - Self.poofStart) / 0.06)),
             1 - smoothstep(clamp((progress - 0.62) / 0.38))
@@ -97,7 +105,7 @@ public struct PoofDismissTimeline: Sendable {
 
         return PoofDismissFrame(
             progress: progress,
-            smokeExpansion: smokeExpansion,
+            hasBurst: progress >= Self.poofStart,
             smokeOpacity: smokeOpacity,
             petReveal: petReveal,
             isComplete: isComplete

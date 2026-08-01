@@ -8,7 +8,7 @@ import Testing
 
     #expect(frame.petReveal == 1)
     #expect(frame.smokeOpacity == 0)
-    #expect(frame.smokeExpansion == 0)
+    #expect(frame.hasBurst == false)
     #expect(frame.isComplete == false)
 }
 
@@ -19,7 +19,7 @@ import Testing
     // The whole point of the poof: the mascot is never seen fading in the open.
     #expect(frame.petReveal == 0)
     #expect(frame.smokeOpacity == 1)
-    #expect(frame.smokeExpansion > 0)
+    #expect(frame.hasBurst)
 }
 
 @Test func smokeClearsByTheEnd() {
@@ -31,23 +31,28 @@ import Testing
     #expect(frame.isComplete)
 }
 
-@Test func smokeExpandsMonotonically() {
+/// Once the bomb has gone off it stays gone off. The cue fires on this edge, so
+/// a value that flickered back to false would play the poof twice.
+@Test func burstLatchesOnce() {
     let timeline = PoofDismissTimeline(duration: 1)
-    var previous = -1.0
-    for step in 0 ... 20 {
-        let expansion = timeline.frame(at: Double(step) / 20).smokeExpansion
-        #expect(expansion >= previous)
-        previous = expansion
+    var seenBurst = false
+    for step in 0 ... 40 {
+        let hasBurst = timeline.frame(at: Double(step) / 40).hasBurst
+        if seenBurst { #expect(hasBurst) }
+        seenBurst = seenBurst || hasBurst
     }
+    #expect(seenBurst)
 }
 
 @Test func reducedMotionFadesWithoutSealOrSmoke() {
     let timeline = PoofDismissTimeline.reducedMotion()
 
     #expect(timeline.playsSeal == false)
+    #expect(timeline.showsSmoke == false)
     let middle = timeline.frame(at: timeline.duration / 2)
     #expect(middle.smokeOpacity == 0)
-    #expect(middle.smokeExpansion == 0)
+    // Still reported, so the dismiss cue plays even with the visuals reduced.
+    #expect(middle.hasBurst)
     #expect(middle.petReveal > 0)
     #expect(middle.petReveal < 1)
     #expect(timeline.frame(at: timeline.duration).petReveal == 0)
@@ -92,4 +97,35 @@ import Testing
     let sealIsStillClear = timeline.frame(at: movingDuration)
     #expect(sealIsStillClear.smokeOpacity == 0)
     #expect(sealIsStillClear.petReveal == 1)
+}
+
+/// Same coupling on the other side: the `poof` row plays on its declared
+/// durations while the timeline runs the fade, so the row has to fit inside the
+/// window the timeline gives it. If it does not, the cloud is still mid-billow
+/// when the panel is ordered out.
+@Test func poofRowFitsInsideTheSmokeWindow() throws {
+    let repositoryRoot = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+    let contractData = try Data(
+        contentsOf: repositoryRoot.appending(path: "art/animation/atlas-contract.json")
+    )
+    let contract = try JSONDecoder().decode(AtlasContract.self, from: contractData)
+    let row = try #require(contract.row(named: "poof"))
+
+    #expect(row.playback == "once-hold")
+    #expect(row.durationsMS.last == .hold)
+
+    let movingDuration = row.durationsMS.reduce(0.0) { total, duration in
+        switch duration {
+        case let .milliseconds(value): total + Double(value) / 1_000
+        case .hold: total
+        }
+    }
+
+    let timeline = PoofDismissTimeline()
+    #expect(movingDuration < timeline.smokeDuration)
 }

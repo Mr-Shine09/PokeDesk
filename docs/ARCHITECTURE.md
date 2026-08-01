@@ -118,9 +118,12 @@ paused > failure-recent > waiting > working > ideating > success-recent > schedu
 - Hide and Quit remain semantically distinct.
 - Summon and dismiss are transitions, not instant visibility changes. Summon opens the Dock portal (`PortalSummonTimeline`); dismiss plays the `hand-sign` seal row and a smoke poof (`PoofDismissTimeline`), and the panel is ordered out only when the transition reports completion. Neither is agent state, so neither goes through the reducer — they sit alongside dragging as the things `AmbientAnimationController` drives directly.
 - Re-summoning during a dismiss cancels it and the pending hide never runs. A dismiss that has been cancelled must not hide the panel afterwards.
+- Quit plays the same farewell when a mascot is on screen, but never at the cost of quitting. A second Quit terminates immediately, an unsummoned mascot skips the transition, and once quitting has started a summon cannot cancel it.
+- The smoke is a second sprite layer over the mascot (`poof`, atlas row 15) rather than a pose, so the character row and the effect row advance independently.
+- Cues exist for exactly four moments: the two agent reactions, and the two transitions the user triggers. One toggle silences all of them.
 - Dragging is always available, plays hanging, and is a placement gesture only — it does not change roaming.
 - Resume Roaming repositions into the current display's safe lane only when the user has not placed the mascot themselves.
-- Only `success` and `failure` produce sound, only while summoned, and the cue fires when a state reaches the screen rather than when it is reduced.
+- The two reaction cues fire only while summoned and only when a state reaches the screen, not when it is reduced. The two transition cues need no visibility gate: the user asked for the transition and is watching it.
 - Screen, scale, Dock orientation, and wake changes trigger placement reconciliation.
 - Reduced Motion work must replace motion with stable/fade behavior, not merely speed up or shrink the same loop.
 

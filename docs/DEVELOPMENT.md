@@ -45,7 +45,15 @@ SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/mac-dock-pet-swiftpm-cache \
 swift test
 ```
 
-Expected handoff baseline: 183 Swift Testing tests pass as of 2026-08-01. A higher count is fine; a lower count requires investigation.
+Expected handoff baseline: 184 Swift Testing tests pass as of 2026-08-01. A higher count is fine; a lower count requires investigation.
+
+**`aDropPastAnEdgeIsClampedBackIntoView` fails whenever a second display is
+attached.** It is order- and focus-sensitive: `WindowCoordinator` resolves
+bounds through `panel.screen ?? NSScreen.main`, and `NSScreen.main` follows
+whichever window currently receives key events. It passes alone under
+`--filter`, fails in the full suite, and does both on `origin/main` as well —
+verified 2026-08-01 in a clean worktree. This is a real multi-display defect
+rather than a flaky test; do not "fix" it by loosening the assertion.
 
 If the suite fails only some of the time, check the clock before the code. One
 fixture family reduces against the sleep window (23:00–06:00 local), and a

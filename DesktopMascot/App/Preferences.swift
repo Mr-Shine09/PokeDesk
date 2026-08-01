@@ -36,11 +36,16 @@ enum Preferences {
         }
     }
 
-    /// Whether the success/failure cues are silenced. Defaults to `false`, so
-    /// the cues work on first launch without hunting for a switch — but the
-    /// choice to silence them persists, because being re-surprised by a sound
-    /// you already turned off is the worse failure of the two.
-    static var reactionSoundsMuted: Bool {
+    /// Whether every cue is silenced — reactions and transitions alike.
+    /// Defaults to `false`, so the cues work on first launch without hunting for
+    /// a switch, but the choice to silence them persists, because being
+    /// re-surprised by a sound you already turned off is the worse failure of
+    /// the two.
+    ///
+    /// The stored key still says `reactionSounds`. It was named before summon
+    /// and dismiss had cues, and renaming it would silently reset the choice of
+    /// anyone who had already turned sound off.
+    static var soundsMuted: Bool {
         get {
             defaults.bool(forKey: Key.reactionSoundsMuted)
         }

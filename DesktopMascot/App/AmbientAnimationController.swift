@@ -14,6 +14,11 @@ import MascotWindow
 @MainActor
 final class AmbientAnimationController {
     var onSummonCompleted: (() -> Void)?
+    /// Fires as the portal opens, so the summon cue starts with the transition.
+    var onSummonStarted: (() -> Void)?
+    /// Fires once per dismiss, at the instant the smoke bomb goes off rather
+    /// than when the transition begins — the seal is silent.
+    var onDismissBurst: (() -> Void)?
     /// Fires when a state reaches the screen, after the selector's dwell — not
     /// when it is reduced. Anything that accompanies an animation (today, the
     /// reaction cues) hangs off this so it stays in step with the frames.
@@ -40,6 +45,9 @@ final class AmbientAnimationController {
     /// between one summon and the next.
     private var dismissTimeline: PoofDismissTimeline?
     private var onDismissCompleted: (() -> Void)?
+    private var smokeFrameIndex = 0
+    private var nextSmokeFrameTime: TimeInterval = 0
+    private var didAnnounceBurst = false
     private var phase: Phase = .resting(until: 0)
     private var currentState = "offline"
     private var frameIndex = 0
@@ -116,6 +124,10 @@ final class AmbientAnimationController {
         dismissTimeline = timeline
         dismissStartedAt = ProcessInfo.processInfo.systemUptime
         onDismissCompleted = completion
+        smokeFrameIndex = 0
+        nextSmokeFrameTime = 0
+        didAnnounceBurst = false
+        previewModel.smokeImage = nil
 
         if timeline.playsSeal {
             isDragging = false
@@ -268,6 +280,15 @@ final class AmbientAnimationController {
             if dismissTimeline.playsSeal {
                 advanceFrames(state: "hand-sign", now: now)
             }
+            if frame.hasBurst {
+                if !didAnnounceBurst {
+                    didAnnounceBurst = true
+                    onDismissBurst?()
+                }
+                if dismissTimeline.showsSmoke {
+                    advanceSmoke(now: now)
+                }
+            }
             if frame.isComplete {
                 let completion = onDismissCompleted
                 finishDismiss()
@@ -362,6 +383,7 @@ final class AmbientAnimationController {
         previewModel.isSummoning = true
         previewModel.summonFrame = summonTimeline.frame(at: 0)
         summonStartedAt = now
+        onSummonStarted?()
 
         if displayedState == .paused {
             show(state: "paused", frame: 0)
@@ -385,12 +407,27 @@ final class AmbientAnimationController {
         previewModel.summonFrame = .resting
     }
 
+    /// Advances the `poof` row on its own layer, on the contract's durations.
+    ///
+    /// Separate from `advanceFrames` for two reasons: the smoke draws over the
+    /// mascot rather than replacing it, and `once-hold` here means *hold* — a
+    /// wrap back to the burst frame part-way through the fade would read as a
+    /// second explosion.
+    private func advanceSmoke(now: TimeInterval) {
+        guard let frames = frameCache["poof"], !frames.isEmpty else { return }
+        guard now >= nextSmokeFrameTime else { return }
+        previewModel.smokeImage = frames[min(smokeFrameIndex, frames.count - 1)]
+        nextSmokeFrameTime = now + frameDuration(state: "poof", index: smokeFrameIndex)
+        smokeFrameIndex = min(smokeFrameIndex + 1, frames.count - 1)
+    }
+
     private func finishDismiss() {
         dismissStartedAt = nil
         dismissTimeline = nil
         onDismissCompleted = nil
         previewModel.isDismissing = false
         previewModel.dismissFrame = .resting
+        previewModel.smokeImage = nil
     }
 
     /// Drops a dismiss in flight *without* calling its completion, so the panel

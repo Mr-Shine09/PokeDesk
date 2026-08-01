@@ -45,6 +45,10 @@ targets:
         buildPhase: resources
       - path: art/audio/failure.wav
         buildPhase: resources
+      - path: art/audio/summon.wav
+        buildPhase: resources
+      - path: art/audio/dismiss.wav
+        buildPhase: resources
     dependencies:
       - package: DesktopMascotKit
         product: MascotCore

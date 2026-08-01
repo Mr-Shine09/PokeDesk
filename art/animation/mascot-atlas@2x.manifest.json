@@ -2,7 +2,7 @@
   "asset": "mascot-atlas@2x.png",
   "pixel_size": [
     768,
-    1680
+    1792
   ],
   "contract": "art/animation/atlas-contract.json",
   "frames_root": "art/animation/frames",
@@ -84,6 +84,14 @@
     "hand-sign/hand-sign-00.png": "201a7456214df0dfcf7404493547a5cdaee9855de6d4aa1502c61d535f87ac41",
     "hand-sign/hand-sign-01.png": "00ec772c373d3c1b5e34ee7f4ccb6e61439842bd6e2d780515f58e514360ae6e",
     "hand-sign/hand-sign-02.png": "53f9a361904166f51bc312b422b4756ced0caf6b49e931371023c703c58e70a6",
-    "hand-sign/hand-sign-03.png": "a5c165b5634c35a3a7a3dea9c4f84fbe953834dcf5ed2e6dac91706abf60af91"
+    "hand-sign/hand-sign-03.png": "a5c165b5634c35a3a7a3dea9c4f84fbe953834dcf5ed2e6dac91706abf60af91",
+    "poof/poof-00.png": "83183f6081a0b0e1564866b6e68fea645b6b19c23d021ab780e4bdb7e84a088b",
+    "poof/poof-01.png": "45b504f6cf71674b58df8de735e851513747c16b5607cfd6ed1cc16907f589c9",
+    "poof/poof-02.png": "e58269bfbefa739dd67acf378d3b5afd114bf3a778e46eabf6bcd96331cd57b1",
+    "poof/poof-03.png": "3979d10a4d0ae5c872861422315d37889e255f77d21216c8a9f14266a8057afc",
+    "poof/poof-04.png": "e9533ca9a6b9485178498ce37b0d740dc939cf2d5cecb2d92cad0935d7fd74ea",
+    "poof/poof-05.png": "27a6c4cb43e0fe449b41e0dbf13338f1682ab764345edf4e92dadeb2752c88d7",
+    "poof/poof-06.png": "e7af899ff5764b015913193dc7bef50ff6e7863ebc78d97a11e6443644c52847",
+    "poof/poof-07.png": "b3d6f12895bde4bdd2bebbc712988b22b480fd49408d8988b373e33d5cbef718"
   }
 }

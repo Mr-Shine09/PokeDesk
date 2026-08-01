@@ -9,7 +9,8 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 - [ ] Complete atlas validates.
 - [ ] Every changed frame row validates.
 - [ ] Full QA sheets and motion previews are regenerated after atlas changes.
-- [ ] Swift package tests pass (current baseline: 183; original handoff baseline: 10).
+- [ ] Swift package tests pass (current baseline: 184; original handoff baseline: 10).
+  - Known exception: `aDropPastAnEdgeIsClampedBackIntoView` fails whenever a second display is attached. Pre-existing on `origin/main`, not a regression — see `docs/DEVELOPMENT.md`.
 - [ ] Unsigned Debug Xcode build succeeds.
 - [ ] Built atlas hash matches workspace atlas.
 - [ ] Built JSON contract byte-matches workspace contract.
@@ -47,7 +48,9 @@ Nothing in this section has been seen on screen by anyone. It is built and unit-
 
 - [ ] Dismiss plays the ninja seal: hands lift, palms join, two finger pairs rise.
 - [ ] The seal is finished and held before the smoke starts, not cut off by it.
+- [ ] The smoke is visibly pixel art in the mascot's own style, not a soft blur.
 - [ ] The smoke covers the whole mascot, feet included, at its densest.
+- [ ] The cloud never opens a hole over the middle where the mascot was standing.
 - [ ] The mascot is never seen fading in the open — it is gone when the smoke clears.
 - [ ] The smoke clears completely; no haze is left behind on the desktop.
 - [ ] Total transition feels quick rather than something to wait through.
@@ -56,6 +59,20 @@ Nothing in this section has been seen on screen by anyone. It is built and unit-
 - [ ] Dismissing a paused mascot still plays the transition.
 - [ ] Quitting during the transition does not leave an orphaned panel.
 - [ ] The transition reads on both light and dark desktop backgrounds.
+- [ ] **Quit** plays the same farewell, then the app actually terminates.
+- [ ] A second Quit during the farewell terminates immediately.
+- [ ] Quitting with no mascot summoned terminates at once, with no transition.
+- [ ] Summoning during a quit does not keep the app alive.
+
+## Sound acceptance
+
+- [ ] Summon plays its rising cue as the portal opens.
+- [ ] Dismiss plays its poof cue on the burst, not at the start of the seal.
+- [ ] The summon cue is distinguishable from the success cue, which is also a rising run.
+- [ ] Neither transition cue is startling at system volume.
+- [ ] Under Reduce Motion both cues still play, even though the visuals are reduced.
+- [ ] The single Sounds toggle silences all four cues, and the choice survives relaunch.
+- [ ] A previously silenced install stays silenced after this update.
 
 ## App icon acceptance
 
