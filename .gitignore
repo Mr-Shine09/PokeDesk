@@ -3,3 +3,11 @@ __pycache__/
 *.pyc
 .build/
 DerivedData/
+
+# Stray REPL/editor artifacts. An empty .Rhistory appeared under
+# project-skills/ on 2026-07-29 and sat in `git status` for three sessions.
+# Ignored rather than deleted: untracked files in this tree are not
+# assumed to be disposable.
+.Rhistory
+.RData
+.Rproj.user/
