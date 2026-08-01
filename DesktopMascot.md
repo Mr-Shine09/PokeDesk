@@ -11,7 +11,7 @@
 | Started | 2026-07-28 |
 | Last updated | 2026-07-31 |
 | Status | Feature-complete for 0.1 and verified against a **real Claude Code session**: provider hooks drive the bundled helper, which feeds the socket server, the reducer, and animation. Installed durably at `~/Applications/Dock Pet.app`. The mascot appears only when summoned, and the menu bar carries the full control surface including state preview |
-| Current gate | Owner hands-on QA, in priority order: listen to the two reaction cues (never heard by anyone — measured non-silent is not the same as correct), drop the mascot from several heights to confirm the drop-and-roam feel, then the display matrix (auto-hide, multiple displays, full-screen Spaces, sleep/wake). Preview State and the cursor-hanging feel ride along with those passes. That QA is the last thing standing between this and a finished 0.1. Launch-at-login and distribution are closed by owner decision |
+| Current gate | Owner hands-on QA, in priority order: listen to the two reaction cues (never heard by anyone — measured non-silent is not the same as correct), drop the mascot from several heights to confirm the drop-and-roam feel, then the display matrix (auto-hide, multiple displays, full-screen Spaces, sleep/wake). Preview State and the cursor-hanging feel ride along with those passes. Alongside it, one owner decision is outstanding: the **animation speed control** has been in 0.1 scope since 2026-07-28, was never built, and was never dropped — build it or strike it. Those two things are what stand between this and a finished 0.1. Launch-at-login and distribution are closed by owner decision |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -88,15 +88,17 @@ These questions do not block the foundation or prototype. They do block a 1.0 re
 ### Version 0.1 — smallest lovable prototype
 
 - One miniature owner mascot.
-- Transparent, non-activating floating window in a bounded strolling lane immediately above or beside the Dock.
-- Menu-bar controls: show/hide, pause animation, manual ideating state, unlock position, launch at login, diagnostics, quit.
+- Transparent, non-activating floating window in a bounded strolling lane immediately above the Dock. *Beside* the Dock left with the removal of Dock-edge tracking (2026-07-30); the lane is bottom-anchored by default, and a dropped mascot roams at the height it landed at.
+- Menu-bar controls: summon/dismiss, pause animation, manual ideating state, reposition, reaction-sound mute, state preview, hook-setup snippet, diagnostics, quit. **No launch at login** (owner decision, 2026-07-30).
 - States: `offline`, `idle`, `working`, `ideating`, `waiting`, `success`, `failure`, `sleeping`, `paused`.
 - Idle animation variants include directional strolling and directional sitting on a small chair with one lower leg shaking.
 - Reliable Codex and Claude Code event adapters based on supported lifecycle hooks.
 - A documented capability boundary for ordinary ChatGPT app/browser activity; no unsupported scraping or fabricated fine-grained states.
 - Local-only event transport.
 - Multiple simultaneous agent sessions reduced to one deterministic mascot state.
-- Reduced Motion support and an animation speed control.
+- Reduced Motion support. Honored by the portal summon transition only; broader coverage is open under [#11](https://github.com/Mr-Shine09/desktop-mascot/issues/11).
+- An animation speed control. **Never built, and never explicitly dropped** — see the open scope question below. This is the only 0.1 scope line with no implementation and no decision behind its absence.
+- Short success and failure reaction cues (added 2026-07-30; this reverses an original non-goal, see below).
 - No network dependency after installation.
 
 ### Explicit non-goals for 0.1
@@ -108,8 +110,22 @@ These questions do not block the foundation or prototype. They do block a 1.0 re
 - Private macOS APIs.
 - General-purpose pet marketplace or arbitrary user-imported sprites.
 - Cloud sync, user accounts, analytics, or remote control.
-- Cursor-following, desktop roaming, sound effects, speech, or notifications.
-- App Store distribution. Direct notarized distribution is the first packaging target.
+- Cursor-following, free desktop roaming, speech, or notifications. **Sound effects were on this list and no longer are**: two short reaction cues for `success` and `failure` were added on 2026-07-30, muted by a persisted menu toggle and silent while dismissed. Nothing else in the app makes sound. "Free desktop roaming" still means what it always did — the mascot walks a bounded horizontal lane; letting the user choose that lane's height by dropping it is not free roaming.
+- App Store distribution — and, since 2026-07-30, **any** distribution. Notarization needs a Developer ID certificate, which the owner classified as a purchase rather than an engineering task. An ad-hoc signed local install is the finished state for 0.1.
+
+### Scope changes since the original contract
+
+The list above is the current contract. It differs from the 2026-07-28 original in five places, recorded here because a definition of done that drifts silently is worse than one that is merely out of date. Four are owner decisions; one is an unanswered question.
+
+| Change | Direction | Date | Basis |
+| --- | --- | --- | --- |
+| Launch at login removed | Narrowed | 2026-07-30 | Owner decision; nothing should start the app for you |
+| Placement beside the Dock removed | Narrowed | 2026-07-30 | Dock-edge tracking was buggy and was deleted rather than fixed |
+| Distribution and notarization removed | Narrowed | 2026-07-30 | Owner decision; a certificate purchase, not engineering |
+| Reaction cues added | **Widened** | 2026-07-30 | Owner asked for a success cue; reverses the original sound-effects non-goal |
+| Animation speed control | **Undecided** | — | In scope since 2026-07-28, never implemented, never dropped |
+
+**Open scope question, for the owner:** the animation speed control is the only 0.1 commitment that is neither built nor consciously abandoned. `grep -ri speed` across the Swift sources returns nothing, and `Preferences` stores only `roaming` and `reactionSoundsMuted`. It should either be built or struck from scope; leaving it unanswered is what lets 0.1 be "finished" and incomplete at the same time. Until it is answered, treat 0.1 as feature-complete *except* for this line.
 
 ## Mascot art direction
 
@@ -1456,12 +1472,45 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Immediately afterward, the fix demonstrated the defect it was fixing. Two of the nine corrections were revision snapshots naming `6a7e631`/PR #26; merging PR #27 made both wrong the moment it landed. The line had now rotted three times across three sessions. It was removed rather than corrected a fourth time: `docs/HANDOFF.md` and next-session item 4 now give the commands (`git status --short --branch`, `gh pr list`, `git branch -a`) and name no revision at all. **The general lesson, which applies past this one line: a documentation claim that the next ordinary action invalidates cannot be fixed by writing it more carefully. Either it stops being written down, or it rots on a schedule.** The test-count baselines have the same shape and are the next candidate if they drift again.
 - Next: unchanged. Owner hands-on QA is the only remaining 0.1 work, in the order now recorded identically in `CLAUDE.md`, the snapshot gate, and `docs/HANDOFF.md`.
 
+### 2026-07-31 — Reconcile Scope with the decisions that overtook it
+
+- Objective: the owner asked when the project will be finished *as planned*. Answering it honestly meant checking whether the plan still described the product. It did not, so this entry fixes the definition of done rather than estimating against a stale one.
+- The `Scope` section still described the 2026-07-28 contract. Five discrepancies, now recorded in a table there rather than silently rewritten:
+  - **Launch at login** listed as an in-scope menu-bar control; closed by owner decision 2026-07-30.
+  - **Placement "above or beside the Dock"**; side-Dock tracking was deleted rather than fixed 2026-07-30.
+  - **"Direct notarized distribution is the first packaging target"**; distribution was closed 2026-07-30 as a certificate purchase, not engineering.
+  - **Sound effects listed as an explicit non-goal** — while 0.1 now ships two reaction cues that are currently the top QA item. A shipped feature sat on the non-goals list for a day.
+  - **An animation speed control** listed in scope, never built.
+- The first four are owner decisions that were simply never written back, and are now annotated with direction and date. The fifth is different in kind and is called out as such: `grep -ri speed` across the Swift sources returns nothing and `Preferences` stores only `roaming` and `reactionSoundsMuted`, so the control does not exist — but no decision ever dropped it either. **It is the only 0.1 commitment that is neither built nor consciously abandoned**, and it is recorded as an open owner question in `Scope`, the snapshot gate, and `CLAUDE.md` rather than being quietly deleted. An agent tidying scope must not resolve this by deletion.
+- Why this matters beyond bookkeeping: the project has been described as "feature-complete for 0.1 pending QA" since 2026-07-30, and that claim was measured against a scope list containing an unbuilt item and excluding a shipped one. The finish line was not where the ledger said it was.
+- No code changed. Verification: 176 package tests pass, contract and atlas validate, and each scope claim was checked against the sources (`grep -ri speed`, `Preferences.swift`, `MenuBarContent.swift`) rather than against other prose.
+- Risks carried forward, unchanged: the reaction cues are unheard, drop-and-roam is unconfirmed on screen, the display matrix is untouched, `waiting`/`failed` are fixture-only, and **Codex has never been run live**.
+- Next: unchanged for implementation — owner hands-on QA, cues first. Newly added alongside it: decide the animation speed control.
+
+### 2026-07-31 — Session closure: documentation made to match the repository
+
+- Objective: with every remaining 0.1 item gated on owner hands-on QA, spend the session on the largest thing an agent could actually close — the gap between what the documentation claimed and what the repository contained.
+- Landed on `main` this session: [PR #27](https://github.com/Mr-Shine09/desktop-mascot/pull/27) nine corrected doc claims, [#28](https://github.com/Mr-Shine09/desktop-mascot/pull/28) removal of revision snapshots, [#29](https://github.com/Mr-Shine09/desktop-mascot/pull/29) corrected dates. **Open at session end: [#30](https://github.com/Mr-Shine09/desktop-mascot/pull/30) (gitignore stray REPL artifacts) and [#31](https://github.com/Mr-Shine09/desktop-mascot/pull/31) (this scope reconciliation, which also carries this entry).** Verify with `gh pr list` rather than trusting this line.
+- The single most important change: **the finish line moved to where it actually is.** 0.1 had been called feature-complete-pending-QA since 2026-07-30, but that was measured against a `Scope` list containing an item nobody built and omitting one that shipped. Everything else this session was smaller.
+- The one new open item: the **animation speed control**, in scope since 2026-07-28, absent from the sources, never dropped. Recorded as an owner decision in three places, deliberately not deleted.
+- Three documentation errors were introduced *by this session* and are recorded rather than quietly fixed: two revision snapshots that PR #28 then had to remove, and a whole set of entries dated 2026-07-30 when the session ran on 2026-07-31. A session about documentation accuracy produced three documentation defects, which is the honest measure of how easy this class of error is.
+- **New trap for the next session, found while cleaning up branches:** `git branch -r --merged main` is misleading in this repository. Every PR is squash-merged, so the branch tip never becomes an ancestor of `main`, and the command reported three branches merged minutes earlier as *unmerged*. It is wrong in both directions and must not be used to decide what is safe to delete. Fixed rather than only documented: `tools/list_merged_branches.sh` classifies every remote branch against GitHub's merge record as `SAFE`, `KEEP` (open PR), or `REVIEW`, and never deletes anything itself.
+- **The tool immediately justified itself.** The branch-delete command handed to the owner earlier in the session listed `agent/provider-hook-adapters` as safe. It is not obviously so: commit `302a24c` was pushed to it *after* PR #21 merged and is absent from `main`, which the tip-versus-merged-head comparison catches and a bare merged/not-merged answer cannot. Inspection showed the commit is documentation recording the live Claude Code run, and that substance did reach `main` through a later PR — so deleting the branch loses nothing. The point stands anyway: the original command was right by luck, not by verification, and the same shape of mistake on a branch carrying real work would have been unrecoverable from this machine.
+- Verification at session end: 176 package tests pass, contract and atlas validate, `git diff --check` clean, and every corrected claim re-read from `git show HEAD:<file>` rather than the worktree.
+- Risks carried forward, unchanged and deliberately not softened:
+  - **The reaction cues have never been heard by anyone.** Measured non-silent is not the same as correct. Still the largest unverified claim in the project.
+  - The drop-and-roam feel is unconfirmed on screen; `settleAfterDrop()` is a one-line revert if it reads badly.
+  - The display matrix is untouched, and a dropped height interacting with a display change is untested surface.
+  - `waiting` and `failed` are fixture-only, and **Codex has never been run live.**
+- Outstanding chores for the owner: merge #30 and #31, and delete the seven merged remote branches — the delete was refused for the assistant by the permission classifier, and the exact command is in the session transcript and in `docs/HANDOFF.md`'s note about that refusal being intermittent.
+- Next: owner hands-on QA, cues first, then drop-from-heights, then the display matrix. Plus one decision: build the animation speed control or strike it from `Scope`.
+
 ## Next-session handoff
 
 1. Read this file in full.
 2. Treat `art/production/mascot-base-chibi-40pt-at2x-80px-final.png` as the frozen base; never present another native tall variant as viable.
 3. Treat atlas revision 4 as the current candidate: 14 rows, `768x1568`; the directional sit-shake rows now use a small freestanding chair, and the six-frame `hanging` row remains at index 13 with a `(48, 4)` top grip anchor.
-4. Establish the repository state with `git status --short --branch`, `gh pr list`, and `git branch -a`. This item deliberately no longer names a revision or a PR number. It did until 2026-07-31, and the claim went stale three times — the last time within minutes, because the commit that corrected it was merged immediately after. A hash here is invalidated by the very next merge, so it was removed rather than corrected again.
+4. Establish the repository state with `git status --short --branch`, `gh pr list`, and `git branch -a`. Note that `git branch -r --merged main` is **not** a safe way to decide what is merged here: every PR is squash-merged, so a merged branch's tip is never an ancestor of `main`, and the command has reported branches merged minutes earlier as unmerged. Run `tools/list_merged_branches.sh`, which cross-references the remote refs against GitHub's merge record and flags branches that moved after their PR merged. This item deliberately no longer names a revision or a PR number. It did until 2026-07-31, and the claim went stale three times — the last time within minutes, because the commit that corrected it was merged immediately after. A hash here is invalidated by the very next merge, so it was removed rather than corrected again.
 5. Treat the current presentation as `96x112` points with a 10-point transparent Dock inset. Revision 4 changes only the two sit-shake rows inside the existing atlas geometry.
 6. Ask the owner to test dragging from several body points and verify that the raised hand remains under the cursor while the body swings left/center/right. Since 2026-07-30 also verify what happens *after* the drop: the mascot must carry on roaming at the height it landed at, keep that spot across Dismiss/Summon and reopen, and return to the bottom lane only via Reposition. Retain the broader click, reopen, relaunch, and display-matrix QA. The full list is in `docs/QA_CHECKLIST.md`.
 7. Preserve the honest capability boundary, which moved on 2026-07-30 and is no longer where earlier revisions of this line said it was. The app listens on the socket, reduces real events, animates from that state, ships an invocable helper inside its bundle, and **both provider adapters exist** as `dockpet-event --hook --provider <name>` (#8, #9 landed in [PR #21](https://github.com/Mr-Shine09/desktop-mascot/pull/21)). The Claude Code hooks were installed into `~/.claude/settings.json` and **observed driving the mascot from a live session**. What remains unproven is narrower and must still be stated exactly: **Codex has never been run live** — it shares the adapter, which is inference rather than evidence — and `waiting` and `failed` are fixture-covered but have never been seen from a real provider. Driving `failed` through the helper by hand does not count.
@@ -1471,8 +1520,9 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 11. Merge and branch-delete commands are sometimes refused for the assistant by the auto-mode permission classifier and sometimes allowed; the outcome is not predictable in advance. If one is denied, hand the owner the exact command to run in their own terminal rather than retrying it or working around the denial.
 12. The app **is** installed durably at `~/Applications/Dock Pet.app` by `tools/install_app.sh` ([PR #22](https://github.com/Mr-Shine09/desktop-mascot/pull/22)), ad-hoc signed with the nested helper signed first, and survives reboot. Relaunching is `open -g "$HOME/Applications/Dock Pet.app"`, not a rebuild. Two things still hold: the build is **not notarized**, so it is trustworthy only on the machine that built it and cannot be given to anyone else without a Developer ID certificate; and there is no launch-at-login by owner decision, so nothing starts it for you. `install_app.sh` will find and *attempt* any Apple Development identity in the local keychain before falling back to ad-hoc — set `CODESIGN_IDENTITY=-` to skip that lookup entirely.
 13. More than one agent session may be working in this repository at the same time, sharing one working tree. Before committing, run `git status --short --branch` and confirm every staged file is yours; stash and rebranch rather than bundling another session's work into your commit.
-14. Update this ledger before ending the next session.
-15. Use `CLAUDE.md` and `docs/HANDOFF.md` as the maintainer onboarding entry points; keep them synchronized when architecture, commands, or asset contracts materially change.
+14. One 0.1 scope line is unresolved and must not be closed by tidying it away: the **animation speed control** has been in `Scope` since 2026-07-28, does not exist in the sources (`grep -ri speed` returns nothing; `Preferences` holds only `roaming` and `reactionSoundsMuted`), and was never dropped by any decision. It is the only 0.1 commitment that is neither built nor consciously abandoned. Ask the owner to build it or strike it; do not resolve it yourself in either direction.
+15. Update this ledger before ending the next session.
+16. Use `CLAUDE.md` and `docs/HANDOFF.md` as the maintainer onboarding entry points; keep them synchronized when architecture, commands, or asset contracts materially change.
 
 ## Documentation sources
 
