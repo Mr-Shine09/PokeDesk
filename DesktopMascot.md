@@ -10,7 +10,7 @@
 | Owner | [Mr-Shine09](https://github.com/Mr-Shine09) |
 | Started | 2026-07-28 |
 | Last updated | 2026-08-02 |
-| Status | Feature-complete for 0.1 and verified against a real Claude Code session. Orange Claude wardrobe corrected 2026-08-02 (sunglasses removed by owner decision, navy sleeves and sleeping blanket fixed) and reinstalled; not yet seen on screen. The Codex generator was repaired on 2026-08-02, the user-level hook file is installed, all seven definitions are trusted and Active, and a fresh real Codex turn completed with no hook failure. An independent installed-helper/socket smoke test passed. Installed durably at `~/Applications/Dock Pet.app` |
+| Status | **0.1 hands-on QA complete (2026-08-02).** Feature-complete and verified against a real Claude Code session. Orange Claude wardrobe corrected 2026-08-02 (sunglasses removed by owner decision, navy sleeves and sleeping blanket fixed), reinstalled, and owner-approved on screen the same day along with the whole two-mascot build. The Codex generator was repaired on 2026-08-02, the user-level hook file is installed, all seven definitions are trusted and Active, and a fresh real Codex turn completed with no hook failure. An independent installed-helper/socket smoke test passed. Installed durably at `~/Applications/Dock Pet.app` |
 | Current gate | Hands-on QA of the two-mascot build (orange Claude, navy Codex), including visually confirming that a real Codex turn animates only the navy mascot. The orange atlas also awaits owner visual approval. What remains: two-mascot hands-on, the orange wardrobe visual check, then the **display matrix**, which has a known multi-display clamping defect and now twice as many panels |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
@@ -1691,6 +1691,16 @@ Owner answers recorded the same day:
 - Corrections to this ledger: handoff item 15 and two `docs/HANDOFF.md` claims stated the test "fails whenever a second display is attached" and was "not a flaky test". Both were wrong — it was intermittent, and the instruction not to loosen the assertion was right for the wrong reason. All three are corrected.
 - Risks or blockers: the fix is verified only against this one two-display arrangement (built-in `0,0 1280x832` plus external `1280,-248 1920x1080`). Display unplugging, mismatched-height gaps, and sleep/wake are still untested by hand. The rest of the display matrix is unchanged and still open.
 - Next: unchanged — owner hands-on QA of the two-mascot build.
+
+### 2026-08-02 — Owner hands-on QA of the two-mascot build
+
+- Objective: close the last 0.1 gate by putting the two-mascot build, the corrected orange wardrobe, and the multi-display clamp fix in front of the owner.
+- Completed: the owner ran the full hands-on pass from the installed `~/Applications` build and reported every listed item smooth — two mascots side by side, per-mascot menus and dismissal, independent dragged positions, a real Claude Code task animating the orange mascot while the navy one strolled, one success cue for both, the orange wardrobe and sleeping blanket at native size, the drag/hanging pass, the display matrix, and the four dismiss edge cases (Reduce Motion, re-summon mid-poof, dismiss-while-paused, second Quit).
+- Also re-ran the automated baseline: `git diff --check` clean, contract and classic atlas validate, 198 package tests pass, the Release build succeeds, and both atlases plus the contract are byte-identical between the workspace and the installed bundle. The orange atlas's three out-of-palette colors were proven by set difference to be exactly the three shades declared in `author_codex_fashion_atlas.py`, with no palette color removed.
+- **Evidence granularity, recorded deliberately:** the owner's report was a single overall verdict ("every QA done, it is smooth"), not per-item observation. `docs/QA_CHECKLIST.md` ticks those items as owner-accepted on that basis. Do not later cite any individual tick as an independently narrated observation.
+- Still unverified, and deliberately left unticked: **a real Codex session driving the navy mascot on screen.** Codex's hooks are installed, trusted, and were exercised by a real turn earlier the same day, but nobody has watched the mascot react. This is the last unproven provider claim in the project. Also untested: `@1x`/non-Retina behavior, the sound-toggle persistence items, icon sizes at 16/32/128pt, and every future release gate.
+- Risks or blockers: the display matrix was exercised against one two-display arrangement only. The build remains ad-hoc signed and unnotarized, so it is trustworthy only on the machine that built it — distribution needs a Developer ID certificate and is out of scope by owner decision.
+- Next: 0.1's hands-on gates are closed. The remaining work is release-gate work, not feature work — energy/latency measurement, signing and notarization, and packaging. Nothing further should be treated as a 0.1 blocker without a fresh owner decision.
 
 ## Next-session handoff
 
