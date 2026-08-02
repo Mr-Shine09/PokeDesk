@@ -9,13 +9,21 @@ import SwiftUI
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published private(set) var diagnostics = "Starting"
-    /// The mascot starts hidden and appears only when summoned.
+    /// Which providers' mascots are currently summoned.
     ///
     /// Owner decision, 2026-07-30: launching the app must not put a pet on the
     /// screen. The app is a menu-bar accessory first, and the mascot is
     /// something the user calls for — so launch leaves the menu-bar item ready
     /// and nothing else. There is deliberately no launch-at-login either.
-    @Published var isVisible = false
+    ///
+    /// Owner decision, 2026-08-01: presence is per mascot. Summoning Claude's
+    /// mascot must not bring Codex's along, and neither appears on its own when
+    /// a provider is detected — that would break the rule above.
+    @Published private(set) var summoned: Set<EventProvider> = []
+
+    /// True while any mascot is on screen. Menu items and diagnostics that are
+    /// about the app rather than one pet read this.
+    var isVisible: Bool { !summoned.isEmpty }
     @Published var isPaused = false
     @Published var isIdeating = false
     /// Restored from preferences, so a deliberate choice survives relaunch.
@@ -37,11 +45,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// Set once Quit has been asked for, so the transition cannot be cancelled
     /// by a summon and the app cannot be left running after asking to stop.
     private var isQuitting = false
-    private let previewModel = MascotPreviewModel()
-    private var atlas: SpriteAtlas?
-    private var windowCoordinator: WindowCoordinator?
-    private var animationController: AmbientAnimationController?
+    /// One mascot per provider, in menu order. Empty only if resource loading
+    /// failed, in which case `diagnostics` carries the reason.
+    private(set) var mascots: [MascotInstance] = []
     private var visibleStateObserver: AnyCancellable?
+
+    private func mascot(for provider: EventProvider) -> MascotInstance? {
+        mascots.first { $0.provider == provider }
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -53,66 +64,100 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             let contractData = try Data(contentsOf: resources.contractURL)
             let contract = try JSONDecoder().decode(AtlasContract.self, from: contractData)
             let atlas = try SpriteAtlas(imageURL: resources.atlasURL, contract: contract)
-            self.atlas = atlas
-            previewModel.image = try atlas.frame(state: "idle", index: 0)
+            let orangeAtlas = try SpriteAtlas(imageURL: resources.orangeAtlasURL, contract: contract)
+            let atlases: [MascotFashion: SpriteAtlas] = [.classic: atlas, .orange: orangeAtlas]
 
-            let hostingView = NSHostingView(rootView: MascotPreviewView(model: previewModel))
-            hostingView.frame = NSRect(origin: .zero, size: MascotPanel.defaultContentSize)
-            let windowCoordinator = WindowCoordinator(contentView: hostingView)
-            self.windowCoordinator = windowCoordinator
-            windowCoordinator.panel.onClick = { [weak self] in
-                self?.showMascotMenu()
+            // One mascot per provider, each offset along the default lane so a
+            // pair summoned together arrives side by side rather than stacked.
+            for (index, provider) in EventProvider.allCases.enumerated() {
+                let fashion = MascotFashion.worn(by: provider)
+                guard let atlas = atlases[fashion] else { throw SpriteAtlasError.unreadableImage }
+                let mascot = try MascotInstance(
+                    provider: provider,
+                    atlas: atlas,
+                    laneOffset: CGFloat(index) * MascotPanel.defaultContentSize.width
+                )
+                wire(mascot)
+                mascots.append(mascot)
             }
-            windowCoordinator.panel.onDragBegan = { [weak self] in
-                self?.animationController?.userDidBeginDrag()
-                self?.diagnostics = "Dragging — hanging pose"
-            }
-            // A drop no longer switches roaming off. Dragging places the mascot;
-            // whether it walks afterwards stays the user's separate choice, made
-            // in the menu. See `userDidEndDrag()` for why.
-            windowCoordinator.panel.onDragEnded = { [weak self] in
-                self?.animationController?.userDidEndDrag()
-                self?.refreshDiagnostics()
-            }
-            animationController = try AmbientAnimationController(
-                atlas: atlas,
-                previewModel: previewModel,
-                windowCoordinator: windowCoordinator
-            )
-            animationController?.onSummonCompleted = { [weak self] in
-                self?.refreshDiagnostics()
-            }
-            // The two transition cues. Both accompany something the user asked
-            // for and can see, so neither needs the visibility gate the
-            // reaction cues have.
-            animationController?.onSummonStarted = { [weak self] in
-                self?.sounds.play(.summon)
-            }
-            animationController?.onDismissBurst = { [weak self] in
-                self?.sounds.play(.dismiss)
-            }
-            // Gated on visibility: a dismissed mascot is one the user chose not
-            // to have on screen, and a chime from an invisible pet is a sound
-            // with nothing to explain it.
-            animationController?.onStateAppeared = { [weak self] state in
-                guard let self, self.isVisible else { return }
-                self.sounds.stateDidAppear(state)
-            }
-            // The reduced state drives animation from here on. Nothing else may
-            // select a row, so manual pause and ideating go through the reducer's
-            // overrides rather than around it.
-            visibleStateObserver = eventBridge.$visibleState
-                .sink { [weak self] visibleState in
-                    self?.animationController?.setVisibleState(visibleState.state)
-                    self?.refreshDiagnostics()
+
+            // Each mascot animates from its own provider's reduced state.
+            // Nothing else may select a row, so manual pause and ideating go
+            // through the reducer's overrides rather than around it.
+            visibleStateObserver = eventBridge.$visibleStates
+                .sink { [weak self] states in
+                    guard let self else { return }
+                    for mascot in self.mascots {
+                        guard let state = states[mascot.provider] else { continue }
+                        mascot.animationController.setVisibleState(state)
+                    }
+                    self.refreshDiagnostics()
                 }
-            // Deliberately not `setVisible(true)`: launching is not summoning.
-            // This orders the panel out and leaves the animation timer stopped,
-            // so an unsummoned Dock Pet costs nothing but the menu-bar item.
-            setVisible(false)
+            // Deliberately no summon here: launching is not summoning. Every
+            // panel stays ordered out with its animation timer stopped, so an
+            // unsummoned Dock Pet costs nothing but the menu-bar item.
+            refreshDiagnostics()
         } catch {
             diagnostics = error.localizedDescription
         }
+    }
+
+    /// Connects one mascot's panel and animation callbacks back to the app.
+    private func wire(_ mascot: MascotInstance) {
+        mascot.windowCoordinator.panel.onClick = { [weak self, weak mascot] in
+            guard let mascot else { return }
+            self?.showMascotMenu(for: mascot)
+        }
+        mascot.windowCoordinator.panel.onDragBegan = { [weak self, weak mascot] in
+            mascot?.animationController.userDidBeginDrag()
+            self?.diagnostics = "Dragging \(mascot?.displayName ?? "mascot") — hanging pose"
+        }
+        // A drop no longer switches roaming off. Dragging places the mascot;
+        // whether it walks afterwards stays the user's separate choice, made
+        // in the menu. See `userDidEndDrag()` for why.
+        mascot.windowCoordinator.panel.onDragEnded = { [weak self, weak mascot] in
+            mascot?.animationController.userDidEndDrag()
+            self?.refreshDiagnostics()
+        }
+        mascot.animationController.onSummonCompleted = { [weak self] in
+            self?.refreshDiagnostics()
+        }
+        // The two transition cues. Both accompany something the user asked
+        // for and can see, so neither needs the visibility gate the
+        // reaction cues have. They are per mascot rather than deduped: each
+        // one is the sound of a specific pet arriving or leaving, and the
+        // owner summons them one menu click at a time.
+        mascot.animationController.onSummonStarted = { [weak self] in
+            self?.sounds.play(.summon)
+        }
+        mascot.animationController.onDismissBurst = { [weak self] in
+            self?.sounds.play(.dismiss)
+        }
+        // Gated on visibility: a dismissed mascot is one the user chose not
+        // to have on screen, and a chime from an invisible pet is a sound
+        // with nothing to explain it.
+        mascot.animationController.onStateAppeared = { [weak self, weak mascot] state in
+            guard let self, let mascot, mascot.isVisible else { return }
+            self.playReactionCue(state, from: mascot)
+        }
+    }
+
+    /// Plays at most one reaction cue per window, however many mascots reacted.
+    ///
+    /// Owner decision, 2026-08-01. Both mascots share the same two WAVs, so two
+    /// of them entering `success` milliseconds apart would phase against each
+    /// other and read as a glitch rather than as two agents finishing.
+    private var lastReactionCueAt: [MascotState: TimeInterval] = [:]
+    private static let reactionCueCoalescingWindow: TimeInterval = 0.6
+
+    private func playReactionCue(_ state: MascotState, from mascot: MascotInstance) {
+        let now = ProcessInfo.processInfo.systemUptime
+        if let previous = lastReactionCueAt[state],
+           now - previous < Self.reactionCueCoalescingWindow {
+            return
+        }
+        lastReactionCueAt[state] = now
+        sounds.stateDidAppear(state)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -121,51 +166,47 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         eventBridge.stop()
     }
 
+    /// Reopening restores whatever was on screen before, or the Claude mascot if
+    /// nothing was — reopening with no mascot summoned should still produce one.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        setVisible(true)
+        if summoned.isEmpty {
+            setVisible(true, for: .claudeCode)
+        } else {
+            for provider in summoned { setVisible(true, for: provider) }
+        }
         diagnostics = "Mascot reopened"
         return true
     }
 
-    func setVisible(_ visible: Bool) {
+    func setVisible(_ visible: Bool, for provider: EventProvider) {
         // Quit is already under way and is not negotiable. Without this, a
         // reopen event arriving during the farewell would cancel the dismiss,
         // and the completion that terminates the app would never fire.
-        guard !isQuitting else { return }
-        isVisible = visible
+        guard !isQuitting, let mascot = mascot(for: provider) else { return }
 
         if visible {
-            // A dropped height is a deliberate placement, so Hide/Show and
-            // reopen must preserve it. Roaming no longer signals this: dragging
-            // leaves roaming on, so the coordinator's own record of the drop is
-            // the only reliable answer to "did the user place this themselves?".
-            let placed = windowCoordinator?.hasManualPlacement ?? false
-            windowCoordinator?.setVisible(true, repositioning: !placed)
-            animationController?.setVisible(true)
-            diagnostics = "Opening Dock portal"
+            summoned.insert(provider)
+            mascot.summon()
+            diagnostics = "Opening Dock portal — \(mascot.displayName)"
             return
         }
 
         // The pet leaves the way it arrived, through a transition rather than by
         // blinking out: it forms a ninja hand seal and vanishes in a smoke poof.
         // The panel therefore stays on screen until the animation says it is
-        // finished, so hiding is deferred into the completion below. `isVisible`
-        // flips immediately regardless, so the menu never offers to dismiss a
-        // mascot that is already leaving.
-        guard let animationController, animationController.isVisible else {
-            completeHiding()
-            return
-        }
-        diagnostics = "Dismissing — hand sign and smoke poof"
-        animationController.beginDismiss { [weak self] in
-            self?.completeHiding()
+        // finished, so hiding is deferred into the completion below. The
+        // summoned set updates immediately regardless, so the menu never offers
+        // to dismiss a mascot that is already leaving.
+        summoned.remove(provider)
+        diagnostics = "Dismissing \(mascot.displayName) — hand sign and smoke poof"
+        mascot.dismiss { [weak self] in
+            self?.refreshDiagnostics()
         }
     }
 
-    private func completeHiding() {
-        windowCoordinator?.setVisible(false)
-        animationController?.setVisible(false)
-        refreshDiagnostics()
+    /// Dismisses every mascot that is currently on screen.
+    func dismissAll() {
+        for provider in summoned { setVisible(false, for: provider) }
     }
 
     func setPaused(_ paused: Bool) {
@@ -215,7 +256,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func setRoaming(_ roaming: Bool) {
         isRoaming = roaming
-        animationController?.setRoaming(roaming)
+        for mascot in mascots { mascot.setRoaming(roaming) }
         Preferences.roaming = roaming
         refreshDiagnostics()
     }
@@ -234,26 +275,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             diagnostics = "Previewing \(previewState.displayName) — not a real agent state"
             return
         }
-        let state = eventBridge.visibleState
-        let providers = state.providers.map(\.rawValue).joined(separator: ", ")
-        switch state.state {
-        case .paused:
-            diagnostics = "Animation paused"
-        case .ideating:
-            diagnostics = "Manual ideating"
-        case .offline:
-            diagnostics = isRoaming
-                ? "Ambient roaming — no agent signal connected"
-                : "Resting at manual position — no agent signal connected"
-        case .idle:
-            diagnostics = "Strolling — \(providers) idle"
-        case .working, .waiting, .success, .failure, .sleeping:
-            diagnostics = "\(state.state.displayName) — \(providers)"
+        // One clause per summoned mascot, so two pets on screen never hide
+        // behind a single collapsed line that names neither of them.
+        let lines = mascots
+            .filter { summoned.contains($0.provider) }
+            .map { mascot -> String in
+                let state = eventBridge.visibleStates[mascot.provider]?.state ?? .offline
+                return "\(mascot.displayName): \(describe(state))"
+            }
+        diagnostics = lines.joined(separator: " • ")
+    }
+
+    /// What one mascot is doing, without implying that a state with no provider
+    /// behind it came from an agent.
+    private func describe(_ state: MascotState) -> String {
+        switch state {
+        case .paused: "animation paused"
+        case .ideating: "manual ideating"
+        case .offline: isRoaming
+            ? "ambient roaming — agent not running"
+            : "resting at manual position — agent not running"
+        case .idle: "strolling — idle"
+        case .working, .waiting, .success, .failure, .sleeping: state.displayName.lowercased()
         }
     }
 
     func reposition() {
-        windowCoordinator?.reposition()
+        for mascot in mascots { mascot.reposition() }
     }
 
     /// Puts the bundled helper's absolute path on the clipboard, so it can be
@@ -297,37 +345,55 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// unsummoned mascot skips the farewell entirely rather than making the
     /// user watch a transition for a pet that was never there.
     func quit() {
-        guard
-            !isQuitting,
-            let animationController,
-            animationController.isVisible
-        else {
+        // Every mascot on screen says goodbye, but quitting must not depend on
+        // any of them finishing: the app terminates when the last farewell
+        // completes, and a second Quit skips straight past them all.
+        let leaving = mascots.filter { $0.animationController.isVisible }
+        guard !isQuitting, !leaving.isEmpty else {
             NSApp.terminate(nil)
             return
         }
         isQuitting = true
-        isVisible = false
+        summoned.removeAll()
         diagnostics = "Quitting — hand sign and smoke poof"
-        animationController.beginDismiss { [weak self] in
-            self?.completeHiding()
-            NSApp.terminate(nil)
+        var remaining = leaving.count
+        for mascot in leaving {
+            mascot.dismiss {
+                remaining -= 1
+                if remaining == 0 { NSApp.terminate(nil) }
+            }
         }
     }
 
-    private func showMascotMenu() {
+    private func showMascotMenu(for mascot: MascotInstance) {
         let menu = NSMenu()
         menu.addItem(withTitle: isPaused ? "Resume Animation" : "Pause Animation", action: #selector(togglePauseFromMascot), keyEquivalent: "")
         menu.addItem(withTitle: isRoaming ? "Stop Roaming" : "Resume Roaming", action: #selector(toggleRoamingFromMascot), keyEquivalent: "")
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Dismiss Mascot", action: #selector(hideMascotFromMenu), keyEquivalent: "")
+        // Names the pet that was clicked, so with two on screen it is never
+        // ambiguous which one is about to leave.
+        let dismiss = NSMenuItem(
+            title: "Dismiss \(mascot.displayName) Mascot",
+            action: #selector(dismissClickedMascot(_:)),
+            keyEquivalent: ""
+        )
+        dismiss.representedObject = mascot.provider.rawValue
+        menu.addItem(dismiss)
         menu.addItem(withTitle: "Quit Dock Pet", action: #selector(quitFromMascotMenu), keyEquivalent: "")
         for item in menu.items { item.target = self }
-        guard let contentView = windowCoordinator?.panel.contentView else { return }
+        let contentView = mascot.windowCoordinator.panel.contentView
+        guard let contentView else { return }
         menu.popUp(positioning: nil, at: NSPoint(x: contentView.bounds.midX, y: contentView.bounds.midY), in: contentView)
     }
 
     @objc private func togglePauseFromMascot() { setPaused(!isPaused) }
     @objc private func toggleRoamingFromMascot() { setRoaming(!isRoaming) }
-    @objc private func hideMascotFromMenu() { setVisible(false) }
+    @objc private func dismissClickedMascot(_ sender: NSMenuItem) {
+        guard
+            let raw = sender.representedObject as? String,
+            let provider = EventProvider(rawValue: raw)
+        else { return }
+        setVisible(false, for: provider)
+    }
     @objc private func quitFromMascotMenu() { quit() }
 }

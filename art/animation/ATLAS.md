@@ -6,7 +6,7 @@ The machine-readable source of truth is [`atlas-contract.json`](atlas-contract.j
 
 ## Geometry
 
-- Production atlas: `mascot-atlas@2x.png`, RGBA PNG, `768x1792` pixels.
+- Production atlases: `mascot-atlas@2x.png` (classic navy wardrobe, worn by the **Codex** mascot) and `mascot-atlas-codex@2x.png` (orange/sunglasses wardrobe, worn by the **Claude** mascot since the 2026-08-01 mapping swap — the filename predates it), both RGBA PNG, `768x1792` pixels.
 - Grid: 8 columns by 16 rows, row-major, with no gutters or margins.
 - Cell: `96x112` backing pixels (`48x56` macOS points on a 2x display).
 - Character footprint: the approved `80x80`-pixel body canvas remains `40x40` points. The larger cell reserves room for poses and the approved ideating effect; it does not enlarge the mascot.
@@ -21,6 +21,8 @@ The machine-readable source of truth is [`atlas-contract.json`](atlas-contract.j
 - Frames never scale, rotate, blur, or interpolate the character. Author every pose at native backing resolution and render with nearest-neighbor sampling on integer backing-pixel boundaries.
 
 The frozen source is `../production/mascot-base-chibi-40pt-at2x-80px-final.png`, SHA-256 `954f4b19cf352808e89c2e197849c16e58409f107a4b5dfd681aa9dac432abc6`. Do not regenerate, resample, redraw, or substitute it when starting a row.
+
+The orange wardrobe is derived only through `tools/author_codex_fashion_atlas.py`. It preserves alpha, geometry, timing, props, effects, gray trousers, navy shoes, and the sleeping blanket; it recolors the top and darkens the existing square-glasses lenses. Do not hand-edit the derivative atlas.
 
 ## Row order and playback
 

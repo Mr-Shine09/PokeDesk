@@ -32,7 +32,11 @@ final class AmbientAnimationController {
         case stationary
     }
 
-    private let atlas: SpriteAtlas
+    /// Fixed for the controller's lifetime. Since 2026-08-01 there is one
+    /// mascot per provider, so a controller never changes outfit mid-animation
+    /// the way the single-mascot build had to.
+    let fashion: MascotFashion
+    private let contract: AtlasContract
     private let previewModel: MascotPreviewModel
     private let windowCoordinator: WindowCoordinator
     private let summonTimeline = PortalSummonTimeline()
@@ -64,23 +68,31 @@ final class AmbientAnimationController {
 
     private var plan: AnimationPlan { AnimationSelector.plan(for: displayedState) }
 
-    init(atlas: SpriteAtlas, previewModel: MascotPreviewModel, windowCoordinator: WindowCoordinator) throws {
-        self.atlas = atlas
+    init(
+        fashion: MascotFashion,
+        atlas: SpriteAtlas,
+        previewModel: MascotPreviewModel,
+        windowCoordinator: WindowCoordinator
+    ) throws {
+        self.fashion = fashion
+        contract = atlas.contract
         self.previewModel = previewModel
         self.windowCoordinator = windowCoordinator
         // Every declared row is cached, rather than a hand-listed subset: the
         // reduced state can now select any of them, and a missing row would show
         // up as a silently frozen pet.
         for row in atlas.contract.rows {
-            frameCache[row.state] = try (0 ..< row.frames).map { try atlas.frame(state: row.state, index: $0) }
+            frameCache[row.state] = try (0 ..< row.frames).map {
+                try atlas.frame(state: row.state, index: $0)
+            }
         }
         beginWalking(at: ProcessInfo.processInfo.systemUptime)
     }
 
     /// The only way agent state enters the animation.
-    func setVisibleState(_ state: MascotState) {
+    func setVisibleState(_ visibleState: MascotVisibleState) {
         let now = ProcessInfo.processInfo.systemUptime
-        adopt(selector.update(to: state, at: Uptime(seconds: now)), at: now)
+        adopt(selector.update(to: visibleState.state, at: Uptime(seconds: now)), at: now)
     }
 
     func setVisible(_ visible: Bool) {
@@ -414,7 +426,7 @@ final class AmbientAnimationController {
     /// wrap back to the burst frame part-way through the fade would read as a
     /// second explosion.
     private func advanceSmoke(now: TimeInterval) {
-        guard let frames = frameCache["poof"], !frames.isEmpty else { return }
+        guard let frames = frames(for: "poof"), !frames.isEmpty else { return }
         guard now >= nextSmokeFrameTime else { return }
         previewModel.smokeImage = frames[min(smokeFrameIndex, frames.count - 1)]
         nextSmokeFrameTime = now + frameDuration(state: "poof", index: smokeFrameIndex)
@@ -463,7 +475,7 @@ final class AmbientAnimationController {
     }
 
     private func advanceFrames(state: String, now: TimeInterval) {
-        guard let frames = frameCache[state], !frames.isEmpty else { return }
+        guard let frames = frames(for: state), !frames.isEmpty else { return }
         if currentState != state {
             currentState = state
             frameIndex = 0
@@ -478,13 +490,17 @@ final class AmbientAnimationController {
     }
 
     private func show(state: String, frame: Int) {
-        guard let frames = frameCache[state], frames.indices.contains(frame) else { return }
+        guard let frames = frames(for: state), frames.indices.contains(frame) else { return }
         previewModel.image = frames[frame]
+    }
+
+    private func frames(for state: String) -> [NSImage]? {
+        frameCache[state]
     }
 
     private func frameDuration(state: String, index: Int) -> TimeInterval {
         guard
-            let row = atlas.contract.row(named: state),
+            let row = contract.row(named: state),
             row.durationsMS.indices.contains(index)
         else { return 0.15 }
         switch row.durationsMS[index] {

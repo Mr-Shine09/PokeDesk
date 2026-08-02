@@ -12,19 +12,27 @@ struct MenuBarContent: View {
     @ObservedObject var eventBridge: AgentEventBridge
 
     var body: some View {
-        // Named for the action rather than a state toggle: the mascot is summoned
-        // deliberately, and the app never puts one on screen by itself.
-        Button {
-            appDelegate.setVisible(!appDelegate.isVisible)
-        } label: {
-            Label(
-                appDelegate.isVisible ? "Dismiss Mascot" : "Summon Mascot",
-                systemImage: appDelegate.isVisible ? "arrow.down.left.circle" : "sparkles"
+        // One toggle per mascot. Owner decision, 2026-08-01: presence is
+        // manual and independent, so running both agents means summoning both
+        // pets deliberately rather than having the app decide. Named for the
+        // action rather than a state toggle — the app never puts one on screen
+        // by itself.
+        ForEach(appDelegate.mascots, id: \.provider) { mascot in
+            let isOn = appDelegate.summoned.contains(mascot.provider)
+            Button {
+                appDelegate.setVisible(!isOn, for: mascot.provider)
+            } label: {
+                Label(
+                    isOn ? "Dismiss \(mascot.displayName)" : "Summon \(mascot.displayName)",
+                    systemImage: isOn ? "arrow.down.left.circle" : "sparkles"
+                )
+            }
+            .accessibilityLabel(
+                isOn
+                    ? "Dismiss the \(mascot.displayName) mascot"
+                    : "Summon the \(mascot.displayName) mascot to the screen"
             )
         }
-        .accessibilityLabel(
-            appDelegate.isVisible ? "Dismiss the mascot" : "Summon the mascot to the screen"
-        )
 
         Button {
             appDelegate.setPaused(!appDelegate.isPaused)

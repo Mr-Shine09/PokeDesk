@@ -161,6 +161,53 @@ public struct MascotStateReducer: Sendable {
         )
     }
 
+    /// Reduces the state of one provider's mascot, ignoring every other
+    /// provider's sessions.
+    ///
+    /// Since 2026-08-01 the owner can summon one mascot per provider, so a
+    /// second reduction exists alongside the collapsed one above. This is
+    /// deliberately the *same* priority ladder applied to a narrower session
+    /// list rather than a parallel implementation: a provider-specific ordering
+    /// would be a second source of truth about what the pet is doing.
+    ///
+    /// A provider with no sessions reduces to `offline`, which strolls. That is
+    /// the intended "normal" look for the mascot whose agent is not running —
+    /// it stays on screen and ambient rather than freezing or vanishing.
+    ///
+    /// Manual overrides are not per provider. Pause, ideating, and preview are
+    /// owner actions aimed at the app as a whole, so they reach both mascots.
+    public func reduce(
+        sessions: [AgentSession],
+        attributedTo provider: EventProvider,
+        overrides: ManualOverrides = .none,
+        now: Date,
+        uptime: Uptime
+    ) -> MascotVisibleState {
+        reduce(
+            sessions: sessions.filter { $0.provider == provider },
+            overrides: overrides,
+            now: now,
+            uptime: uptime
+        )
+    }
+
+    /// Convenience overload so callers hold a registry rather than a snapshot.
+    public func reduce(
+        registry: SessionRegistry,
+        attributedTo provider: EventProvider,
+        overrides: ManualOverrides = .none,
+        now: Date,
+        uptime: Uptime
+    ) -> MascotVisibleState {
+        reduce(
+            sessions: registry.sessions(at: uptime),
+            attributedTo: provider,
+            overrides: overrides,
+            now: now,
+            uptime: uptime
+        )
+    }
+
     private static func hasLiveReaction(
         _ session: AgentSession,
         kind: SessionReaction.Kind,

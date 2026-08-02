@@ -1,6 +1,6 @@
 # Animation production status
 
-The revision 4 atlas contract is defined in `ATLAS.md` and `atlas-contract.json`.
+The revision 6 geometry/timing contract is defined in `ATLAS.md` and `atlas-contract.json`.
 
 ## Approved rows
 
@@ -13,7 +13,7 @@ The revision 4 atlas contract is defined in `ATLAS.md` and `atlas-contract.json`
 
 These six rows passed deterministic checks, internal visual QA, and owner review on 2026-07-28.
 
-## Revision 4 candidate
+## Current revision 6 atlases
 
 - `frames/offline/` — four bowed-pose frames with a rising/disappearing `Z` trail.
 - `frames/sleeping/` — six blanket-breathing frames with a rising/fading `Z` trail.
@@ -23,7 +23,9 @@ These six rows passed deterministic checks, internal visual QA, and owner review
 - `frames/paused/` — two deterministic approved-idle frame reuses ending in a static hold.
 - `frames/sit-shake-right/` and `frames/sit-shake-left/` — two six-frame directional chair-idle clips with one raised lower leg swinging; the chair back, seat, and two legs stay fixed.
 - `frames/hanging/` — six cursor-hanging frames with a fixed raised-hand grip and a left/center/right pendulum swing, with no cliff or ledge.
-- `mascot-atlas@2x.png` — complete structurally validated `768x1568` revision 4 candidate atlas.
+- `mascot-atlas@2x.png` — classic navy `768x1792` revision 6 atlas, worn by the Codex mascot.
+- `mascot-atlas-codex@2x.png` — deterministic orange wardrobe derivative with sunglasses and an orange/white top; the lower outfit, alpha, geometry, rows, and timing are unchanged. Worn by the **Claude** mascot since 2026-08-01; the `-codex` in the filename predates that swap.
+- `qa/contact-sheet-codex-fashion-4x.png` — full orange wardrobe review sheet.
 - `qa/contact-sheet-backing-1x-{light,dark}.png` and `qa/contact-sheet-inspection-8x-{light,dark}.png` — full contract review sheets.
 - `qa/silhouette-sheet-candidate.png` and `qa/previews/` — full silhouette and contract-timed motion review.
 
@@ -35,7 +37,7 @@ Reproduction order for revised reaction rows is normalize body frames, apply any
 
 Two generated idle rows and one generated single-blink repair were rejected because they changed the approved identity; their images were not admitted to the project. With owner authorization, the production idle row was authored directly at native resolution. Frames 0 and 3 preserve every frozen-base pixel; frames 1 and 2 change only the lens interiors.
 
-Revision 4 is the current app-integration candidate. Do not change row order, timing, geometry, or pixels without a recorded revision decision.
+Revision 6 is the current app-integration contract. Do not change row order, timing, or geometry without a recorded revision decision. Regenerate the orange wardrobe with `python3 tools/author_codex_fashion_atlas.py`; never hand-edit it. `--celebration-eyes` selects how the `success` row handles the sparkle eyes behind the sunglasses; the owner chose the default `shades-sparkle` on 2026-08-01.
 
 ## Verification
 

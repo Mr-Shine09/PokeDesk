@@ -144,3 +144,47 @@ private func event(
     #expect(pipeline.visibleState.providers == [.claudeCode, .codex])
     #expect(pipeline.diagnostics.trackedSessions == 2)
 }
+
+// MARK: - Per-provider visible states
+
+@Test func thePipelinePublishesAVisibleStateForEveryProvider() {
+    // The calendar is pinned rather than left as `.current`: with the default
+    // one this test passes or fails depending on what time the machine running
+    // it thinks it is, because a provider with no sessions reduces to
+    // `sleeping` instead of `offline` inside the nightly window.
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "Asia/Yangon")!
+    var components = DateComponents()
+    components.year = 2026
+    components.month = 7
+    components.day = 29
+    components.hour = 14
+    let now = calendar.date(from: components)!
+
+    var pipeline = EventPipeline(reducer: MascotStateReducer(calendar: calendar))
+    // Always populated, so a caller never has to decide what a missing key
+    // means for a mascot it is about to animate.
+    #expect(pipeline.visibleStates.count == EventProvider.allCases.count)
+    for provider in EventProvider.allCases {
+        #expect(pipeline.visibleStates[provider]?.state == .offline)
+    }
+
+    let uptime = Uptime(seconds: 500)
+    for event in [AgentEvent.started, .active] {
+        pipeline.ingest(
+            EventEnvelope(
+                provider: .claudeCode,
+                sessionID: SessionID("claude-1")!,
+                event: event,
+                occurredAt: now
+            ),
+            now: now,
+            uptime: uptime
+        )
+    }
+
+    #expect(pipeline.visibleStates[.claudeCode]?.state == .working)
+    #expect(pipeline.visibleStates[.codex]?.state == .offline)
+    // The collapsed state is unchanged and still drives the diagnostics line.
+    #expect(pipeline.visibleState.state == .working)
+}

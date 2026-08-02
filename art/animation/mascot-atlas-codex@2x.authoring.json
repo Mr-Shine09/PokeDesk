@@ -1,0 +1,378 @@
+{
+  "offline": [
+    {
+      "shirt_pixels": 388,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 407,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 388,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 407,
+      "lens_pixels": 0
+    }
+  ],
+  "idle": [
+    {
+      "shirt_pixels": 394,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 394,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 394,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 394,
+      "lens_pixels": 0
+    }
+  ],
+  "working": [
+    {
+      "shirt_pixels": 308,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 307,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 289,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 278,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 304,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 305,
+      "lens_pixels": 0
+    }
+  ],
+  "ideating": [
+    {
+      "shirt_pixels": 297,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 293,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 305,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 317,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 300,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 297,
+      "lens_pixels": 0
+    }
+  ],
+  "waiting": [
+    {
+      "shirt_pixels": 390,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 398,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 406,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 411,
+      "lens_pixels": 0
+    }
+  ],
+  "success": [
+    {
+      "shirt_pixels": 398,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 396,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 408,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 440,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 440,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 440,
+      "lens_pixels": 0
+    }
+  ],
+  "failure": [
+    {
+      "shirt_pixels": 397,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 470,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 373,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 376,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 463,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 395,
+      "lens_pixels": 0
+    }
+  ],
+  "sleeping": [
+    {
+      "shirt_pixels": 461,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 488,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 398,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 480,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 398,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 488,
+      "lens_pixels": 0
+    }
+  ],
+  "paused": [
+    {
+      "shirt_pixels": 394,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 394,
+      "lens_pixels": 0
+    }
+  ],
+  "walk-right": [
+    {
+      "shirt_pixels": 348,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 362,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 350,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 335,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 359,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 382,
+      "lens_pixels": 0
+    }
+  ],
+  "walk-left": [
+    {
+      "shirt_pixels": 348,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 362,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 350,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 335,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 359,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 382,
+      "lens_pixels": 0
+    }
+  ],
+  "sit-shake-right": [
+    {
+      "shirt_pixels": 298,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 323,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 319,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 323,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 306,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 294,
+      "lens_pixels": 0
+    }
+  ],
+  "sit-shake-left": [
+    {
+      "shirt_pixels": 298,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 323,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 319,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 323,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 306,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 294,
+      "lens_pixels": 0
+    }
+  ],
+  "hanging": [
+    {
+      "shirt_pixels": 433,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 424,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 432,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 420,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 516,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 429,
+      "lens_pixels": 0
+    }
+  ],
+  "hand-sign": [
+    {
+      "shirt_pixels": 349,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 317,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 296,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 291,
+      "lens_pixels": 0
+    }
+  ],
+  "poof": [
+    {
+      "shirt_pixels": 0,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 0,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 0,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 0,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 0,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 0,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 0,
+      "lens_pixels": 0
+    },
+    {
+      "shirt_pixels": 0,
+      "lens_pixels": 0
+    }
+  ]
+}

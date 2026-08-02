@@ -4,12 +4,26 @@ import AppKit
 public final class WindowCoordinator: NSObject {
     public let panel: MascotPanel
     private let contentSize: NSSize
+    /// Shifts this mascot's *default* placement along the lane.
+    ///
+    /// Owner decision, 2026-08-01: with one mascot per provider, two panels can
+    /// be summoned at once and would otherwise both land on the same default
+    /// origin, appearing stacked. Each mascot gets its own offset so they
+    /// arrive side by side. This affects the default position only — once
+    /// roaming or dragging moves a panel the two are fully independent and may
+    /// cross, which is intended.
+    private let laneOffset: CGFloat
     /// The height the user last dropped the mascot at, or `nil` while it is
     /// still on the default bottom lane.
     private var manualLaneY: CGFloat?
 
-    public init(contentView: NSView, contentSize: NSSize = MascotPanel.defaultContentSize) {
+    public init(
+        contentView: NSView,
+        contentSize: NSSize = MascotPanel.defaultContentSize,
+        laneOffset: CGFloat = 0
+    ) {
         self.contentSize = contentSize
+        self.laneOffset = laneOffset
         panel = MascotPanel(contentView: contentView, contentSize: contentSize)
         super.init()
         NotificationCenter.default.addObserver(
@@ -102,7 +116,12 @@ public final class WindowCoordinator: NSObject {
             panelSize: contentSize,
             visualInset: MascotPanel.defaultDockVisualInset
         )
-        panel.setFrameOrigin(origin)
+        // Clamped, so an offset mascot on a narrow display still lands on
+        // screen rather than being pushed off the right edge.
+        let x = horizontalMovementBounds().map {
+            min(max(origin.x + laneOffset, $0.lowerBound), $0.upperBound)
+        } ?? origin.x
+        panel.setFrameOrigin(NSPoint(x: x, y: origin.y))
     }
 
     /// A display change must not silently discard a dropped height, but it can

@@ -47,16 +47,36 @@ public enum HookConfiguration {
     /// the mapping lives in the helper rather than in eight shell snippets.
     public static func snippet(for provider: EventProvider, helperPath: String) -> String {
         let handlers = events(for: provider).map { event in
-            """
+            let command: String
+            let arguments: String
+            switch provider {
+            case .claudeCode:
+                // Claude Code models argv separately from the executable.
+                command = quoted(helperPath)
+                arguments = "\n                    \"args\": [\"--hook\", \"--provider\", \"\(provider.rawValue)\"],"
+            case .codex:
+                // Codex command hooks accept one shell command string and do
+                // not define Claude Code's separate `args` field. Keeping the
+                // flags there caused Codex to launch the helper with no mode,
+                // so every hook exited with a usage error and the mascot stayed
+                // offline. Shell-quote the app path because it contains a space.
+                command = quoted(
+                    "\(shellQuoted(helperPath)) --hook --provider \(provider.rawValue)"
+                )
+                arguments = ""
+            }
+            // Codex caps SessionEnd at three seconds. Other hooks retain the
+            // short five-second ceiling used by the existing Claude adapter.
+            let timeout = provider == .codex && event == "SessionEnd" ? 3 : 5
+            return """
                 "\(event)": [
                   {
                     "matcher": "*",
                     "hooks": [
                       {
                         "type": "command",
-                        "command": \(quoted(helperPath)),
-                        "args": ["--hook", "--provider", "\(provider.rawValue)"],
-                        "timeout": 5
+                        "command": \(command),\(arguments)
+                        "timeout": \(timeout)
                       }
                     ]
                   }
@@ -100,5 +120,12 @@ public enum HookConfiguration {
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
         return "\"\(escaped)\""
+    }
+
+    /// Quotes one argument for the POSIX shell used by Codex command hooks.
+    /// A literal single quote closes the string, emits an escaped quote, and
+    /// reopens it; every other byte is inert inside single quotes.
+    private static func shellQuoted(_ value: String) -> String {
+        "'" + value.replacingOccurrences(of: "'", with: "'\"'\"'") + "'"
     }
 }

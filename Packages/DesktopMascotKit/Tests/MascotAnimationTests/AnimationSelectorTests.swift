@@ -37,6 +37,26 @@ private let boot = Uptime(seconds: 2_000)
     #expect(AnimationSelector.plan(for: .idle) == .ambient(restingRow: "idle"))
 }
 
+// MARK: - Provider fashion
+
+// Owner decision, 2026-08-01: orange is Claude and navy is Codex, the reverse
+// of the mapping used earlier the same day. There is no longer a "both
+// providers" case to resolve — each provider has its own mascot, so a wardrobe
+// is a fixed property rather than a selection between competing accents.
+
+@Test func claudeWearsTheOrangeFashion() {
+    #expect(MascotFashion.worn(by: .claudeCode) == .orange)
+}
+
+@Test func codexWearsTheClassicFashion() {
+    #expect(MascotFashion.worn(by: .codex) == .classic)
+}
+
+@Test func everyProviderHasADistinctWardrobe() {
+    let worn = EventProvider.allCases.map(MascotFashion.worn(by:))
+    #expect(Set(worn).count == EventProvider.allCases.count)
+}
+
 // MARK: - Dwell
 
 @Test func theFirstChangeIsShownImmediately() {

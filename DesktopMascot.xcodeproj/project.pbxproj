@@ -13,12 +13,14 @@
 		284B8D635FC1CED126FCF813 /* AppResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16245A1009483229670E5018 /* AppResources.swift */; };
 		287C9188AD7A02B159CCEAEA /* DesktopMascotApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41EE1C1DD5A7A2FCDDF08B3C /* DesktopMascotApp.swift */; };
 		2A023175CF91D2371E1CE3E0 /* MascotSoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AFD72CF5D8CE0ABBD0F70D /* MascotSoundPlayer.swift */; };
+		328BA5B48B89E201666D7866 /* mascot-atlas-codex@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C153EEF2060303481AD38106 /* mascot-atlas-codex@2x.png */; };
 		3DF3C73BAFED48941DAA461A /* MascotTransport in Frameworks */ = {isa = PBXBuildFile; productRef = FCB9020BAF9D7FF4BBF35483 /* MascotTransport */; };
 		574620DFCFC68F0BF7E09451 /* MascotCore in Frameworks */ = {isa = PBXBuildFile; productRef = CD0B0F909106FBA28B44E81D /* MascotCore */; };
 		6692BC621114154B0CA42B2D /* dismiss.wav in Resources */ = {isa = PBXBuildFile; fileRef = 7A1B6F8A3DB33656A05E85B0 /* dismiss.wav */; };
 		74712B8AF062BC80039ACD7C /* mascot-atlas@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 5619442C57C4058305853A8F /* mascot-atlas@2x.png */; };
 		7A00A8E5791AAB7B3532FAF7 /* AgentEventBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57A93096D8C2E8C08FC98012 /* AgentEventBridge.swift */; };
 		7C8BF032D548B5B5DB46D8C4 /* AmbientAnimationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A4711FDCED703588195AEA2 /* AmbientAnimationController.swift */; };
+		888257AA6AE03EEF242FDA01 /* MascotInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE96CD5AC26FCA94226F20E /* MascotInstance.swift */; };
 		90CE6F844A663B5EB7EE75DF /* MascotWindow in Frameworks */ = {isa = PBXBuildFile; productRef = 169CC0F70261FBB9E36D2069 /* MascotWindow */; };
 		9D2EDFC6DFA1813498EA19CE /* summon.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1391FF915BC38459B2C8F191 /* summon.wav */; };
 		A09068AC324F2595CD23D860 /* success.wav in Resources */ = {isa = PBXBuildFile; fileRef = 56D46B35AB9733A3AA28187B /* success.wav */; };
@@ -79,6 +81,8 @@
 		A03AAF40D6F4F138DDBA1C62 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B3AF38AC31ECC3ACAED12504 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C0860DC47188B80AA1AE618B /* MenuBarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarContent.swift; sourceTree = "<group>"; };
+		C153EEF2060303481AD38106 /* mascot-atlas-codex@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "mascot-atlas-codex@2x.png"; sourceTree = "<group>"; };
+		CFE96CD5AC26FCA94226F20E /* MascotInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MascotInstance.swift; sourceTree = "<group>"; };
 		EBB02BFF34AC70D56636144E /* DesktopMascotKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DesktopMascotKit; path = Packages/DesktopMascotKit; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -159,6 +163,7 @@
 				A03AAF40D6F4F138DDBA1C62 /* Assets.xcassets */,
 				41EE1C1DD5A7A2FCDDF08B3C /* DesktopMascotApp.swift */,
 				08C465D303E5B8C09D23D596 /* EventHelperLocation.swift */,
+				CFE96CD5AC26FCA94226F20E /* MascotInstance.swift */,
 				1836E78848D6B2FD49EC9424 /* MascotPreviewView.swift */,
 				49AFD72CF5D8CE0ABBD0F70D /* MascotSoundPlayer.swift */,
 				C0860DC47188B80AA1AE618B /* MenuBarContent.swift */,
@@ -208,6 +213,7 @@
 			isa = PBXGroup;
 			children = (
 				36F19CD414F513BEB1E5C61F /* atlas-contract.json */,
+				C153EEF2060303481AD38106 /* mascot-atlas-codex@2x.png */,
 				5619442C57C4058305853A8F /* mascot-atlas@2x.png */,
 			);
 			path = animation;
@@ -310,6 +316,7 @@
 				B10178104EA43107B06D0605 /* atlas-contract.json in Resources */,
 				6692BC621114154B0CA42B2D /* dismiss.wav in Resources */,
 				21EBACB22CFA0C5F13FBBBDE /* failure.wav in Resources */,
+				328BA5B48B89E201666D7866 /* mascot-atlas-codex@2x.png in Resources */,
 				74712B8AF062BC80039ACD7C /* mascot-atlas@2x.png in Resources */,
 				A09068AC324F2595CD23D860 /* success.wav in Resources */,
 				9D2EDFC6DFA1813498EA19CE /* summon.wav in Resources */,
@@ -337,6 +344,7 @@
 				284B8D635FC1CED126FCF813 /* AppResources.swift in Sources */,
 				287C9188AD7A02B159CCEAEA /* DesktopMascotApp.swift in Sources */,
 				0A3053C7B6F222316337ACD3 /* EventHelperLocation.swift in Sources */,
+				888257AA6AE03EEF242FDA01 /* MascotInstance.swift in Sources */,
 				E3C852E43F8538F388F4F0FC /* MascotPreviewView.swift in Sources */,
 				2A023175CF91D2371E1CE3E0 /* MascotSoundPlayer.swift in Sources */,
 				1BEF9E2C39FC7E61326C3549 /* MenuBarContent.swift in Sources */,

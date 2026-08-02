@@ -231,3 +231,83 @@ private func reduce(
     #expect(visible.state == .working)
     #expect(visible.providers == [.codex])
 }
+
+// MARK: - Per-provider reduction
+
+// Owner decision, 2026-08-01: one mascot per provider. Each reduces only its
+// own provider's sessions, using the same priority ladder as the collapsed
+// reduction rather than a parallel one.
+
+private func reduce(
+    _ events: [(AgentEvent, EventProvider, String)],
+    attributedTo provider: EventProvider,
+    overrides: ManualOverrides = .none,
+    now: Date = daytime,
+    uptime: Uptime = boot
+) -> MascotVisibleState {
+    reducer().reduce(
+        registry: registry(events),
+        attributedTo: provider,
+        overrides: overrides,
+        now: now,
+        uptime: uptime
+    )
+}
+
+@Test func eachProviderReducesOnlyItsOwnSessions() {
+    let events: [(AgentEvent, EventProvider, String)] = [
+        (.started, .claudeCode, "claude-1"),
+        (.active, .claudeCode, "claude-1"),
+    ]
+    #expect(reduce(events, attributedTo: .claudeCode).state == .working)
+    // Codex has no session at all, so its mascot is offline rather than
+    // inheriting Claude's working state.
+    #expect(reduce(events, attributedTo: .codex).state == .offline)
+}
+
+@Test func aProviderWithNoSessionsIsOfflineSoItsMascotStrolls() {
+    // `offline` is what keeps the other pet ambient and on screen instead of
+    // frozen. If this ever becomes a distinct state, the mascot that is not
+    // running needs a new answer here.
+    #expect(reduce([], attributedTo: .claudeCode).state == .offline)
+    #expect(reduce([], attributedTo: .codex).state == .offline)
+}
+
+@Test func oneProviderWorkingLeavesTheOtherIdleWhenItHasAQuietSession() {
+    let events: [(AgentEvent, EventProvider, String)] = [
+        (.started, .claudeCode, "claude-1"),
+        (.active, .claudeCode, "claude-1"),
+        (.started, .codex, "codex-1"),
+    ]
+    #expect(reduce(events, attributedTo: .claudeCode).state == .working)
+    #expect(reduce(events, attributedTo: .codex).state == .idle)
+}
+
+@Test func perProviderReductionAttributesOnlyThatProvider() {
+    let events: [(AgentEvent, EventProvider, String)] = [
+        (.started, .claudeCode, "claude-1"),
+        (.active, .claudeCode, "claude-1"),
+        (.started, .codex, "codex-1"),
+        (.active, .codex, "codex-1"),
+    ]
+    #expect(reduce(events, attributedTo: .codex).providers == [.codex])
+    #expect(reduce(events, attributedTo: .claudeCode).providers == [.claudeCode])
+    // The collapsed reduction still names both, for the menu-bar diagnostics.
+    #expect(reduce(events).providers == [.claudeCode, .codex])
+}
+
+@Test func manualOverridesReachEveryProvidersMascot() {
+    let events: [(AgentEvent, EventProvider, String)] = [
+        (.started, .claudeCode, "claude-1"),
+        (.active, .claudeCode, "claude-1"),
+    ]
+    // Pause, ideating, and preview are aimed at the app rather than one pet,
+    // so they must not be filtered away with the other provider's sessions.
+    let paused = ManualOverrides(isPaused: true)
+    #expect(reduce(events, attributedTo: .claudeCode, overrides: paused).state == .paused)
+    #expect(reduce(events, attributedTo: .codex, overrides: paused).state == .paused)
+
+    let preview = ManualOverrides(preview: .sleeping)
+    #expect(reduce(events, attributedTo: .claudeCode, overrides: preview).state == .sleeping)
+    #expect(reduce(events, attributedTo: .codex, overrides: preview).state == .sleeping)
+}
