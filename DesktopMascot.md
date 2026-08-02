@@ -11,7 +11,7 @@
 | Started | 2026-07-28 |
 | Last updated | 2026-08-01 |
 | Status | Feature-complete for 0.1 and verified against a **real Claude Code session**: provider hooks drive the bundled helper, which feeds the socket server, the reducer, and animation. Installed durably at `~/Applications/Dock Pet.app`. The mascot appears only when summoned, and the menu bar carries the full control surface including state preview |
-| Current gate | Owner hands-on QA. The dismiss/quit transition and its two cues were approved on 2026-08-01 (happy path only). What remains, in priority order: **listen to the two reaction cues** (still never heard by anyone — measured non-silent is not the same as correct), drop the mascot from several heights to confirm the drop-and-roam feel, then the display matrix, which now has a known multi-display clamping defect waiting for it. Alongside it, one owner decision is still outstanding: the **animation speed control** has been in 0.1 scope since 2026-07-28, was never built, and was never dropped — build it or strike it. Launch-at-login and distribution are closed by owner decision |
+| Current gate | Owner hands-on QA. The dismiss/quit transition, its two cues, drag-and-drop, and the app icon were all approved on 2026-08-01 from the installed `~/Applications` build. The animation speed control was deferred out of 0.1 on 2026-08-01 (owner decision). What remains, in priority order: **listen to the two reaction cues** (still never heard by anyone — measured non-silent is not the same as correct), then the display matrix, which now has a known multi-display clamping defect waiting for it. Launch-at-login and distribution are closed by owner decision |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -97,7 +97,7 @@ These questions do not block the foundation or prototype. They do block a 1.0 re
 - Local-only event transport.
 - Multiple simultaneous agent sessions reduced to one deterministic mascot state.
 - Reduced Motion support. Honored by the portal summon transition only; broader coverage is open under [#11](https://github.com/Mr-Shine09/desktop-mascot/issues/11).
-- An animation speed control. **Never built, and never explicitly dropped** — see the open scope question below. This is the only 0.1 scope line with no implementation and no decision behind its absence.
+- ~~An animation speed control.~~ **Deferred out of 0.1** on 2026-08-01 by owner decision ("forget about this for now"). No longer blocks 0.1 completion.
 - Short success and failure reaction cues (added 2026-07-30; this reverses an original non-goal, see below).
 - No network dependency after installation.
 
@@ -123,9 +123,9 @@ The list above is the current contract. It differs from the 2026-07-28 original 
 | Placement beside the Dock removed | Narrowed | 2026-07-30 | Dock-edge tracking was buggy and was deleted rather than fixed |
 | Distribution and notarization removed | Narrowed | 2026-07-30 | Owner decision; a certificate purchase, not engineering |
 | Reaction cues added | **Widened** | 2026-07-30 | Owner asked for a success cue; reverses the original sound-effects non-goal |
-| Animation speed control | **Undecided** | — | In scope since 2026-07-28, never implemented, never dropped |
+| Animation speed control | **Deferred** | 2026-08-01 | Owner decision: "forget about this for now"; no longer blocks 0.1 |
 
-**Open scope question, for the owner:** the animation speed control is the only 0.1 commitment that is neither built nor consciously abandoned. `grep -ri speed` across the Swift sources returns nothing, and `Preferences` stores only `roaming` and `reactionSoundsMuted`. It should either be built or struck from scope; leaving it unanswered is what lets 0.1 be "finished" and incomplete at the same time. Until it is answered, treat 0.1 as feature-complete *except* for this line.
+**Resolved 2026-08-01:** the animation speed control was deferred out of 0.1 by owner decision. All 0.1 scope commitments are now either built or consciously abandoned.
 
 ## Mascot art direction
 
@@ -487,7 +487,7 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 | Chair sit-shake rows | Six frames each direction, stable chair/torso, one swinging leg, mirrored temporal order | Revision 4 passes deterministic and internal native-size visual QA on 2026-07-29; owner review pending |
 | Retina atlas assembly | Exact current grid, used/unused occupancy, palette, alpha, transparent RGB, and cell guards | **Current: revision 6, 16 rows, `768x1792`, passes the validator on 2026-08-01.** Revision 4 `768x1568` passed on 2026-07-29; owner chair and drag QA pending |
 | Dismiss transition | Ninja seal row, pixel smoke row, deferred panel hide, quit farewell, and the two transition cues | Rows and timeline pass deterministic validation and 184 package tests on 2026-08-01; **owner watched and approved summon/dismiss/quit the same day, happy path only.** Reduce Motion, re-summon mid-poof, dismiss-while-paused, and the second-Quit escape hatch are unexercised |
-| App icon | Rendered from the frozen base, full macOS slot set, present in the built bundle | Renders correctly when extracted from the built bundle on 2026-08-01; **not yet confirmed in Finder** |
+| App icon | Rendered from the frozen base, full macOS slot set, present in the built bundle | Renders correctly when extracted from the built bundle on 2026-08-01; **owner confirmed in Finder from the installed `~/Applications` build on 2026-08-01** |
 | Cursor-hanging row | Six frames, fixed top grip, frozen palette, binary alpha, no cliff/ledge, and cursor-attached drag geometry | Passed deterministic art validation, runtime pixel equality, drag geometry test, and Debug build on 2026-07-29; physical feel pending |
 | Native app scaffold | Generated Xcode project, modular package, embedded atlas resources, static nearest-neighbor render, and startup/reopen smoke tests | Passed initial scaffold on 2026-07-28; fresh Debug relaunch restored a visible `96x112` window on 2026-07-29 |
 | Window geometry | Automated fixtures plus manual multi-display matrix | Rescoped 2026-07-30: `DockGeometry` is bottom-anchored only and has no Dock-edge inference, but later the same day `WindowCoordinator.settleAfterDrop()` gained a sanctioned override so a dropped mascot roams at the height it landed at, with `reposition()` the one way back to the default lane. Thirteen tests pass (`swift test --filter MascotWindowTests`), covering placement, clamp-with-guard, visibility, manual-position preservation across Hide/Show, non-activating interaction, click routing, drag begin/end routing, a drop that keeps both axes, an off-edge drop that clamps, roaming that preserves a dropped height, and reposition restoring the lane. The multi-display matrix is still pending, and a dropped height interacting with a display change is new untested surface |
@@ -642,6 +642,12 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Supersede unconditional bottom-edge anchoring *for manual placement only*: the mascot now roams at whatever height it was dropped at, including above the Dock and through open air. Owner's stated reason, after rejecting a lane-snapping first implementation: it should roam wherever it is dropped. The walk cycle still only moves along X, so this buys horizontal roaming at an arbitrary height, not free 2D movement. The bottom lane remains the default placement and Reposition is the one deliberate way back to it. `DockGeometry` is untouched — this is a `WindowCoordinator` placement override, not a revival of Dock-edge inference.
 - Supersede `AppDelegate` passing `isRoaming` as the `repositioning` flag with `WindowCoordinator.hasManualPlacement`. Roaming can no longer stand in for "the user placed this themselves", because dragging no longer switches roaming off; the coordinator's own record of the drop is the only reliable answer.
 - Synthesize the reaction cues from committed tooling rather than sourcing audio. Every sprite in this repository is generated by a script a reviewer can read, and audio should be no different: it stays regenerable, reviewable, and free of any licensing question. Cue playback hangs off the animation controller's `onStateAppeared`, not off reduced state, so a cue cannot arrive before the frames it belongs to.
+
+### 2026-08-01
+
+- Defer the animation speed control out of 0.1. Owner's stated reason: "forget about this for now." This resolves the last open 0.1 scope question — every scope commitment is now either built or consciously deferred. The speed control moves to post-0.1 experiments alongside cursor-following, user-imported sprites, and auto-update.
+- Confirm drop-and-roam from the installed `~/Applications` build. Owner tested dragging to several heights and confirmed the mascot roams at the dropped height as intended.
+- Confirm the app icon from the installed build. The previous check looked at the July 30 install, which had no icon; the current build shows the mascot headshot in Finder.
 
 ## Session log
 
@@ -1562,6 +1568,22 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Verification: 184 package tests pass apart from the known multi-display failure; contract, both new rows, and the atlas validate; the isolated Debug build carries the 16-row atlas at a matching hash, all four WAVs, `Assets.car`, and `AppIcon.icns`.
 - Next: the queue is unchanged apart from what closed today — the **reaction cues**, still never heard by anyone; drop-from-heights; the display matrix, which now has a known defect waiting for it; and the **animation speed control** decision.
 
+### 2026-08-01 — Merge, install, and installed-version QA
+
+- Objective: merge both open PRs, rebuild and install the app, and get owner QA from the installed copy rather than a debug build.
+- Completed:
+  - Merged [PR #32](https://github.com/Mr-Shine09/desktop-mascot/pull/32) and [PR #33](https://github.com/Mr-Shine09/desktop-mascot/pull/33) into `main`. No open PRs remain.
+  - Rebuilt Release and installed to `~/Applications/Dock Pet.app` via `tools/install_app.sh` with an isolated `-derivedDataPath` at `/private/tmp/DockPetDD-dismiss`.
+  - Verified the installed bundle contains all four WAVs, `Assets.car` (with the icon), and the 111 KB revision-6 atlas.
+  - Owner tested the installed version and confirmed: dismiss animation, quit farewell, summon/dismiss sound cues, drag-and-drop at multiple heights, and the app icon in Finder all work.
+  - Owner deferred the animation speed control out of 0.1 ("forget about this for now"). This resolves the last open scope question — all 0.1 commitments are now either built or consciously deferred.
+  - Owner confirmed drop-and-roam works as intended.
+  - Owner noted the mascot goes behind the Dock when near it, which is expected bottom-anchored behavior.
+- Decisions: animation speed control deferred to post-0.1. See the 2026-08-01 decision log below.
+- Verification: installed `~/Applications/Dock Pet.app` is the source of all owner QA this session, not a debug build. Bundle resources confirmed present before the owner tested.
+- Risks or blockers: the two reaction cues remain unheard. The display matrix remains untested beyond what the owner noticed incidentally (mascot goes behind Dock).
+- Next: **listen to the two reaction cues** — this is now the only remaining hands-on QA item before the display matrix.
+
 ## Next-session handoff
 
 1. Read this file in full.
@@ -1577,9 +1599,9 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 11. Merge and branch-delete commands are sometimes refused for the assistant by the auto-mode permission classifier and sometimes allowed; the outcome is not predictable in advance. If one is denied, hand the owner the exact command to run in their own terminal rather than retrying it or working around the denial.
 12. The app **is** installed durably at `~/Applications/Dock Pet.app` by `tools/install_app.sh` ([PR #22](https://github.com/Mr-Shine09/desktop-mascot/pull/22)), ad-hoc signed with the nested helper signed first, and survives reboot. Relaunching is `open -g "$HOME/Applications/Dock Pet.app"`, not a rebuild. Two things still hold: the build is **not notarized**, so it is trustworthy only on the machine that built it and cannot be given to anyone else without a Developer ID certificate; and there is no launch-at-login by owner decision, so nothing starts it for you. `install_app.sh` will find and *attempt* any Apple Development identity in the local keychain before falling back to ad-hoc — set `CODESIGN_IDENTITY=-` to skip that lookup entirely.
 13. More than one agent session may be working in this repository at the same time, sharing one working tree. Before committing, run `git status --short --branch` and confirm every staged file is yours; stash and rebranch rather than bundling another session's work into your commit.
-14. One 0.1 scope line is unresolved and must not be closed by tidying it away: the **animation speed control** has been in `Scope` since 2026-07-28, does not exist in the sources (`grep -ri speed` returns nothing; `Preferences` holds only `roaming` and `reactionSoundsMuted`), and was never dropped by any decision. It is the only 0.1 commitment that is neither built nor consciously abandoned. Ask the owner to build it or strike it; do not resolve it yourself in either direction.
+14. The animation speed control was **deferred out of 0.1** by owner decision on 2026-08-01. It is no longer an open question or a blocker.
 15. `aDropPastAnEdgeIsClampedBackIntoView` fails whenever a second display is attached, on `origin/main` as well as on any branch. `WindowCoordinator` resolves bounds through `panel.screen ?? NSScreen.main`, which follows keyboard focus. It is a real multi-display defect, not a flaky test — do not loosen the assertion to make the suite green.
-16. The dismiss transition, the quit farewell, and the two transition cues were **owner-approved on 2026-08-01, happy path only.** Reduce Motion, re-summon mid-poof, dismiss-while-paused, and the second-Quit escape hatch are unexercised, and the icon is unconfirmed in Finder. Do not promote "the owner liked it" into "the edge cases pass."
+16. The dismiss transition, the quit farewell, the two transition cues, drag-and-drop, and the app icon were **owner-approved on 2026-08-01 from the installed `~/Applications` build, happy path only.** Reduce Motion, re-summon mid-poof, dismiss-while-paused, and the second-Quit escape hatch are unexercised. Do not promote "the owner liked it" into "the edge cases pass."
 17. **Give every worktree its own `-derivedDataPath`.** It is shared mutable state: on 2026-08-01 a background session rebuilt the Debug bundle from `main` while the owner tested a feature branch, producing a four-feature false bug report. Check `Contents/Resources/` before trusting any hands-on test.
 18. Update this ledger before ending the next session.
 19. Use `CLAUDE.md` and `docs/HANDOFF.md` as the maintainer onboarding entry points; keep them synchronized when architecture, commands, or asset contracts materially change.

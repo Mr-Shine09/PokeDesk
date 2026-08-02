@@ -36,8 +36,8 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 - [ ] Body swings left/center/right and both feet remain off the ground.
 - [ ] No cliff, ledge, rope, cursor art, shadow, or ground is visible.
 - [ ] Snap to the overhead grip feels acceptable to the owner.
-- [ ] Dropping leaves roaming on and the mascot carries on walking from where it landed.
-- [ ] The mascot roams horizontally at the height it was dropped at, not at the bottom lane.
+- [x] Dropping leaves roaming on and the mascot carries on walking from where it landed.
+- [x] The mascot roams horizontally at the height it was dropped at, not at the bottom lane.
 - [ ] A drop near any screen edge is clamped back into view rather than stranded.
 - [ ] The dropped position survives Dismiss/Summon, application reopen, and toggling roaming off and on.
 - [ ] Reposition on Current Display returns the mascot to the default bottom lane.
@@ -81,11 +81,11 @@ oldest unverified claim in the project.
 
 ## App icon acceptance
 
-The icon renders correctly when extracted from the built bundle, but the owner
-has not confirmed it in Finder. The first attempt to check it looked at the
-July 30 install, which has no icon at all.
+Owner confirmed the icon from the installed `~/Applications/Dock Pet.app` on
+2026-08-01. The previous attempt looked at the July 30 install, which had no
+icon; the current build shows the mascot headshot.
 
-- [ ] The icon shows the mascot headshot in Finder, Get Info, and the Applications folder.
+- [x] The icon shows the mascot headshot in Finder, Get Info, and the Applications folder.
 - [ ] Pixel edges are crisp at 128pt and above.
 - [ ] The 16pt and 32pt sizes are legible rather than mush.
 - [ ] The icon reads on both light and dark Finder backgrounds.
