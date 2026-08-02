@@ -11,7 +11,7 @@
 | Started | 2026-07-28 |
 | Last updated | 2026-08-01 |
 | Status | Feature-complete for 0.1 and verified against a **real Claude Code session**: provider hooks drive the bundled helper, which feeds the socket server, the reducer, and animation. Installed durably at `~/Applications/Dock Pet.app`. The mascot appears only when summoned, and the menu bar carries the full control surface including state preview |
-| Current gate | Owner hands-on QA, in priority order: listen to the two reaction cues (never heard by anyone — measured non-silent is not the same as correct), drop the mascot from several heights to confirm the drop-and-roam feel, then the display matrix (auto-hide, multiple displays, full-screen Spaces, sleep/wake). Preview State and the cursor-hanging feel ride along with those passes. Alongside it, one owner decision is outstanding: the **animation speed control** has been in 0.1 scope since 2026-07-28, was never built, and was never dropped — build it or strike it. Those two things are what stand between this and a finished 0.1. Launch-at-login and distribution are closed by owner decision |
+| Current gate | Owner hands-on QA. The dismiss/quit transition and its two cues were approved on 2026-08-01 (happy path only). What remains, in priority order: **listen to the two reaction cues** (still never heard by anyone — measured non-silent is not the same as correct), drop the mascot from several heights to confirm the drop-and-roam feel, then the display matrix, which now has a known multi-display clamping defect waiting for it. Alongside it, one owner decision is still outstanding: the **animation speed control** has been in 0.1 scope since 2026-07-28, was never built, and was never dropped — build it or strike it. Launch-at-login and distribution are closed by owner decision |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -1547,6 +1547,19 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 - Risks or blockers: **still nothing has been seen or heard on screen.** Four cues, two of which are new, have never been played by anyone; the sprite composite was checked as a render, not in the app. The seal-to-smoke handoff is timed by two independent mechanisms — the atlas row's declared durations and the timeline's fade — and the tests only prove the numbers fit, not that the join looks right in motion.
 - Next: owner watches and listens to a dismiss and a quit, then the pre-existing queue: reaction cues, drop-from-heights, display matrix (now with a known defect waiting for it), and the animation speed control decision.
 
+### 2026-08-01 — Owner QA: dismiss, quit, and the transition cues approved
+
+- Objective: put the day's three changes in front of the owner and record what they actually confirmed.
+- Result: **approved.** The owner ran summon, dismiss, and quit and reported the animations and sound effects working. This is the first owner-verified claim for the dismiss transition, the quit farewell, the pixel smoke, and the two new cues.
+- Scope of that approval, stated exactly so it is not read as more than it is: the **happy path only**. Reduce Motion, re-summoning part-way through the poof, dismissing a paused mascot, the second-Quit escape hatch, quitting unsummoned, and the light/dark desktop matrix were **not** walked. They are unticked in `docs/QA_CHECKLIST.md` as unexercised, not as failing. The app icon renders correctly when extracted from the built bundle but has not been confirmed in Finder.
+- **The first QA attempt was invalid, and the reason is worth more than the result.** The owner reported no summon sound, no dismiss animation, no quit animation, and no icon — four features, all missing at once. That shape was the clue: one cause, not four bugs. The Debug bundle had been rebuilt from `main` at 17:02 by the background session working on the multi-display defect, because `docs/DEVELOPMENT.md` documents a single hardcoded `-derivedDataPath` and the second worktree wrote to it. The owner tested a build of `main` and reported, accurately, that none of the work was in it.
+  - Diagnosis was by inspection rather than by argument: the bundle held the 14-row atlas (98594 bytes against this branch's 102061), no `summon.wav`, no `dismiss.wav`, and no `Assets.car`.
+  - Fixed by rebuilding to a branch-specific path. `DEVELOPMENT.md` now warns that the derived-data path is shared mutable state, and gives the one-line check that catches it: list the bundle's `Contents/Resources/`.
+  - **This was self-inflicted.** The parallel task was suggested from this session without isolating its build output, and the cost landed on the owner as a wasted test cycle and a false bug report.
+- Also worth keeping: the owner's screenshot showed the *installed* `~/Applications/Dock Pet.app`, still the July 30 build, which genuinely has no icon. Two different stale artifacts pointed at the same symptom.
+- Verification: 184 package tests pass apart from the known multi-display failure; contract, both new rows, and the atlas validate; the isolated Debug build carries the 16-row atlas at a matching hash, all four WAVs, `Assets.car`, and `AppIcon.icns`.
+- Next: the queue is unchanged apart from what closed today — the **reaction cues**, still never heard by anyone; drop-from-heights; the display matrix, which now has a known defect waiting for it; and the **animation speed control** decision.
+
 ## Next-session handoff
 
 1. Read this file in full.
@@ -1564,9 +1577,10 @@ None of these may enter 0.1 without an explicit scope change in this ledger and 
 13. More than one agent session may be working in this repository at the same time, sharing one working tree. Before committing, run `git status --short --branch` and confirm every staged file is yours; stash and rebranch rather than bundling another session's work into your commit.
 14. One 0.1 scope line is unresolved and must not be closed by tidying it away: the **animation speed control** has been in `Scope` since 2026-07-28, does not exist in the sources (`grep -ri speed` returns nothing; `Preferences` holds only `roaming` and `reactionSoundsMuted`), and was never dropped by any decision. It is the only 0.1 commitment that is neither built nor consciously abandoned. Ask the owner to build it or strike it; do not resolve it yourself in either direction.
 15. `aDropPastAnEdgeIsClampedBackIntoView` fails whenever a second display is attached, on `origin/main` as well as on any branch. `WindowCoordinator` resolves bounds through `panel.screen ?? NSScreen.main`, which follows keyboard focus. It is a real multi-display defect, not a flaky test — do not loosen the assertion to make the suite green.
-16. The dismiss transition, the quit farewell, the two new cues, and the app icon, all added 2026-08-01, have **never been seen or heard.** Automated checks cover the frames, the timeline arithmetic, and the build; none of them can judge whether a smoke poof looks like a smoke poof. Ask the owner to watch a dismiss before treating either as done, and do not describe them as verified in the meantime.
-17. Update this ledger before ending the next session.
-18. Use `CLAUDE.md` and `docs/HANDOFF.md` as the maintainer onboarding entry points; keep them synchronized when architecture, commands, or asset contracts materially change.
+16. The dismiss transition, the quit farewell, and the two transition cues were **owner-approved on 2026-08-01, happy path only.** Reduce Motion, re-summon mid-poof, dismiss-while-paused, and the second-Quit escape hatch are unexercised, and the icon is unconfirmed in Finder. Do not promote "the owner liked it" into "the edge cases pass."
+17. **Give every worktree its own `-derivedDataPath`.** It is shared mutable state: on 2026-08-01 a background session rebuilt the Debug bundle from `main` while the owner tested a feature branch, producing a four-feature false bug report. Check `Contents/Resources/` before trusting any hands-on test.
+18. Update this ledger before ending the next session.
+19. Use `CLAUDE.md` and `docs/HANDOFF.md` as the maintainer onboarding entry points; keep them synchronized when architecture, commands, or asset contracts materially change.
 
 ## Documentation sources
 

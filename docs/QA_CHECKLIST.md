@@ -44,30 +44,35 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 
 ## Dismiss transition acceptance
 
-Nothing in this section has been seen on screen by anyone. It is built and unit-tested only.
+Owner ran summon, dismiss, and quit on 2026-08-01 and approved the result. Only
+the happy path was walked; everything still unticked below is an edge case
+nobody has exercised, not a known failure.
 
-- [ ] Dismiss plays the ninja seal: hands lift, palms join, two finger pairs rise.
-- [ ] The seal is finished and held before the smoke starts, not cut off by it.
-- [ ] The smoke is visibly pixel art in the mascot's own style, not a soft blur.
-- [ ] The smoke covers the whole mascot, feet included, at its densest.
-- [ ] The cloud never opens a hole over the middle where the mascot was standing.
-- [ ] The mascot is never seen fading in the open — it is gone when the smoke clears.
-- [ ] The smoke clears completely; no haze is left behind on the desktop.
-- [ ] Total transition feels quick rather than something to wait through.
+- [x] Dismiss plays the ninja seal: hands lift, palms join, two finger pairs rise.
+- [x] The seal is finished and held before the smoke starts, not cut off by it.
+- [x] The smoke is visibly pixel art in the mascot's own style, not a soft blur.
+- [x] The smoke covers the whole mascot, feet included, at its densest.
+- [x] The cloud never opens a hole over the middle where the mascot was standing.
+- [x] The mascot is never seen fading in the open — it is gone when the smoke clears.
+- [x] The smoke clears completely; no haze is left behind on the desktop.
+- [x] Total transition feels quick rather than something to wait through.
+- [x] **Quit** plays the same farewell, then the app actually terminates.
 - [ ] Reduce Motion replaces the whole thing with a short stationary fade, no seal and no smoke.
 - [ ] Re-summoning part-way through the poof brings the mascot back rather than hiding it a moment later.
 - [ ] Dismissing a paused mascot still plays the transition.
-- [ ] Quitting during the transition does not leave an orphaned panel.
-- [ ] The transition reads on both light and dark desktop backgrounds.
-- [ ] **Quit** plays the same farewell, then the app actually terminates.
 - [ ] A second Quit during the farewell terminates immediately.
 - [ ] Quitting with no mascot summoned terminates at once, with no transition.
 - [ ] Summoning during a quit does not keep the app alive.
+- [ ] The transition reads on both light and dark desktop backgrounds.
 
 ## Sound acceptance
 
-- [ ] Summon plays its rising cue as the portal opens.
-- [ ] Dismiss plays its poof cue on the burst, not at the start of the seal.
+Owner heard the summon and dismiss cues on 2026-08-01 and approved them. The
+**reaction** cues remain unheard — that gap is unchanged and is still the
+oldest unverified claim in the project.
+
+- [x] Summon plays its rising cue as the portal opens.
+- [x] Dismiss plays its poof cue on the burst, not at the start of the seal.
 - [ ] The summon cue is distinguishable from the success cue, which is also a rising run.
 - [ ] Neither transition cue is startling at system volume.
 - [ ] Under Reduce Motion both cues still play, even though the visuals are reduced.
@@ -75,6 +80,10 @@ Nothing in this section has been seen on screen by anyone. It is built and unit-
 - [ ] A previously silenced install stays silenced after this update.
 
 ## App icon acceptance
+
+The icon renders correctly when extracted from the built bundle, but the owner
+has not confirmed it in Finder. The first attempt to check it looked at the
+July 30 install, which has no icon at all.
 
 - [ ] The icon shows the mascot headshot in Finder, Get Info, and the Applications folder.
 - [ ] Pixel edges are crisp at 128pt and above.
