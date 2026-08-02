@@ -11,7 +11,7 @@
 | Started | 2026-07-28 |
 | Last updated | 2026-08-02 |
 | Status | **0.1 hands-on QA complete (2026-08-02).** Feature-complete and verified against a real Claude Code session. Orange Claude wardrobe corrected 2026-08-02 (sunglasses removed by owner decision, navy sleeves and sleeping blanket fixed), reinstalled, and owner-approved on screen the same day along with the whole two-mascot build. The Codex generator was repaired on 2026-08-02, the user-level hook file is installed, all seven definitions are trusted and Active, and a fresh real Codex turn completed with no hook failure. An independent installed-helper/socket smoke test passed. Installed durably at `~/Applications/Dock Pet.app` |
-| Current gate | Hands-on QA of the two-mascot build (orange Claude, navy Codex), including visually confirming that a real Codex turn animates only the navy mascot. The orange atlas also awaits owner visual approval. What remains: two-mascot hands-on, the orange wardrobe visual check, then the **display matrix**, which has a known multi-display clamping defect and now twice as many panels |
+| Current gate | **Release gates only — 0.1 feature work and hands-on QA are both closed.** The open items are the idle-CPU gate, which **failed** its first measurement on 2026-08-02 at a 3.40% median against a <1% target, plus event-to-visible-state latency, Reduce Motion sign-off, signing, notarization, and packaging. One hands-on claim also remains: a real Codex session driving the navy mascot on screen |
 | Repository | [Mr-Shine09/desktop-mascot](https://github.com/Mr-Shine09/desktop-mascot) (private) |
 | Initial release | Local-only native macOS app, macOS 14+ |
 | Canonical source image | `/Users/oaksoekhant/Mr-Shine09/source-avatar-magenta.png` |
@@ -1701,6 +1701,24 @@ Owner answers recorded the same day:
 - Still unverified, and deliberately left unticked: **a real Codex session driving the navy mascot on screen.** Codex's hooks are installed, trusted, and were exercised by a real turn earlier the same day, but nobody has watched the mascot react. This is the last unproven provider claim in the project. Also untested: `@1x`/non-Retina behavior, the sound-toggle persistence items, icon sizes at 16/32/128pt, and every future release gate.
 - Risks or blockers: the display matrix was exercised against one two-display arrangement only. The build remains ad-hoc signed and unnotarized, so it is trustworthy only on the machine that built it — distribution needs a Developer ID certificate and is out of scope by owner decision.
 - Next: 0.1's hands-on gates are closed. The remaining work is release-gate work, not feature work — energy/latency measurement, signing and notarization, and packaging. Nothing further should be treated as a 0.1 blocker without a fresh owner decision.
+
+### 2026-08-02 — First energy and memory measurement
+
+- Objective: measure the idle CPU, memory, and swap release gates, which had never been quantified.
+- Method: installed `~/Applications` build, launched with `open -g`. Sampled cumulative CPU time (`ps -o cputime=`) every 15 s for 11 minutes and differenced it, rather than reading `ps %cpu`, which is a decaying average and would have understated a steady load. RSS and system swap sampled alongside; `footprint` read at the end.
+- Result — **the idle CPU gate fails**:
+  - No mascot summoned: 0.40% median CPU (n=5), 77 MB RSS.
+  - One mascot on screen: **3.40% median, 3.51% mean, 6.87% max** (n=39 over 9.8 min).
+  - The gate is "idle CPU median below 1% over ten minutes". At 3.40% it is missed by more than 3x. The cost is squarely the animation loop: the same build with no mascot summoned is under half a percent, so neither the event socket, the reducer, nor the menu-bar item is responsible.
+  - Measured with **one** mascot. Two on screen were never measured, and there is no basis yet for assuming the cost is linear.
+- Result — memory and swap pass:
+  - `phys_footprint` 36 MB, peak 37 MB, 48 KB swapped. Well inside the 80 MB gate.
+  - RSS reads 81 MB and appears to breach the gate, but RSS counts shared framework pages; `phys_footprint` is what Activity Monitor reports as Memory. Do not re-report the RSS figure as a failure.
+  - No growth trend across the window: RSS fell from 88.7 MB to 80.9 MB.
+  - System-wide `vm.swapusage` rose from 743 MB to 1055 MB during the window, but that is the whole machine under a concurrent Xcode build and is **not** attributable to Dock Pet. The 48 KB per-process figure is the one that means anything.
+- Decisions: none taken. Whether to throttle the animation loop or restate the gate is an owner call, and both are defensible for an app whose entire purpose is an animated sprite.
+- Risks or blockers: the idle-CPU gate is the first hard release gate to fail on evidence rather than remain unmeasured. Options are a lower frame rate while strolling, pausing the loop when the panel is occluded or on another Space, or coalescing the two mascots onto one timer. None is implemented.
+- Next: owner decides between throttling the loop and restating the gate. Latency, Reduce Motion sign-off, signing, notarization, and packaging remain untouched.
 
 ## Next-session handoff
 

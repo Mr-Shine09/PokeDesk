@@ -176,9 +176,22 @@ exercised.
 
 ## Release gates (future)
 
+Energy and memory were measured for the first time on 2026-08-02 from the
+installed build, sampling cumulative CPU time every 15 s for 11 minutes.
+
 - [ ] Reduce Motion behavior passes.
-- [ ] Idle CPU median below 1% over ten minutes.
-- [ ] Memory below 80 MB after ten minutes with no transition growth trend.
+- [ ] **Idle CPU median below 1% over ten minutes. FAILS: 3.40% median with one
+  mascot on screen** (mean 3.51%, max 6.87%, n=39 over 9.8 min). With no mascot
+  summoned the same build sits at 0.40% median, so the cost is the animation
+  loop, not the event path or the menu-bar item. Measured with a single mascot;
+  two were never measured together. Either the loop needs throttling — a lower
+  frame rate while strolling, or pausing when occluded — or the gate needs to be
+  restated for an app whose whole purpose is an animated sprite.
+- [x] Memory below 80 MB after ten minutes with no transition growth trend.
+  `phys_footprint` 36 MB, peak 37 MB, 48 KB swapped. RSS reads 81 MB but is
+  dominated by shared framework pages; `phys_footprint` is what Activity Monitor
+  reports as Memory and is the honest figure. No growth trend: RSS fell from
+  88.7 MB to 80.9 MB across the window.
 - [ ] Local event-to-visible-state latency below 500 ms.
 - [ ] Launch at login works and is reversible.
 - [ ] Hardened runtime and signing configured.
