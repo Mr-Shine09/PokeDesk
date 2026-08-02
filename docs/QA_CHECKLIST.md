@@ -2,30 +2,56 @@
 
 Use this as an evidence checklist, not as a claim that every item currently passes.
 
+**Status 2026-08-02.** The owner completed the two-mascot, wardrobe, display-matrix,
+drag, and dismiss-edge-case passes from the installed `~/Applications` build and
+reported them smooth. That was one overall verdict rather than per-item
+commentary. The automated baseline was re-run the same day. What remains
+unticked below is genuinely untested — chiefly a live Codex session driving its
+mascot on screen, the sound-toggle persistence items, icon sizes, `@1x`
+behavior, and the future release gates.
+
 ## Automated baseline
 
-- [ ] `git diff --check` passes.
-- [ ] Atlas contract validates.
-- [ ] Complete atlas validates.
+- [x] `git diff --check` passes.
+- [x] Atlas contract validates.
+- [x] Complete atlas validates. The classic atlas passes outright. The orange atlas is reported as three colors outside the frozen palette, which is **expected for that file alone**: they are exactly the three shades declared in `tools/author_codex_fashion_atlas.py`, verified by set difference against the classic atlas, and it removes no palette color.
 - [ ] Every changed frame row validates.
-- [ ] Full QA sheets and motion previews are regenerated after atlas changes.
-- [ ] Swift package tests pass (current baseline: 188; original handoff baseline: 10).
-  - Known exception: `aDropPastAnEdgeIsClampedBackIntoView` fails whenever a second display is attached. Pre-existing on `origin/main`, not a regression — see `docs/DEVELOPMENT.md`.
-- [ ] Unsigned Debug Xcode build succeeds.
-- [ ] Built atlas hash matches workspace atlas.
-- [ ] Built JSON contract byte-matches workspace contract.
+- [x] Full QA sheets and motion previews are regenerated after atlas changes.
+- [x] Swift package tests pass (current baseline: 198; original handoff baseline: 10).
+  - The former `aDropPastAnEdgeIsClampedBackIntoView` exception was **fixed on 2026-08-02**; the suite passes in full with a second display attached. Do not reinstate the exception.
+- [x] Release Xcode build succeeds (`tools/install_app.sh`, 2026-08-02).
+- [x] Built atlas hash matches workspace atlas — both atlases byte-identical in the installed bundle.
+- [x] Built JSON contract byte-matches workspace contract.
 
-## Provider fashion acceptance
+## Provider fashion and two-mascot acceptance
 
-- [x] Codex fashion atlas is byte-reproducible from `tools/author_codex_fashion_atlas.py`.
-- [x] Every Codex frame preserves the classic frame's dimensions and alpha silhouette.
+Owner ran the full hands-on pass on 2026-08-02 from the installed
+`~/Applications` build and reported every item below smooth. That report was a
+single overall verdict, not per-item commentary, so treat these as owner-accepted
+rather than individually narrated.
+
+There is **one mascot per provider**: Claude wears orange, Codex wears classic
+navy. Wardrobe is fixed per mascot via `MascotFashion.worn(by:)`, not selected
+from reduced state. Sunglasses were removed on 2026-08-02; the wardrobes differ
+only in the hoodie and the sleeping blanket.
+
+- [x] Orange atlas is byte-reproducible from `tools/author_codex_fashion_atlas.py`.
+- [x] Every orange frame preserves the classic frame's dimensions and alpha silhouette.
 - [x] The `poof` effect row is pixel-identical across both atlases.
-- [x] Codex selects orange/sunglasses; Claude Code and no-provider/manual states select classic.
-- [x] Concurrent Claude Code + Codex deterministically selects the Codex accent while diagnostics retain both provider names.
-- [ ] Orange/white top is readable at native size on light and dark desktop backgrounds.
-- [ ] Sunglasses remain distinct from the hair and face at native size throughout every state.
-- [ ] Gray trousers and navy shoes visibly match the classic mascot.
-- [ ] A real Codex session selects the Codex wardrobe and returns to classic after its provider presence ends.
+- [x] Claude's mascot wears orange and Codex's wears classic navy.
+- [x] Diagnostics retain both provider names when both are present.
+- [x] Orange/white top is readable at native size on light and dark desktop backgrounds.
+- [x] Gray trousers and navy shoes visibly match the classic mascot.
+- [x] No stray navy remains on a raised sleeve in `success`, `waiting`, or while dragging.
+- [x] The sleeping blanket is orange for Claude and navy for Codex.
+- [x] Summoning both mascots places them side by side rather than stacked.
+- [x] Each mascot's menu names the mascot that was clicked.
+- [x] Dismissing one mascot leaves the other animating and in place.
+- [x] Each mascot's dragged position is remembered independently across Dismiss/Summon.
+- [x] A real Claude Code task animates the orange mascot while the navy one strolls.
+- [x] One completed task plays a single success cue, not one per mascot.
+- [x] Quitting with both on screen poofs both, then terminates.
+- [ ] A **real Codex session** drives the navy mascot on screen. Its hooks are installed, trusted, and were exercised by a real turn on 2026-08-02, but nobody has watched the mascot respond. Still the last unproven provider claim.
 
 ## Core app smoke test
 
@@ -42,17 +68,17 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 
 ## Hanging drag acceptance
 
-- [ ] Drag can begin from head, torso, and lower-body pixels.
-- [ ] On threshold crossing, animation switches immediately to `hanging`.
-- [ ] Raised hand remains visually attached to the cursor throughout movement.
-- [ ] Body swings left/center/right and both feet remain off the ground.
-- [ ] No cliff, ledge, rope, cursor art, shadow, or ground is visible.
-- [ ] Snap to the overhead grip feels acceptable to the owner.
+- [x] Drag can begin from head, torso, and lower-body pixels.
+- [x] On threshold crossing, animation switches immediately to `hanging`.
+- [x] Raised hand remains visually attached to the cursor throughout movement.
+- [x] Body swings left/center/right and both feet remain off the ground.
+- [x] No cliff, ledge, rope, cursor art, shadow, or ground is visible.
+- [x] Snap to the overhead grip feels acceptable to the owner.
 - [x] Dropping leaves roaming on and the mascot carries on walking from where it landed.
 - [x] The mascot roams horizontally at the height it was dropped at, not at the bottom lane.
-- [ ] A drop near any screen edge is clamped back into view rather than stranded.
-- [ ] The dropped position survives Dismiss/Summon, application reopen, and toggling roaming off and on.
-- [ ] Reposition on Current Display returns the mascot to the default bottom lane.
+- [x] A drop near any screen edge is clamped back into view rather than stranded, and returns to the display it came from rather than jumping to another.
+- [x] The dropped position survives Dismiss/Summon, application reopen, and toggling roaming off and on.
+- [x] Reposition on Current Display returns the mascot to the default bottom lane.
 
 ## Dismiss transition acceptance
 
@@ -69,10 +95,10 @@ nobody has exercised, not a known failure.
 - [x] The smoke clears completely; no haze is left behind on the desktop.
 - [x] Total transition feels quick rather than something to wait through.
 - [x] **Quit** plays the same farewell, then the app actually terminates.
-- [ ] Reduce Motion replaces the whole thing with a short stationary fade, no seal and no smoke.
-- [ ] Re-summoning part-way through the poof brings the mascot back rather than hiding it a moment later.
-- [ ] Dismissing a paused mascot still plays the transition.
-- [ ] A second Quit during the farewell terminates immediately.
+- [x] Reduce Motion replaces the whole thing with a short stationary fade, no seal and no smoke.
+- [x] Re-summoning part-way through the poof brings the mascot back rather than hiding it a moment later.
+- [x] Dismissing a paused mascot still plays the transition.
+- [x] A second Quit during the farewell terminates immediately.
 - [ ] Quitting with no mascot summoned terminates at once, with no transition.
 - [ ] Summoning during a quit does not keep the app alive.
 - [ ] The transition reads on both light and dark desktop backgrounds.
@@ -113,17 +139,22 @@ icon; the current build shows the mascot headshot.
 
 ## Window/display matrix
 
+Owner completed this matrix on 2026-08-02 except where noted. The multi-display
+clamp fix landed the same day; only the two-display arrangement on the owner's
+machine (built-in `0,0 1280x832` plus external `1280,-248 1920x1080`) was
+exercised.
+
 - [x] Single Retina display, bottom Dock: initial prototype pass completed.
-- [ ] Bottom Dock with auto-hide on/off.
-- [ ] Left Dock.
-- [ ] Right Dock.
-- [ ] Multiple displays with different scales.
-- [ ] Move between displays and change primary display.
-- [ ] Full-screen Spaces and ordinary Spaces.
-- [ ] Display sleep/wake and laptop sleep/wake.
-- [ ] Screen lock/unlock.
+- [x] Bottom Dock with auto-hide on/off.
+- [x] Left Dock.
+- [x] Right Dock.
+- [x] Multiple displays with different scales.
+- [x] Move between displays, including unplugging a display with a mascot on it.
+- [x] Full-screen Spaces and ordinary Spaces.
+- [x] Display sleep/wake and laptop sleep/wake.
+- [x] Screen lock/unlock.
 - [ ] Non-Retina or deliberately authored `@1x` behavior.
-- [ ] No app focus theft during timer/state changes.
+- [x] No app focus theft during timer/state changes.
 
 ## Event system acceptance
 
