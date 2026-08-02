@@ -13,7 +13,7 @@ belongs to, and they stay legible at low volume over a laptop speaker.
 
     python3 tools/author_sound_effects.py
 
-Writes art/audio/success.wav and art/audio/failure.wav.
+Writes art/audio/success.wav, failure.wav, summon.wav, and dismiss.wav.
 """
 
 from __future__ import annotations
@@ -88,6 +88,57 @@ def failure_cue() -> list[float]:
     return samples
 
 
+def noise(seconds: float, seed: int, decay: float, smoothing: float) -> list[float]:
+    """Deterministic white noise through a one-pole lowpass, with a fast decay.
+
+    A linear congruential generator rather than `random`, so the bytes are
+    reproducible across Python versions the way the rest of this file is. The
+    lowpass is what turns a hiss into a "pff" — unfiltered noise reads as
+    static, not as air moving.
+    """
+    count = int(SAMPLE_RATE * seconds)
+    state = seed
+    previous = 0.0
+    samples = []
+    attack = max(1, int(SAMPLE_RATE * 0.002))
+    for index in range(count):
+        state = (state * 1_103_515_245 + 12_345) % (1 << 31)
+        white = (state / (1 << 30)) - 1.0
+        previous += smoothing * (white - previous)
+        envelope = math.exp(-decay * index / count)
+        if index < attack:
+            envelope *= index / attack
+        samples.append(previous * envelope)
+    return samples
+
+
+def summon_cue() -> list[float]:
+    """A quick rising run: the portal opening and something arriving through it.
+
+    Thin duty cycle and short steps, so it reads as a sparkle rather than as the
+    success fanfare, which is a rising arpeggio in the same register.
+    """
+    samples: list[float] = []
+    for name in ("G4", "C5", "E5", "G5", "C6"):
+        samples += square(note(name), 0.045, duty=0.125)
+    samples += square(note("E6"), 0.18, duty=0.125)
+    return samples
+
+
+def dismiss_cue() -> list[float]:
+    """A smoke-bomb puff: a filtered noise burst over a short downward blip.
+
+    Noise carries the poof; the falling tone under it gives the burst a body so
+    it does not read as a click on small speakers.
+    """
+    burst = noise(0.34, seed=20_260_801, decay=5.5, smoothing=0.35)
+    body: list[float] = []
+    for name, duration in (("A4", 0.05), ("D4", 0.07)):
+        body += square(note(name), duration, duty=0.5)
+    body += [0.0] * max(0, len(burst) - len(body))
+    return [0.72 * a + 0.28 * b for a, b in zip(burst, body)]
+
+
 def write_wav(path: Path, samples: list[float]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     peak = max((abs(value) for value in samples), default=1.0) or 1.0
@@ -113,6 +164,8 @@ def main() -> None:
     arguments = parser.parse_args()
     write_wav(arguments.output_root / "success.wav", success_cue() + silence(0.02))
     write_wav(arguments.output_root / "failure.wav", failure_cue() + silence(0.02))
+    write_wav(arguments.output_root / "summon.wav", summon_cue() + silence(0.02))
+    write_wav(arguments.output_root / "dismiss.wav", dismiss_cue() + silence(0.02))
 
 
 if __name__ == "__main__":

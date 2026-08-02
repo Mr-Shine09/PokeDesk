@@ -45,7 +45,15 @@ SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/mac-dock-pet-swiftpm-cache \
 swift test
 ```
 
-Expected handoff baseline: 176 Swift Testing tests pass as of 2026-07-31. A higher count is fine; a lower count requires investigation.
+Expected handoff baseline: 184 Swift Testing tests pass as of 2026-08-01. A higher count is fine; a lower count requires investigation.
+
+**`aDropPastAnEdgeIsClampedBackIntoView` fails whenever a second display is
+attached.** It is order- and focus-sensitive: `WindowCoordinator` resolves
+bounds through `panel.screen ?? NSScreen.main`, and `NSScreen.main` follows
+whichever window currently receives key events. It passes alone under
+`--filter`, fails in the full suite, and does both on `origin/main` as well —
+verified 2026-08-01 in a clean worktree. This is a real multi-display defect
+rather than a flaky test; do not "fix" it by loosening the assertion.
 
 If the suite fails only some of the time, check the clock before the code. One
 fixture family reduces against the sleep window (23:00–06:00 local), and a
@@ -176,6 +184,25 @@ xcodebuild \
   CODE_SIGNING_ALLOWED=NO \
   build
 ```
+
+**Give every worktree its own `-derivedDataPath`.** That path is shared state,
+not a scratch directory: two sessions building different branches into it means
+the last build wins, silently, and the loser is left running the other branch's
+app. This bit on 2026-08-01 — a background session working in
+`.claude/worktrees/` rebuilt the Debug bundle from `main` while the owner was
+testing a feature branch, and the feature simply appeared not to work. Nothing
+in the output says the bundle was replaced.
+
+Use a suffix per branch or worktree, for example
+`-derivedDataPath /private/tmp/DockPetDD-<branch>`, and check what you are about
+to launch before trusting a test:
+
+```bash
+ls '<derived-data>/Build/Products/Debug/Dock Pet.app/Contents/Resources/'
+```
+
+The resource list is the fastest tell — a missing WAV, a missing `Assets.car`,
+or an atlas of the wrong size means the bundle is not from your branch.
 
 The unsigned app is written to:
 

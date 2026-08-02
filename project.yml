@@ -45,6 +45,10 @@ targets:
         buildPhase: resources
       - path: art/audio/failure.wav
         buildPhase: resources
+      - path: art/audio/summon.wav
+        buildPhase: resources
+      - path: art/audio/dismiss.wav
+        buildPhase: resources
     dependencies:
       - package: DesktopMascotKit
         product: MascotCore
@@ -68,6 +72,10 @@ targets:
         GENERATE_INFOPLIST_FILE: true
         INFOPLIST_KEY_CFBundleDisplayName: Dock Pet
         INFOPLIST_KEY_LSUIElement: true
+        # Rendered from the frozen mascot base by tools/render_app_icon.py. An
+        # accessory app has no Dock tile, but the icon still shows in Finder,
+        # Get Info, and system alerts.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         MARKETING_VERSION: 0.1.0
         CURRENT_PROJECT_VERSION: 1
         CODE_SIGN_STYLE: Automatic

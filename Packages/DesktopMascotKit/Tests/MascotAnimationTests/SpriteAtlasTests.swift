@@ -20,7 +20,7 @@ import Testing
         contract: contract
     )
 
-    for state in ["offline", "idle", "working", "ideating", "walk-right", "walk-left", "sit-shake-right", "sit-shake-left", "hanging"] {
+    for state in ["offline", "idle", "working", "ideating", "walk-right", "walk-left", "sit-shake-right", "sit-shake-left", "hanging", "hand-sign"] {
         let atlasFrame = try atlas.frame(state: state, index: 0)
         let frozenFrameURL = animationRoot
             .appending(path: "frames")

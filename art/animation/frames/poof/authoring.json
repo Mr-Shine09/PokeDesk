@@ -1,0 +1,21 @@
+{
+  "state": "poof",
+  "method": "authored-native-pixel-cloud",
+  "frame_count": 8,
+  "palette": [
+    "#111219",
+    "#7E8085",
+    "#B5B6B8",
+    "#F6F3E4"
+  ],
+  "frame_notes": [
+    "burst, already near full size so nothing shows through",
+    "expanding",
+    "full size",
+    "churning",
+    "churning and drifting upward",
+    "lobes starting to separate",
+    "breaking up from the edges",
+    "loosest; the layer fade finishes the disappearance"
+  ]
+}

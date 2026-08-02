@@ -153,6 +153,8 @@ def validate_frame_rows(frames_root: Path, states: list[str], contract: dict, er
     grounded_states = {
         "offline", "idle", "working", "ideating", "waiting", "success", "failure",
         "sleeping", "paused", "walk-right", "walk-left", "sit-shake-right", "sit-shake-left",
+        "hand-sign",
+        # "poof" is deliberately absent: it is a cloud, not a pose, and has no baseline.
     }
     hanging_anchor = contract.get("hanging_anchor", {})
     for state in states:

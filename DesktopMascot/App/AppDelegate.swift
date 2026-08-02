@@ -31,9 +31,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     let eventBridge = AgentEventBridge()
 
     /// Mirrors the player's own persisted setting so the menu can bind to it.
-    @Published var isMuted = Preferences.reactionSoundsMuted
+    @Published var isMuted = Preferences.soundsMuted
 
-    private let reactionSounds = ReactionSoundPlayer()
+    private let sounds = MascotSoundPlayer()
+    /// Set once Quit has been asked for, so the transition cannot be cancelled
+    /// by a summon and the app cannot be left running after asking to stop.
+    private var isQuitting = false
     private let previewModel = MascotPreviewModel()
     private var atlas: SpriteAtlas?
     private var windowCoordinator: WindowCoordinator?
@@ -79,12 +82,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             animationController?.onSummonCompleted = { [weak self] in
                 self?.refreshDiagnostics()
             }
+            // The two transition cues. Both accompany something the user asked
+            // for and can see, so neither needs the visibility gate the
+            // reaction cues have.
+            animationController?.onSummonStarted = { [weak self] in
+                self?.sounds.play(.summon)
+            }
+            animationController?.onDismissBurst = { [weak self] in
+                self?.sounds.play(.dismiss)
+            }
             // Gated on visibility: a dismissed mascot is one the user chose not
             // to have on screen, and a chime from an invisible pet is a sound
             // with nothing to explain it.
             animationController?.onStateAppeared = { [weak self] state in
                 guard let self, self.isVisible else { return }
-                self.reactionSounds.stateDidAppear(state)
+                self.sounds.stateDidAppear(state)
             }
             // The reduced state drives animation from here on. Nothing else may
             // select a row, so manual pause and ideating go through the reducer's
@@ -116,16 +128,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     func setVisible(_ visible: Bool) {
+        // Quit is already under way and is not negotiable. Without this, a
+        // reopen event arriving during the farewell would cancel the dismiss,
+        // and the completion that terminates the app would never fire.
+        guard !isQuitting else { return }
         isVisible = visible
-        // A dropped height is a deliberate placement, so Hide/Show and reopen
-        // must preserve it. Roaming no longer signals this: dragging leaves
-        // roaming on, so the coordinator's own record of the drop is the only
-        // reliable answer to "did the user place this themselves?".
-        let placed = windowCoordinator?.hasManualPlacement ?? false
-        windowCoordinator?.setVisible(visible, repositioning: !placed)
-        animationController?.setVisible(visible)
-        diagnostics = visible ? "Opening Dock portal" : "Not summoned"
-        if !visible { refreshDiagnostics() }
+
+        if visible {
+            // A dropped height is a deliberate placement, so Hide/Show and
+            // reopen must preserve it. Roaming no longer signals this: dragging
+            // leaves roaming on, so the coordinator's own record of the drop is
+            // the only reliable answer to "did the user place this themselves?".
+            let placed = windowCoordinator?.hasManualPlacement ?? false
+            windowCoordinator?.setVisible(true, repositioning: !placed)
+            animationController?.setVisible(true)
+            diagnostics = "Opening Dock portal"
+            return
+        }
+
+        // The pet leaves the way it arrived, through a transition rather than by
+        // blinking out: it forms a ninja hand seal and vanishes in a smoke poof.
+        // The panel therefore stays on screen until the animation says it is
+        // finished, so hiding is deferred into the completion below. `isVisible`
+        // flips immediately regardless, so the menu never offers to dismiss a
+        // mascot that is already leaving.
+        guard let animationController, animationController.isVisible else {
+            completeHiding()
+            return
+        }
+        diagnostics = "Dismissing — hand sign and smoke poof"
+        animationController.beginDismiss { [weak self] in
+            self?.completeHiding()
+        }
+    }
+
+    private func completeHiding() {
+        windowCoordinator?.setVisible(false)
+        animationController?.setVisible(false)
+        refreshDiagnostics()
     }
 
     func setPaused(_ paused: Bool) {
@@ -170,7 +210,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func setMuted(_ muted: Bool) {
         isMuted = muted
-        reactionSounds.isMuted = muted
+        sounds.isMuted = muted
     }
 
     func setRoaming(_ roaming: Bool) {
@@ -249,8 +289,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         diagnostics = "\(provider.rawValue) hook setup copied"
     }
 
+    /// Quitting says goodbye first, when there is a mascot on screen to say it.
+    ///
+    /// Owner request, 2026-08-01: the same seal and poof that plays for Dismiss.
+    /// It costs about a second, so the escape hatches matter more than the
+    /// animation does — a second Quit terminates immediately, and an
+    /// unsummoned mascot skips the farewell entirely rather than making the
+    /// user watch a transition for a pet that was never there.
     func quit() {
-        NSApp.terminate(nil)
+        guard
+            !isQuitting,
+            let animationController,
+            animationController.isVisible
+        else {
+            NSApp.terminate(nil)
+            return
+        }
+        isQuitting = true
+        isVisible = false
+        diagnostics = "Quitting — hand sign and smoke poof"
+        animationController.beginDismiss { [weak self] in
+            self?.completeHiding()
+            NSApp.terminate(nil)
+        }
     }
 
     private func showMascotMenu() {

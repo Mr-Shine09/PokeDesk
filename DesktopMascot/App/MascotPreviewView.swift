@@ -8,6 +8,11 @@ final class MascotPreviewModel: ObservableObject {
     @Published var image: NSImage?
     @Published var isSummoning = false
     @Published var summonFrame = PortalSummonFrame.resting
+    @Published var isDismissing = false
+    @Published var dismissFrame = PoofDismissFrame.resting
+    /// The current `poof` cell, drawn over the mascot. Separate from `image`
+    /// because the smoke is a layer on top of the character, not a pose of it.
+    @Published var smokeImage: NSImage?
     @Published var usesReducedMotion = false
 }
 
@@ -36,6 +41,16 @@ struct MascotPreviewView: View {
                 PortalFrontView(openness: model.summonFrame.portalOpenness)
                     .padding(.bottom, 2)
             }
+
+            // Last in the stack so the mascot vanishes behind it rather than in
+            // front of it.
+            if model.isDismissing, let smoke = model.smokeImage {
+                Image(nsImage: smoke)
+                    .resizable()
+                    .interpolation(.none)
+                    .opacity(model.dismissFrame.smokeOpacity)
+                    .allowsHitTesting(false)
+            }
         }
         .frame(
             width: MascotPanel.defaultContentSize.width,
@@ -47,11 +62,16 @@ struct MascotPreviewView: View {
     }
 
     private var reveal: CGFloat {
-        model.isSummoning ? CGFloat(model.summonFrame.petReveal) : 1
+        if model.isDismissing { return CGFloat(model.dismissFrame.petReveal) }
+        if model.isSummoning { return CGFloat(model.summonFrame.petReveal) }
+        return 1
     }
 
+    /// The summon rises out of the Dock; the dismiss does not sink back into it,
+    /// because the pet is meant to read as having vanished from where it stood.
     private var petOffset: CGFloat {
-        model.usesReducedMotion ? 0 : (1 - reveal) * 72
+        guard !model.usesReducedMotion, !model.isDismissing else { return 0 }
+        return (1 - reveal) * 72
     }
 
     private var petScale: CGFloat {
@@ -59,7 +79,7 @@ struct MascotPreviewView: View {
     }
 
     private var petOpacity: Double {
-        model.isSummoning ? Double(reveal) : 1
+        Double(reveal)
     }
 }
 
