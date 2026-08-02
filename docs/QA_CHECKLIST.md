@@ -9,11 +9,23 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 - [ ] Complete atlas validates.
 - [ ] Every changed frame row validates.
 - [ ] Full QA sheets and motion previews are regenerated after atlas changes.
-- [ ] Swift package tests pass (current baseline: 184; original handoff baseline: 10).
+- [ ] Swift package tests pass (current baseline: 188; original handoff baseline: 10).
   - Known exception: `aDropPastAnEdgeIsClampedBackIntoView` fails whenever a second display is attached. Pre-existing on `origin/main`, not a regression — see `docs/DEVELOPMENT.md`.
 - [ ] Unsigned Debug Xcode build succeeds.
 - [ ] Built atlas hash matches workspace atlas.
 - [ ] Built JSON contract byte-matches workspace contract.
+
+## Provider fashion acceptance
+
+- [x] Codex fashion atlas is byte-reproducible from `tools/author_codex_fashion_atlas.py`.
+- [x] Every Codex frame preserves the classic frame's dimensions and alpha silhouette.
+- [x] The `poof` effect row is pixel-identical across both atlases.
+- [x] Codex selects orange/sunglasses; Claude Code and no-provider/manual states select classic.
+- [x] Concurrent Claude Code + Codex deterministically selects the Codex accent while diagnostics retain both provider names.
+- [ ] Orange/white top is readable at native size on light and dark desktop backgrounds.
+- [ ] Sunglasses remain distinct from the hair and face at native size throughout every state.
+- [ ] Gray trousers and navy shoes visibly match the classic mascot.
+- [ ] A real Codex session selects the Codex wardrobe and returns to classic after its provider presence ends.
 
 ## Core app smoke test
 
@@ -67,9 +79,9 @@ nobody has exercised, not a known failure.
 
 ## Sound acceptance
 
-Owner heard the summon and dismiss cues on 2026-08-01 and approved them. The
-**reaction** cues remain unheard — that gap is unchanged and is still the
-oldest unverified claim in the project.
+Owner heard all four cues on 2026-08-01 and approved them. The summon and
+dismiss cues were heard first; the reaction cues (success and failure) were
+confirmed working from the installed build later the same day.
 
 - [x] Summon plays its rising cue as the portal opens.
 - [x] Dismiss plays its poof cue on the burst, not at the start of the seal.
@@ -92,9 +104,9 @@ icon; the current build shows the mascot headshot.
 
 ## Reaction cue acceptance
 
-- [ ] Success plays the sparkle row and its cue together, neither ahead of the other.
-- [ ] Failure plays the cracked-bulb row and its cue together.
-- [ ] Both cues are audible over a laptop speaker without being startling.
+- [x] Success plays the sparkle row and its cue together, neither ahead of the other.
+- [x] Failure plays the cracked-bulb row and its cue together.
+- [x] Both cues are audible over a laptop speaker without being startling.
 - [ ] Back-to-back turns restart the cue rather than overlapping into a drone.
 - [ ] Reaction Sounds off silences both, and the choice survives relaunch.
 - [ ] A dismissed mascot makes no sound.
@@ -142,4 +154,3 @@ icon; the current build shows the mascot headshot.
 - [ ] Notarized build installs on a clean account.
 - [ ] Install, upgrade, and uninstall instructions verified.
 - [ ] Privacy-safe diagnostics reviewed.
-
