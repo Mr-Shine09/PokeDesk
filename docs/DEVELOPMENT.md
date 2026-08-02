@@ -185,6 +185,25 @@ xcodebuild \
   build
 ```
 
+**Give every worktree its own `-derivedDataPath`.** That path is shared state,
+not a scratch directory: two sessions building different branches into it means
+the last build wins, silently, and the loser is left running the other branch's
+app. This bit on 2026-08-01 — a background session working in
+`.claude/worktrees/` rebuilt the Debug bundle from `main` while the owner was
+testing a feature branch, and the feature simply appeared not to work. Nothing
+in the output says the bundle was replaced.
+
+Use a suffix per branch or worktree, for example
+`-derivedDataPath /private/tmp/DockPetDD-<branch>`, and check what you are about
+to launch before trusting a test:
+
+```bash
+ls '<derived-data>/Build/Products/Debug/Dock Pet.app/Contents/Resources/'
+```
+
+The resource list is the fastest tell — a missing WAV, a missing `Assets.car`,
+or an atlas of the wrong size means the bundle is not from your branch.
+
 The unsigned app is written to:
 
 ```text
