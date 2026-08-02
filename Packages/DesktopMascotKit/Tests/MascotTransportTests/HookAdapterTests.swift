@@ -231,6 +231,43 @@ private let realisticToolPayload = """
     #expect(hooks.keys.contains("Stop"))
 }
 
+@Test func codexPutsHookModeInTheCommandRatherThanAnUnsupportedArgsField() throws {
+    let path = "/Applications/Dock Pet.app/Contents/MacOS/dockpet-event"
+    let snippet = HookConfiguration.snippet(for: .codex, helperPath: path)
+    let parsed = try JSONSerialization.jsonObject(with: Data(snippet.utf8))
+    let hooks = try #require((parsed as? [String: Any])?["hooks"] as? [String: Any])
+    let groups = try #require(hooks["UserPromptSubmit"] as? [[String: Any]])
+    let handlers = try #require(groups.first?["hooks"] as? [[String: Any]])
+    let handler = try #require(handlers.first)
+
+    #expect(handler["command"] as? String == "'\(path)' --hook --provider codex")
+    #expect(handler["args"] == nil)
+}
+
+@Test func codexSessionEndUsesItsSupportedTimeoutCeiling() throws {
+    let snippet = HookConfiguration.snippet(for: .codex, helperPath: "/tmp/dockpet-event")
+    let parsed = try JSONSerialization.jsonObject(with: Data(snippet.utf8))
+    let hooks = try #require((parsed as? [String: Any])?["hooks"] as? [String: Any])
+    let groups = try #require(hooks["SessionEnd"] as? [[String: Any]])
+    let handlers = try #require(groups.first?["hooks"] as? [[String: Any]])
+
+    #expect(handlers.first?["timeout"] as? Int == 3)
+}
+
+@Test func codexShellQuotesAnApostropheInTheHelperPath() throws {
+    let path = "/Users/o'connor/Dock Pet.app/Contents/MacOS/dockpet-event"
+    let snippet = HookConfiguration.snippet(for: .codex, helperPath: path)
+    let parsed = try JSONSerialization.jsonObject(with: Data(snippet.utf8))
+    let hooks = try #require((parsed as? [String: Any])?["hooks"] as? [String: Any])
+    let groups = try #require(hooks["Stop"] as? [[String: Any]])
+    let handlers = try #require(groups.first?["hooks"] as? [[String: Any]])
+
+    #expect(
+        handlers.first?["command"] as? String
+            == "'/Users/o'\"'\"'connor/Dock Pet.app/Contents/MacOS/dockpet-event' --hook --provider codex"
+    )
+}
+
 @Test func aPathContainingAQuoteStillProducesValidJSON() throws {
     let snippet = HookConfiguration.snippet(
         for: .codex,

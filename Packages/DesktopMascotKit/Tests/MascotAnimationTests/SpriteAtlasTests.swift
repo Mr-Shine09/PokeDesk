@@ -31,6 +31,46 @@ import Testing
     }
 }
 
+@MainActor
+@Test func codexFashionAtlasPreservesGeometryAndPoofPixels() throws {
+    let repositoryRoot = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+    let animationRoot = repositoryRoot.appending(path: "art/animation")
+    let contractData = try Data(contentsOf: animationRoot.appending(path: "atlas-contract.json"))
+    let contract = try JSONDecoder().decode(AtlasContract.self, from: contractData)
+    let classic = try SpriteAtlas(
+        imageURL: animationRoot.appending(path: "mascot-atlas@2x.png"),
+        contract: contract
+    )
+    let codex = try SpriteAtlas(
+        imageURL: animationRoot.appending(path: "mascot-atlas-codex@2x.png"),
+        contract: contract
+    )
+
+    for row in contract.rows {
+        for index in 0 ..< row.frames {
+            let classicFrame = try classic.frame(state: row.state, index: index)
+            let codexFrame = try codex.frame(state: row.state, index: index)
+            let classicImage = try #require(classicFrame.cgImage(forProposedRect: nil, context: nil, hints: nil))
+            let codexImage = try #require(codexFrame.cgImage(forProposedRect: nil, context: nil, hints: nil))
+            #expect(classicImage.width == codexImage.width)
+            #expect(classicImage.height == codexImage.height)
+            #expect(try alphaPixels(of: classicImage) == alphaPixels(of: codexImage))
+        }
+    }
+
+    let classicPoof = try classic.frame(state: "poof", index: 0)
+    let codexPoof = try codex.frame(state: "poof", index: 0)
+    #expect(
+        try rgbaPixels(of: #require(classicPoof.cgImage(forProposedRect: nil, context: nil, hints: nil)))
+            == rgbaPixels(of: #require(codexPoof.cgImage(forProposedRect: nil, context: nil, hints: nil)))
+    )
+}
+
 private func loadImage(at url: URL) throws -> CGImage {
     let source = try #require(CGImageSourceCreateWithURL(url as CFURL, nil))
     return try #require(CGImageSourceCreateImageAtIndex(source, 0, nil))
@@ -54,4 +94,9 @@ private func rgbaPixels(of image: CGImage) throws -> Data {
     }
     try #require(didRender)
     return pixels
+}
+
+private func alphaPixels(of image: CGImage) throws -> Data {
+    let rgba = try rgbaPixels(of: image)
+    return Data(stride(from: 3, to: rgba.count, by: 4).map { rgba[$0] })
 }

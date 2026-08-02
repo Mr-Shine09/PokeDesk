@@ -20,6 +20,9 @@ final class AgentEventBridge: ObservableObject {
 
     @Published private(set) var status: Status = .stopped
     @Published private(set) var visibleState = MascotVisibleState(state: .offline)
+    /// One reduced state per provider, driving that provider's own mascot.
+    /// `visibleState` above collapses them and now feeds diagnostics only.
+    @Published private(set) var visibleStates: [EventProvider: MascotVisibleState] = [:]
     @Published private(set) var diagnostics = EventPipelineDiagnostics()
 
     /// Kept in sync by `AppDelegate` so a manual pause or ideating choice
@@ -147,6 +150,7 @@ final class AgentEventBridge: ObservableObject {
 
     private func publish() {
         visibleState = pipeline.visibleState
+        visibleStates = pipeline.visibleStates
         diagnostics = pipeline.diagnostics
         rescheduleRefresh()
     }

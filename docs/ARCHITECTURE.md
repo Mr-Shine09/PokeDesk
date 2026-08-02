@@ -109,7 +109,7 @@ paused > failure-recent > waiting > working > ideating > success-recent > schedu
 - Failure reaction lasts 4 seconds; success lasts 3 seconds.
 - Duplicate events are idempotent and older reordered events cannot overwrite newer session state.
 - Work/ideating/waiting interrupts scheduled sleep immediately.
-- Multiple active providers still produce one visible working state; diagnostics may list provider counts without private identifiers.
+- Since 2026-08-01 each provider drives its own mascot through `MascotStateReducer.reduce(sessions:attributedTo:...)`, so multiple active providers no longer collapse into one animation. The collapsed `reduce` remains and feeds the menu-bar diagnostics, which may list provider counts without private identifiers.
 
 ## Interaction invariants
 

@@ -35,7 +35,23 @@ public struct EventPipeline: Sendable {
     public var reducer: MascotStateReducer
     public private(set) var diagnostics = EventPipelineDiagnostics()
     /// The reduced state as of the last `ingest`, `refresh`, or `noteRejectedFrame`.
+    ///
+    /// This collapses every provider, and since 2026-08-01 it drives the
+    /// menu-bar diagnostics rather than the animation. Use `visibleStates` for
+    /// what each mascot should be doing.
     public private(set) var visibleState = MascotVisibleState(state: .offline)
+
+    /// The reduced state of each provider's own mascot, computed from that
+    /// provider's sessions alone.
+    ///
+    /// Always carries an entry for every `EventProvider`, so a caller never has
+    /// to decide what a missing key means. A provider with no sessions reduces
+    /// to `offline`, which strolls — the intended "normal" look for a mascot
+    /// whose agent is not currently running.
+    public private(set) var visibleStates: [EventProvider: MascotVisibleState] =
+        Dictionary(uniqueKeysWithValues: EventProvider.allCases.map {
+            ($0, MascotVisibleState(state: .offline))
+        })
 
     public init(
         registry: SessionRegistry = SessionRegistry(),
@@ -91,12 +107,25 @@ public struct EventPipeline: Sendable {
     }
 
     private mutating func recompute(overrides: ManualOverrides, now: Date, uptime: Uptime) {
+        let sessions = registry.sessions(at: uptime)
         visibleState = reducer.reduce(
-            registry: registry,
+            sessions: sessions,
             overrides: overrides,
             now: now,
             uptime: uptime
         )
-        diagnostics.trackedSessions = registry.sessions(at: uptime).count
+        visibleStates = Dictionary(uniqueKeysWithValues: EventProvider.allCases.map { provider in
+            (
+                provider,
+                reducer.reduce(
+                    sessions: sessions,
+                    attributedTo: provider,
+                    overrides: overrides,
+                    now: now,
+                    uptime: uptime
+                )
+            )
+        })
+        diagnostics.trackedSessions = sessions.count
     }
 }
