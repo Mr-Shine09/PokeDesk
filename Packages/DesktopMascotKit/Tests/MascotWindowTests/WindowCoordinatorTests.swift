@@ -197,3 +197,39 @@ private func mouseEvent(type: NSEvent.EventType, location: NSPoint, panel: NSPan
         pressure: type == .leftMouseUp ? 0 : 1
     )
 }
+
+/// The clamp must not consult keyboard focus.
+///
+/// `aDropPastAnEdgeIsClampedBackIntoView` pins the arithmetic. This pins the
+/// property that used to make it flaky: once the panel is dropped clear of
+/// every display, `NSWindow.screen` is nil, and the old fallback was
+/// `NSScreen.main` — the display with *keyboard focus*. The same drop could
+/// therefore settle in two different places depending on where the user was
+/// typing. Focus cannot be set from a test, so this asserts what focus
+/// dependence would break: the result is a function of the panel alone, and so
+/// repeating one drop lands in one place.
+@MainActor
+@Test func aStrandedDropSettlesDeterministicallyOnTheDisplayItCameFrom() {
+    let coordinator = WindowCoordinator(contentView: NSView())
+    defer { coordinator.setVisible(false) }
+
+    guard let horizontal = coordinator.horizontalMovementBounds() else { return }
+    let origin = coordinator.panel.screen ?? NSScreen.main
+
+    // Clear of every display: far right of them all, and far above them all.
+    let stranded = NSPoint(x: horizontal.upperBound + 5_000, y: 50_000)
+    coordinator.panel.setFrameOrigin(stranded)
+    #expect(coordinator.panel.screen == nil, "the drop must actually strand the panel for this to test anything")
+
+    coordinator.settleAfterDrop()
+    let settled = coordinator.panel.frame
+
+    #expect(NSScreen.screens.contains { $0.frame.intersects(settled) })
+    // Back on the display it started on, not moved to a different one.
+    #expect(origin?.frame.intersects(settled) == true)
+
+    // And the same drop twice lands in the same place.
+    coordinator.panel.setFrameOrigin(stranded)
+    coordinator.settleAfterDrop()
+    #expect(coordinator.panel.frame.origin == settled.origin)
+}

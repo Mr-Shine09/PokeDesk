@@ -16,6 +16,9 @@ public final class WindowCoordinator: NSObject {
     /// The height the user last dropped the mascot at, or `nil` while it is
     /// still on the default bottom lane.
     private var manualLaneY: CGFloat?
+    /// The last display the panel was genuinely on, used to pull it back after
+    /// it is dropped somewhere no display covers.
+    private var lastKnownScreen: NSScreen?
 
     public init(
         contentView: NSView,
@@ -55,8 +58,58 @@ public final class WindowCoordinator: NSObject {
         }
     }
 
+    /// The display this mascot's placement is measured against, resolved from
+    /// the panel's own position rather than from keyboard focus.
+    ///
+    /// `NSWindow.screen` is nil whenever the window lies entirely outside every
+    /// display — precisely what a drop past an edge produces. The fallback used
+    /// to be `NSScreen.main`, which is *the screen with keyboard focus*, so with
+    /// two displays attached the answer depended on where the user happened to
+    /// be typing at that instant. A mascot dropped into dead space off the right
+    /// of the built-in display could be clamped back onto the external one, and
+    /// `aDropPastAnEdgeIsClampedBackIntoView` passed or failed run to run for the
+    /// same reason. That flakiness was recorded as a deterministic
+    /// second-display defect; it is really this nondeterminism, and the two have
+    /// one cause.
+    ///
+    /// The replacement prefers the display the panel was last genuinely on, so
+    /// throwing the pet off an edge returns it to the display it came from
+    /// rather than moving it to another one, and falls back to the nearest
+    /// display only when there is no history to use.
+    private var referenceScreen: NSScreen? {
+        if let screen = panel.screen {
+            lastKnownScreen = screen
+            return screen
+        }
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else { return NSScreen.main }
+        // The display the mascot was last actually on wins. A drop past an edge
+        // should pull it back onto the display it came from, not move it to a
+        // different one — the user threw it off the edge, they did not ask for
+        // it to change screens.
+        if let remembered = lastKnownScreen, screens.contains(remembered) {
+            return remembered
+        }
+        // No history — first placement, or the remembered display was
+        // unplugged. Fall back to the display nearest the panel.
+        let center = CGPoint(x: panel.frame.midX, y: panel.frame.midY)
+        return screens.min {
+            Self.squaredDistance(from: center, to: $0.frame)
+                < Self.squaredDistance(from: center, to: $1.frame)
+        }
+    }
+
+    /// Zero when the point is inside the rectangle, otherwise the squared
+    /// distance to its nearest edge. Squared to avoid a pointless `sqrt` in a
+    /// comparison.
+    private static func squaredDistance(from point: CGPoint, to rect: CGRect) -> CGFloat {
+        let dx = max(rect.minX - point.x, 0, point.x - rect.maxX)
+        let dy = max(rect.minY - point.y, 0, point.y - rect.maxY)
+        return dx * dx + dy * dy
+    }
+
     public func horizontalMovementBounds() -> ClosedRange<CGFloat>? {
-        guard let screen = panel.screen ?? NSScreen.main else { return nil }
+        guard let screen = referenceScreen else { return nil }
         let minimum = screen.visibleFrame.minX
         let maximum = max(minimum, screen.visibleFrame.maxX - contentSize.width)
         return minimum ... maximum
@@ -74,7 +127,7 @@ public final class WindowCoordinator: NSObject {
     public var hasManualPlacement: Bool { manualLaneY != nil }
 
     public func verticalPlacementBounds() -> ClosedRange<CGFloat>? {
-        guard let screen = panel.screen ?? NSScreen.main else { return nil }
+        guard let screen = referenceScreen else { return nil }
         let minimum = screen.frame.minY - MascotPanel.defaultDockVisualInset
         let maximum = max(minimum, screen.visibleFrame.maxY - contentSize.height)
         return minimum ... maximum
@@ -107,7 +160,7 @@ public final class WindowCoordinator: NSObject {
     /// height. This is what the Reposition menu action is for: once the pet can
     /// roam at any height, the user needs one deliberate way to get it back.
     public func reposition(on screen: NSScreen? = nil) {
-        let screen = screen ?? panel.screen ?? NSScreen.main
+        let screen = screen ?? referenceScreen
         guard let screen else { return }
         manualLaneY = nil
         let origin = DockGeometry.panelOrigin(
