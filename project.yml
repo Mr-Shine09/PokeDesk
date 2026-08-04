@@ -2,7 +2,12 @@ name: DesktopMascot
 options:
   createIntermediateGroups: true
   deploymentTarget:
-    macOS: "14.0"
+    # 14.4, not 14.0, for NSHostingMenu. The menu bar item is built as an
+    # NSStatusItem the app owns (see AppDelegate.statusItem) so macOS cannot
+    # remember it as removed and leave the app unlaunchable; NSHostingMenu is
+    # what lets that item keep the existing SwiftUI MenuBarContent instead of a
+    # second, hand-written AppKit copy of the same menu. Raised 2026-08-03.
+    macOS: "14.4"
   xcodeVersion: "26.0"
 packages:
   DesktopMascotKit:
