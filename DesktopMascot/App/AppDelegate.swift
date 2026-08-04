@@ -38,6 +38,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// since those reach the reducer as overrides.
     let eventBridge = AgentEventBridge()
 
+    /// The menu bar item, owned here rather than created by a SwiftUI
+    /// `MenuBarExtra`.
+    ///
+    /// `MenuBarExtra` derives its own autosave name (`CC Item-0` here) and
+    /// obeys the visibility macOS has remembered for it. On 2026-08-03 that
+    /// made the app unusable: the item had been dragged off the menu bar at
+    /// some point, so Control Center sent `NSStatusItemChangeVisibilityAction`
+    /// on every launch, and because the `MenuBarExtra` was the app's only scene
+    /// SwiftUI terminated the process about a tenth of a second in. The app
+    /// could not be launched, controlled, or quit, and wrote no crash report.
+    /// Pinning `isInserted` to `true` kept the process alive but did not bring
+    /// the icon back — Control Center's hide still won.
+    ///
+    /// Owning the item fixes both halves. `autosaveName` is ours, so this is a
+    /// fresh identity with no removal remembered against it, and `isVisible` is
+    /// a property we set rather than one macOS restores. The menu itself is
+    /// still the same SwiftUI `MenuBarContent`, rendered through
+    /// `NSHostingMenu`, so nothing about the menu's contents changed.
+    private var statusItem: NSStatusItem?
+
     /// Mirrors the player's own persisted setting so the menu can bind to it.
     @Published var isMuted = Preferences.soundsMuted
 
@@ -93,6 +113,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                     }
                     self.refreshDiagnostics()
                 }
+            installStatusItem()
             // Deliberately no summon here: launching is not summoning. Every
             // panel stays ordered out with its animation timer stopped, so an
             // unsummoned Dock Pet costs nothing but the menu-bar item.
@@ -100,6 +121,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         } catch {
             diagnostics = error.localizedDescription
         }
+    }
+
+    /// Builds the menu bar item. See `statusItem` for why the app owns this
+    /// rather than declaring a `MenuBarExtra` scene.
+    private func installStatusItem() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // A name of our own choosing. The removal macOS remembers is keyed to
+        // the old `MenuBarExtra`-derived name, so this identity starts clean.
+        item.autosaveName = "DockPetMenuBarItem"
+        item.button?.image = NSImage(
+            systemSymbolName: "pawprint.fill",
+            accessibilityDescription: "Dock Pet"
+        )
+        item.menu = NSHostingMenu(
+            rootView: MenuBarContent(appDelegate: self, eventBridge: eventBridge)
+        )
+        // Set last and unconditionally: this item is the app's only escape
+        // hatch, so it is never allowed to stay hidden.
+        item.isVisible = true
+        statusItem = item
     }
 
     /// Connects one mascot's panel and animation callbacks back to the app.
