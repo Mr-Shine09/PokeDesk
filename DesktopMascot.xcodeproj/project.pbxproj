@@ -378,7 +378,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.mrshine09.desktopmascot;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mrshine09.dockpet;
 				PRODUCT_NAME = "Dock Pet";
 				SDKROOT = macosx;
 			};
@@ -413,7 +413,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.mrshine09.desktopmascot;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mrshine09.dockpet;
 				PRODUCT_NAME = "Dock Pet";
 				SDKROOT = macosx;
 			};

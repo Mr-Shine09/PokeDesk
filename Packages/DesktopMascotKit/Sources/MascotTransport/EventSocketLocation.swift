@@ -7,6 +7,11 @@ import Foundation
 /// file has to carry it — one less place for a caller to point the helper
 /// somewhere unintended.
 public enum EventSocketLocation {
+    /// Deliberately *not* the bundle identifier, which became
+    /// `com.mrshine09.dockpet` on 2026-08-05. This string is the socket path
+    /// that already-installed provider hooks connect to, so it is frozen
+    /// independently of how the app is identified to macOS. Changing it
+    /// silently breaks every hook installed before the change.
     public static let directoryName = "com.mrshine09.desktopmascot"
     /// Kept short on purpose: the full path must fit `sun_path`.
     public static let socketName = "events.sock"

@@ -77,7 +77,15 @@ targets:
           destination: executables
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.mrshine09.desktopmascot
+        # Changed from com.mrshine09.desktopmascot on 2026-08-05. A menu bar
+        # removal is remembered against the bundle identifier in a system store
+        # the app cannot reach, so the old identifier can never show a menu bar
+        # icon again on a machine where the item was once dragged off — proven
+        # 2026-08-03 by building one binary under two identifiers. Do not
+        # revert. Note that EventSocketLocation.directoryName still spells the
+        # old identifier and must stay that way: it is the socket path that
+        # installed provider hooks already talk to.
+        PRODUCT_BUNDLE_IDENTIFIER: com.mrshine09.dockpet
         PRODUCT_NAME: Dock Pet
         GENERATE_INFOPLIST_FILE: true
         INFOPLIST_KEY_CFBundleDisplayName: Dock Pet

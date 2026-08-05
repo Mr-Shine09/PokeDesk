@@ -80,6 +80,8 @@ say "Installing to $DESTINATION"
 mkdir -p "$DESTINATION"
 # Quit a running copy first: replacing a bundle out from under a live process
 # leaves it running stale code, and the socket would stay bound.
+osascript -e 'quit app id "com.mrshine09.dockpet"' 2>/dev/null || true
+# The pre-2026-08-05 identifier, in case an old copy is still the one running.
 osascript -e 'quit app id "com.mrshine09.desktopmascot"' 2>/dev/null || true
 sleep 1
 rm -rf "$INSTALLED_APP"
