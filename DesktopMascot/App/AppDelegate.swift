@@ -51,11 +51,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// Pinning `isInserted` to `true` kept the process alive but did not bring
     /// the icon back — Control Center's hide still won.
     ///
-    /// Owning the item fixes both halves. `autosaveName` is ours, so this is a
-    /// fresh identity with no removal remembered against it, and `isVisible` is
-    /// a property we set rather than one macOS restores. The menu itself is
+    /// Owning the item fixes the fatal half: the app stays alive and keeps a
+    /// menu, because nothing can delete its only scene. The menu itself is
     /// still the same SwiftUI `MenuBarContent`, rendered through
     /// `NSHostingMenu`, so nothing about the menu's contents changed.
+    ///
+    /// It does **not** restore an icon macOS has already been told to remove.
+    /// That was established on 2026-08-03 by building this exact binary twice,
+    /// changing only `PRODUCT_BUNDLE_IDENTIFIER`: under a fresh identifier the
+    /// pawprint appears, under `com.mrshine09.desktopmascot` it never does —
+    /// with the preferences domain emptied and `isVisible` true either way. The
+    /// removal is held in a system store keyed to the **bundle identifier**,
+    /// outside the app's own preferences, and no `autosaveName` escapes it.
+    /// Renaming the autosave, deleting the persisted keys, restarting
+    /// `cfprefsd` and `ControlCenter`, dropping `NSHostingMenu` for a plain
+    /// `NSMenu`, and moving off the SwiftUI entry point were all tried and all
+    /// made no difference to the icon.
     private var statusItem: NSStatusItem?
 
     /// Mirrors the player's own persisted setting so the menu can bind to it.
@@ -127,8 +138,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// rather than declaring a `MenuBarExtra` scene.
     private func installStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        // A name of our own choosing. The removal macOS remembers is keyed to
-        // the old `MenuBarExtra`-derived name, so this identity starts clean.
+        // A name of our own choosing, so the item's visibility is a property
+        // this app sets rather than one macOS restores. Note that renaming does
+        // NOT escape a menu bar removal: that state is keyed to the bundle
+        // identifier, not to the autosave name. See `statusItem`.
         item.autosaveName = "DockPetMenuBarItem"
         item.button?.image = NSImage(
             systemSymbolName: "pawprint.fill",
