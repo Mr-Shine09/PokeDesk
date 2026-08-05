@@ -3,7 +3,7 @@
 ## Requirements
 
 - macOS with Xcode supporting Swift 6
-- macOS 14+ deployment target
+- macOS 14.4 deployment target, raised from 14.0 on 2026-08-03 for `NSHostingMenu`
 - Python 3 with Pillow for art tools
 - XcodeGen when `project.yml` changes
 - Git access to the private `Mr-Shine09/desktop-mascot` repository when publishing is authorized
@@ -45,15 +45,17 @@ SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/mac-dock-pet-swiftpm-cache \
 swift test
 ```
 
-Expected handoff baseline: 184 Swift Testing tests pass as of 2026-08-01. A higher count is fine; a lower count requires investigation.
+Expected handoff baseline: 198 Swift Testing tests pass as of 2026-08-02. A higher count is fine; a lower count requires investigation.
 
-**`aDropPastAnEdgeIsClampedBackIntoView` fails whenever a second display is
-attached.** It is order- and focus-sensitive: `WindowCoordinator` resolves
-bounds through `panel.screen ?? NSScreen.main`, and `NSScreen.main` follows
-whichever window currently receives key events. It passes alone under
-`--filter`, fails in the full suite, and does both on `origin/main` as well —
-verified 2026-08-01 in a clean worktree. This is a real multi-display defect
-rather than a flaky test; do not "fix" it by loosening the assertion.
+**`aDropPastAnEdgeIsClampedBackIntoView` was fixed on 2026-08-02** and the full
+suite now passes with a second display attached — verified over five consecutive
+runs. The earlier text here called the failure deterministic and "not a flaky
+test"; both halves were wrong. It was intermittent, because `NSWindow.screen` is
+nil for a panel dropped clear of every display and the old `NSScreen.main`
+fallback resolved to whichever display held **keyboard focus**.
+`WindowCoordinator.referenceScreen` now prefers the display the panel was last
+genuinely on, then the nearest display, and only then `NSScreen.main`. Do not
+reintroduce a focus-dependent fallback.
 
 If the suite fails only some of the time, check the clock before the code. One
 fixture family reduces against the sleep window (23:00–06:00 local), and a

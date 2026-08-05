@@ -67,6 +67,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// `cfprefsd` and `ControlCenter`, dropping `NSHostingMenu` for a plain
     /// `NSMenu`, and moving off the SwiftUI entry point were all tried and all
     /// made no difference to the icon.
+    ///
+    /// The identifier was therefore changed to `com.mrshine09.dockpet` on
+    /// 2026-08-05 (owner decision), which is the only thing proven to bring the
+    /// icon back. Owning the item still matters and must stay: it is what keeps
+    /// a future stray Command-drag from making the app terminate itself again.
     private var statusItem: NSStatusItem?
 
     /// Mirrors the player's own persisted setting so the menu can bind to it.

@@ -59,6 +59,10 @@ final class AmbientAnimationController {
     private var previousTickTime: TimeInterval = 0
     private var lastWalkingDirection: CGFloat = 0
     private var isDragging = false
+    /// True while the panel is on another Space or fully covered. Suspends the
+    /// ambient loop only — see `occlusionChanged()`.
+    private var isOccluded = false
+    private var occlusionObserver: (any NSObjectProtocol)?
     private(set) var isVisible = false
     private(set) var isRoaming = true
 
@@ -87,6 +91,44 @@ final class AmbientAnimationController {
             }
         }
         beginWalking(at: ProcessInfo.processInfo.systemUptime)
+
+        occlusionObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didChangeOcclusionStateNotification,
+            object: windowCoordinator.panel,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.occlusionChanged() }
+        }
+    }
+
+    // No `deinit` unregisters the observer above, deliberately. `AppDelegate`
+    // builds exactly one controller per provider at launch and holds them for
+    // the process's lifetime, so there is no teardown to clean up after, and a
+    // nonisolated `deinit` cannot touch the token under Swift 6 isolation
+    // anyway. If controllers ever become disposable, the observer has to be
+    // removed at that point.
+
+    /// Stops animating a mascot nobody can see.
+    ///
+    /// AppKit clears `.visible` when the panel is on another Space or fully
+    /// covered — a full-screen window, for instance. Frames drawn then cost a
+    /// timer wakeup, a sprite swap, and a compositor pass for a pet that is not
+    /// on screen, which is the cheapest part of the idle-CPU budget to give up
+    /// because it costs nothing anyone can see.
+    ///
+    /// Transitions and drags are deliberately exempt. `beginDismiss` orders the
+    /// panel out from its *completion*, and Quit plays that same farewell, so a
+    /// dismiss whose timer stopped would never finish and the app could not be
+    /// quit. Occlusion may only ever suspend the ambient loop.
+    private func occlusionChanged() {
+        isOccluded = !windowCoordinator.panel.occlusionState.contains(.visible)
+        if isOccluded {
+            if summonStartedAt == nil, dismissStartedAt == nil, !isDragging {
+                stopTimer()
+            }
+        } else if isVisible {
+            startTimer()
+        }
     }
 
     /// The only way agent state enters the animation.
@@ -255,22 +297,48 @@ final class AmbientAnimationController {
 
     // MARK: - Timing
 
+    /// Never tick much faster than the fastest thing that actually changes.
+    ///
+    /// The ambient loop's two jobs are advancing a sprite frame and stepping a
+    /// walk. The atlas's shortest ambient frame is 100 ms and the walk rows hold
+    /// each frame for 120–140 ms, so the sprite itself only changes about eight
+    /// times a second; the walk moves 24 pt/s, which at 12 Hz is a 2 pt step —
+    /// still finer than the sprite's own frame rate. The old fixed 20 Hz was
+    /// therefore oversampling both, and each surplus tick cost a wakeup, a
+    /// sprite swap, and a compositor pass for a transparent panel. Measured at
+    /// 3.40% median idle CPU on 2026-08-02 against a <1% gate.
+    private static let ambientTickInterval = 1.0 / 12.0
+
+    /// Transitions keep the old rate. `poof` runs frames as short as 70 ms, and
+    /// the summon and dismiss timelines are both about a second — brief and
+    /// rare enough that they are not what an *idle* budget is about.
+    private static let transitionTickInterval = 1.0 / 20.0
+
     private func startTimer(resetPhase: Bool = false) {
         guard isVisible else { return }
-        guard
-            displayedState != .paused
-                || isDragging
-                || summonStartedAt != nil
-                || dismissStartedAt != nil
-        else { return }
+        let isTransitioning = isDragging || summonStartedAt != nil || dismissStartedAt != nil
+        guard displayedState != .paused || isTransitioning else { return }
+        // A transition still runs while occluded: its completion is what orders
+        // the panel out, and Quit waits on it.
+        guard !isOccluded || isTransitioning else { return }
         if resetPhase, summonStartedAt == nil, plan.isAmbient {
             beginWalking(at: ProcessInfo.processInfo.systemUptime)
         }
-        guard timer == nil else { return }
+        let interval = isTransitioning ? Self.transitionTickInterval : Self.ambientTickInterval
+        // Rate is state-dependent, so a timer running at the wrong rate is
+        // replaced rather than kept.
+        if let timer, abs(timer.timeInterval - interval) < 0.0001 { return }
+        stopTimer()
         previousTickTime = ProcessInfo.processInfo.systemUptime
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 20.0, repeats: true) { [weak self] _ in
+        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
         }
+        // Tolerance lets the kernel coalesce these wakeups with ones already
+        // scheduled instead of waking the CPU on its own. Elapsed time is
+        // measured per tick rather than assumed, so a late tick still moves the
+        // pet the right distance.
+        timer.tolerance = interval / 4
+        self.timer = timer
         tick()
     }
 
