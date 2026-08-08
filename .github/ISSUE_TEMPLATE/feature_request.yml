@@ -1,0 +1,56 @@
+name: Feature request
+description: Suggest a change to what Dock Pet does
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Dock Pet has a deliberately narrow product definition, and a number of
+        reasonable-sounding ideas have already been considered and declined with
+        reasons recorded. Please skim
+        [`DesktopMascot.md`](https://github.com/Mr-Shine09/desktop-mascot/blob/main/DesktopMascot.md)
+        and the invariants in
+        [`CONTRIBUTING.md`](https://github.com/Mr-Shine09/desktop-mascot/blob/main/CONTRIBUTING.md)
+        before writing this up.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation you are in, not the solution you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like Dock Pet to do?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: invariants
+    attributes:
+      label: Compatibility with the project's invariants
+      description: Check each one your proposal respects.
+      options:
+        - label: It needs no network access, account, or telemetry.
+        - label: >
+            It reads no prompt, transcript, code, tool argument, tool output,
+            repository path, or screen content.
+        - label: It needs no private APIs and no Dock injection.
+        - label: It does not change the frozen mascot character design.
+        - label: It keeps the app non-activating and always dismissible.
+
+  - type: textarea
+    id: exceptions
+    attributes:
+      label: If you left any box above unchecked, explain why the tradeoff is worth it
+      description: >
+        An honest argument is welcome. An unchecked box is not automatically a
+        rejection, but it does need justifying.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered

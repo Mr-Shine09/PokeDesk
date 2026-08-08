@@ -4,6 +4,18 @@ __pycache__/
 .build/
 DerivedData/
 
+# Per-user Xcode state. The .xcodeproj itself IS committed — it is generated
+# from project.yml by XcodeGen and CI checks the two stay in sync — but the
+# per-user window layout and breakpoints inside it are not shareable.
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+.swiftpm/
+
+# Python virtual environments, for the Pillow-based art tooling.
+.venv/
+venv/
+
 # Stray REPL/editor artifacts. An empty .Rhistory appeared under
 # project-skills/ on 2026-07-29 and sat in `git status` for three sessions.
 # Ignored rather than deleted: untracked files in this tree are not
