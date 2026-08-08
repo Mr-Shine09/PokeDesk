@@ -8,13 +8,26 @@ import Testing
 /// Returns the `Pipe` rather than just its read handle, and the caller must keep
 /// it alive: a released `Pipe` closes its write end, which produces the very EOF
 /// the "never closes" case is trying to withhold.
+///
+/// The writer runs on a **dedicated thread, not `DispatchQueue.global()`**.
+/// It did use the global queue until 2026-08-08, when CI failed on its first
+/// ever run and then failed a *different* test in this file on re-run. Every
+/// test here parks three threads at once — the test thread on the reader's
+/// semaphore, a pool thread inside `handle.availableData`, and a pool thread
+/// sleeping here — and Swift Testing runs them in parallel. On a CI runner with
+/// few cores the pool cannot grow fast enough, so a writer block waits seconds
+/// to be scheduled and the reader hits its deadline. The proof it was
+/// scheduling and not slowness: the failing re-run was the empty-chunks case,
+/// whose writer only closes the handle, and it still took the full 5 seconds.
+/// A machine with spare cores hides this completely, which is why it passed
+/// locally for weeks. Do not move this back onto a shared queue.
 private func makePipe(
     chunks: [String],
     gap: TimeInterval = 0.05,
     closeAfterWriting: Bool = true
 ) -> Pipe {
     let pipe = Pipe()
-    DispatchQueue.global().async {
+    let thread = Thread {
         for chunk in chunks {
             pipe.fileHandleForWriting.write(Data(chunk.utf8))
             Thread.sleep(forTimeInterval: gap)
@@ -23,6 +36,8 @@ private func makePipe(
             try? pipe.fileHandleForWriting.close()
         }
     }
+    thread.name = "HookPayloadReaderTests.writer"
+    thread.start()
     return pipe
 }
 
