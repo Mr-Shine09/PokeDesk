@@ -1,0 +1,113 @@
+name: Bug report
+description: Something in Dock Pet does not work the way it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report.
+
+        **Please do not paste prompt, transcript, or source code content.**
+        Dock Pet never sees it, and neither should this issue tracker.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Summon the Claude mascot
+        2. Start a Claude Code session
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: "14.6.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: hardware
+    attributes:
+      label: Hardware
+      options:
+        - Apple Silicon
+        - Intel
+    validations:
+      required: true
+
+  - type: dropdown
+    id: build
+    attributes:
+      label: How did you build it?
+      options:
+        - "./tools/install_app.sh into ~/Applications"
+        - "xcodebuild into a DerivedData path"
+        - "Xcode GUI"
+        - "Other / not sure"
+    validations:
+      required: true
+
+  - type: input
+    id: commit
+    attributes:
+      label: Commit
+      description: "Output of `git rev-parse --short HEAD`"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Which mascot or provider is involved?
+      options:
+        - "Claude Code (orange mascot)"
+        - "Codex (navy mascot)"
+        - "Both"
+        - "Neither — this is about the app itself"
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Menu bar diagnostics
+      description: >
+        Open the menu bar paw print and copy the `Event socket:` and
+        `Reduced state:` lines as they read when the problem occurs.
+      render: text
+
+  - type: textarea
+    id: display
+    attributes:
+      label: Display setup
+      description: >
+        Number of displays, Retina or not, Dock position, whether Dock
+        auto-hide is on, and whether you were in a full-screen Space. Several
+        known rough edges live here.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: >
+            I quit and relaunched the app after building. (`open -g` reopens a
+            running process instead of relaunching it, so you can end up testing
+            the old binary.)
+        - label: >
+            If this is about events not arriving, I confirmed the hook path in
+            my agent config matches where the app actually is.
+        - label: I have not included any prompt, transcript, or source content.
+          required: true

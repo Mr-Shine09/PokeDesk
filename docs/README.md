@@ -1,5 +1,11 @@
 # Dock Pet documentation
 
+These are the *engineering* documents. If you arrived here wanting to install
+and use Dock Pet, start with the top-level [`../README.md`](../README.md)
+instead — it covers requirements, install, agent hook setup, privacy, and
+troubleshooting. [`../CONTRIBUTING.md`](../CONTRIBUTING.md) covers the
+invariants a change has to respect.
+
 Use these documents in this order:
 
 1. [`HANDOFF.md`](HANDOFF.md) — immediate project takeover and current state
