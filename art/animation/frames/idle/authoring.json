@@ -1,7 +1,7 @@
 {
   "state": "idle",
   "method": "native-pixel-lens-interior-edit",
-  "source_base": "/Users/oaksoekhant/Mac Dock Pet/art/production/mascot-base-chibi-40pt-at2x-80px-final.png",
+  "source_base": "art/production/mascot-base-chibi-40pt-at2x-80px-final.png",
   "source_sha256": "954f4b19cf352808e89c2e197849c16e58409f107a4b5dfd681aa9dac432abc6",
   "frame_count": 4,
   "cell_offset": [

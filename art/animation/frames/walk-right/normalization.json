@@ -1,6 +1,6 @@
 {
   "state": "walk-right",
-  "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/walk-right-row.png",
+  "source": "art/animation/sources/walk-right-row.png",
   "frames": 6,
   "source_slot_bounds": [
     [
@@ -41,5 +41,5 @@
     ]
   ],
   "shared_scale": 0.2125340599455041,
-  "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/walk-right"
+  "output_root": "art/animation/frames/walk-right"
 }

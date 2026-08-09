@@ -1,6 +1,6 @@
 {
   "state": "failure",
-  "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/failure-row.png",
+  "source": "art/animation/sources/failure-row.png",
   "frames": 6,
   "source_slot_bounds": [
     [
@@ -43,5 +43,5 @@
   "shared_scale": 0.20967741935483872,
   "bounds_mode": "normal",
   "minimum_component_ratio": 0.02,
-  "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/failure"
+  "output_root": "art/animation/frames/failure"
 }

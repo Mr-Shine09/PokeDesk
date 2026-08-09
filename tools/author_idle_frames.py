@@ -11,6 +11,22 @@ from pathlib import Path
 from PIL import Image
 
 
+REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
+
+
+def repository_relative(path: Path) -> str:
+    """Record provenance as a repository-relative path.
+
+    This record is committed, so an absolute path would publish the authoring
+    machine's home directory (and its owner's name) alongside the art.
+    """
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(REPOSITORY_ROOT))
+    except ValueError:
+        return str(resolved)
+
+
 EXPECTED_BASE_SHA256 = "954f4b19cf352808e89c2e197849c16e58409f107a4b5dfd681aa9dac432abc6"
 WHITE = (246, 243, 228, 255)
 SKIN = (255, 190, 75, 255)
@@ -89,7 +105,7 @@ def main() -> int:
     report = {
         "state": "idle",
         "method": "native-pixel-lens-interior-edit",
-        "source_base": str(base_path),
+        "source_base": repository_relative(base_path),
         "source_sha256": EXPECTED_BASE_SHA256,
         "frame_count": 4,
         "cell_offset": offset,

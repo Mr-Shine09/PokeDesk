@@ -1,6 +1,6 @@
 {
   "state": "success",
-  "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/success-row.png",
+  "source": "art/animation/sources/success-row.png",
   "frames": 6,
   "source_slot_bounds": [
     [
@@ -43,5 +43,5 @@
   "shared_scale": 0.18266978922716628,
   "bounds_mode": "normal",
   "minimum_component_ratio": 0.005,
-  "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/success"
+  "output_root": "art/animation/frames/success"
 }
