@@ -11,6 +11,24 @@ from pathlib import Path
 from PIL import Image
 
 
+REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
+
+
+def repository_relative(path: Path) -> str:
+    """Record provenance as a repository-relative path.
+
+    These records are committed, so an absolute path would publish the
+    authoring machine's home directory (and its owner's name) alongside the
+    art. A path outside the repository is kept verbatim; it is already
+    unreproducible elsewhere and hiding that would be worse than naming it.
+    """
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(REPOSITORY_ROOT))
+    except ValueError:
+        return str(resolved)
+
+
 def rgb_from_hex(value: str) -> tuple[int, int, int]:
     value = value.removeprefix("#")
     return tuple(int(value[index:index + 2], 16) for index in (0, 2, 4))
@@ -215,14 +233,14 @@ def process_strip(
 
     report = {
         "state": state,
-        "source": str(strip_path.resolve()),
+        "source": repository_relative(strip_path),
         "frames": frame_count,
         "source_slot_bounds": bounds,
         "shared_scale": scale,
         "bounds_mode": bounds_mode,
         "minimum_component_ratio": minimum_component_ratio,
         "anchor_mode": anchor_mode,
-        "output_root": str(destination.resolve()),
+        "output_root": repository_relative(destination),
     }
     (destination / "normalization.json").write_text(json.dumps(report, indent=2) + "\n")
 

@@ -1,6 +1,6 @@
 {
   "state": "working",
-  "source": "/Users/oaksoekhant/Mac Dock Pet/art/animation/sources/working-row.png",
+  "source": "art/animation/sources/working-row.png",
   "frames": 6,
   "source_slot_bounds": [
     [
@@ -43,5 +43,5 @@
   "shared_scale": 0.23076923076923078,
   "bounds_mode": "normal",
   "minimum_component_ratio": 0.005,
-  "output_root": "/Users/oaksoekhant/Mac Dock Pet/art/animation/frames/working"
+  "output_root": "art/animation/frames/working"
 }
