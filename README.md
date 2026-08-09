@@ -214,9 +214,12 @@ merely so that it promises not to.
 
 Stated plainly, because you are about to build this yourself:
 
-- **Idle CPU is around 2.2%** with one mascot on screen, against a target of
-  under 1%. The animation loop runs at 12 Hz and pauses when the pet is hidden
-  behind a window, but this is not solved yet.
+- **Idle CPU is around 2.2%** with one mascot on screen — about the same energy
+  cost as `launchd` or `bluetoothd` on the same machine. The animation loop runs
+  at 12 Hz and stops entirely when the pet is hidden behind a window. It is a
+  continuously animated sprite, so it is not free; if that bothers you, dismiss
+  the pet and the cost drops to roughly 0.4%. Two mascots on screen at once have
+  never been measured.
 - **No notarized download.** Build from source; see above.
 - **No launch at login.** Add it manually if you want it.
 - **The `waiting` and `failed` states have never been observed from a real

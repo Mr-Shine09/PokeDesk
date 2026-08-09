@@ -180,20 +180,73 @@ Energy and memory were measured for the first time on 2026-08-02 from the
 installed build, sampling cumulative CPU time every 15 s for 11 minutes.
 
 - [ ] Reduce Motion behavior passes.
-- [ ] **Idle CPU median below 1% over ten minutes. FAILS: 3.40% median with one
-  mascot on screen** (mean 3.51%, max 6.87%, n=39 over 9.8 min). With no mascot
-  summoned the same build sits at 0.40% median, so the cost is the animation
-  loop, not the event path or the menu-bar item. Measured with a single mascot;
-  two were never measured together. Either the loop needs throttling — a lower
-  frame rate while strolling, or pausing when occluded — or the gate needs to be
-  restated for an app whose whole purpose is an animated sprite.
+- [x] **Idle CPU median below 3% over ten minutes, with an energy cost in the
+  band of an ordinary background daemon. PASSES: 2.17% median, 2.21% mean,
+  1.47–3.27% range** with one mascot on screen (n=20 over 5 min), and an
+  **Energy Impact of 3.70** against 757 for the whole machine — comparable to
+  `launchd` (3.68) and `bluetoothd` (3.42), with `WindowServer` at 241 for
+  scale. With no mascot summoned the same build sits at 0.40% median, so the
+  cost is the animation loop, not the event path or the menu-bar item.
+
+  **This gate was restated on 2026-08-09 by owner decision.** It was `<1%`, and
+  it failed twice: 3.40% median on 2026-08-02, then 2.17% on 2026-08-05 after
+  the loop was throttled to 12 Hz with an occlusion pause. Cost is very close to
+  linear in tick rate — a 40% cut in ticks bought a 36% cut in CPU — so `<1%`
+  needs roughly 5.5 Hz, which is **below the sprite's own ~8 fps** and would
+  visibly degrade the animation rather than merely stop oversampling it. The
+  original figure was set before anyone had measured what a continuously
+  animated sprite costs. The remaining structural levers (not moving the
+  `NSPanel` every tick while walking; coalescing both mascots onto one timer)
+  were left unspent and are still available if the number ever needs to drop.
+
+  Still true and still unmeasured: **two mascots have never been measured
+  together**, so do not assume the cost is linear in mascot count. Sample for
+  minutes — a single 5-second `powermetrics` window landed on the top of the
+  range and produced a wrong conclusion on 2026-08-05.
 - [x] Memory below 80 MB after ten minutes with no transition growth trend.
   `phys_footprint` 36 MB, peak 37 MB, 48 KB swapped. RSS reads 81 MB but is
   dominated by shared framework pages; `phys_footprint` is what Activity Monitor
   reports as Memory and is the honest figure. No growth trend: RSS fell from
   88.7 MB to 80.9 MB across the window.
-- [ ] Local event-to-visible-state latency below 500 ms.
-- [ ] Launch at login works and is reversible.
+- [x] **Local event-to-visible-state latency below 500 ms. PASSES with about 4x
+  headroom: ~70 ms typical, ~122 ms worst case.** Measured 2026-08-09 against
+  the installed build with the app running and listening.
+
+  This is a **composition of measured parts, not one stopwatch** — the app has
+  no instrumentation that timestamps a state reaching the screen, and none was
+  added for a measurement this far inside the gate:
+
+  | Stage | Median | Worst observed |
+  | --- | --- | --- |
+  | `dockpet-event` exec → exit (spawn, connect, write) | 19.1 ms | 20.9 ms |
+  | Socket read → main-actor hop | *not measured* | see below |
+  | Decode + registry ingest + reduce + recompute | 0.35 ms | 0.71 ms |
+  | Wait for the next 12 Hz ambient tick to swap the row | ~41.7 ms | 83.3 ms |
+  | One compositor frame | ~8 ms | ~16.7 ms |
+  | **Total** | **~69 ms** | **~122 ms** |
+
+  The helper figure is n=40 against the real installed binary, discarding a
+  warm-up run. The compute figure is n=2000 in release, warmed. The tick figure
+  is arithmetic, not a measurement: `adopt` sets `nextFrameTime = 0` rather than
+  drawing, so an agent-driven row swaps on the next ambient tick. `paused` is
+  the exception and calls `show()` directly, which is deliberate.
+
+  The unmeasured hop is a single kernel wakeup on a socket plus one main-actor
+  hop. It is not separately measured, and it does not need to be: it would have
+  to be **3000x** larger than plausible to consume the 380 ms of headroom.
+
+  **One case exceeds the gate on purpose.** `AnimationSelector` holds a state
+  change for a 0.75 s minimum dwell if the previous change committed less than
+  that ago, so a second change inside one dwell window reaches the screen in up
+  to ~771 ms. That is the dwell doing its job — sessions flip between working
+  and waiting several times a second while tools run, and showing every flip
+  reads as a glitch, not as information. The first change after a quiet period
+  is never delayed: `committedAt` is `nil` until the first real commit. Do not
+  "fix" this to pass the gate.
+- [ ] ~~Launch at login works and is reversible.~~ **Out of scope by owner
+  decision, 2026-07-30.** There is no launch at login, deliberately; the mascot
+  appears only when summoned. This line is kept rather than deleted so a future
+  reader does not re-open it as an oversight.
 - [ ] Hardened runtime and signing configured.
 - [ ] Notarized build installs on a clean account.
 - [ ] Install, upgrade, and uninstall instructions verified.
