@@ -168,6 +168,46 @@ private func key(_ provider: EventProvider = .claudeCode, _ session: String = "s
     #expect(registry.sessions(at: boot.advanced(by: offset + 121)).isEmpty)
 }
 
+// MARK: - Waiting outlives the ordinary heartbeat timeout
+
+@Test func aWaitingSessionSurvivesLongPastTheHeartbeatTimeout() {
+    // Regression, observed in a real Claude Code session on 2026-08-09: a
+    // permission prompt was still on screen and the mascot strolled away.
+    // A blocked agent sends nothing while it waits, so the ordinary quiet-means-
+    // gone rule retired the very session that was most certainly alive.
+    var registry = SessionRegistry()
+    registry.ingest(event(.started), at: boot)
+    registry.ingest(event(.waiting, offset: 1), at: boot.advanced(by: 1))
+
+    // Well past the 120 s heartbeat timeout, with no further events at all.
+    let sessions = registry.sessions(at: boot.advanced(by: 600))
+    #expect(sessions.count == 1)
+    #expect(sessions.first?.activity == .waiting)
+}
+
+@Test func aWaitingSessionIsStillEventuallyExpired() {
+    // Not infinite on purpose: an agent killed mid-prompt must not leave the
+    // mascot asserting `waiting` for the rest of the login session.
+    var registry = SessionRegistry()
+    registry.ingest(event(.started), at: boot)
+    registry.ingest(event(.waiting, offset: 1), at: boot.advanced(by: 1))
+
+    #expect(registry.sessions(at: boot.advanced(by: 1 + 1_799)).count == 1)
+    #expect(registry.sessions(at: boot.advanced(by: 1 + 1_801)).isEmpty)
+}
+
+@Test func leavingWaitingRestoresTheOrdinaryHeartbeatTimeout() {
+    // The longer deadline is a property of the current activity, not a lasting
+    // exemption the session keeps once the user has answered.
+    var registry = SessionRegistry()
+    registry.ingest(event(.started), at: boot)
+    registry.ingest(event(.waiting, offset: 1), at: boot.advanced(by: 1))
+    registry.ingest(event(.active, offset: 2), at: boot.advanced(by: 2))
+
+    #expect(registry.sessions(at: boot.advanced(by: 2 + 119)).count == 1)
+    #expect(registry.sessions(at: boot.advanced(by: 2 + 121)).isEmpty)
+}
+
 @Test func reconcileRemovesExpiredSessionsFromStorage() {
     var registry = SessionRegistry()
     registry.ingest(event(.active), at: boot)

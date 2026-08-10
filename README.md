@@ -222,10 +222,10 @@ Stated plainly, because you are about to build this yourself:
   never been measured.
 - **No notarized download.** Build from source; see above.
 - **No launch at login.** Add it manually if you want it.
-- **The `waiting` and `failed` states have never been observed from a real
-  provider run** — they work, and they are covered by tests and by
-  **Preview State**, but no one has watched a genuine agent session produce
-  them.
+- **The `failed` state has never been observed from a real provider run** — it
+  works, and it is covered by tests and by **Preview State**, but no one has
+  watched a genuine agent session produce it. `waiting` was first seen from a
+  real Claude Code session on 2026-08-09.
 - **The Codex mascot has not been watched reacting to a real Codex session.**
   The hooks are installed, trusted, and have been exercised end to end without
   failure, but nobody has confirmed the on-screen reaction.

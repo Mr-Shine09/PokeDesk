@@ -1842,6 +1842,20 @@ Owner answers recorded the same day:
 - Verification note: sending latency probes required delivering real events to the running app, which moved the on-screen mascot through `active`/`waiting` exactly as a provider hook would. That is the intended behavior of the path being measured, and the state settles back on its own.
 - Next: the four remaining items are **owner-side, not engineering** — a README screenshot, a watched real Codex session, a Reduce Motion pass, and flipping repository visibility. Signing and notarization stay blocked on a Developer ID purchase.
 
+### 2026-08-09 — A waiting session no longer expires while the user is thinking
+
+- **Owner-reported defect, and the first real-provider sighting of `waiting`.** The owner watched a real Claude Code session put the mascot into `waiting`, left it, and the mascot went back to strolling while the prompt was still on screen. **This retires the "`waiting` has never been observed from a real provider" claim**, which stood in `README.md`, `CLAUDE.md`, and `docs/HANDOFF.md`; all three are corrected. `failed` is still fixture-only.
+- **Two wrong diagnoses were proposed and discarded before the right one.** Recorded because the discarding is the useful part:
+  - *Preview State timing out.* Ruled out: `setPreview` is sticky, there is no timer, and `overrides.preview` is checked first in the reducer. A preview persists until it is switched Off.
+  - *The animation freezing on its last frame.* Plausible, because the `waiting` row ends on a `"hold"` duration — but `hold` maps to 0.5 s in `frameDuration`, and `advanceFrames` wraps with `% frames.count`. The row loops forever on a ~960 ms cycle and never stops.
+  - The owner's confirmation that **Preview State was off and the session was real** is what selected between them. Asking was worth more than guessing: the first explanation offered was right about the mechanism and would have been wrong about the observation.
+- **Cause:** `SessionRegistry.isExpired` applied the ordinary 120 s `heartbeatTimeout` to every non-`stopped` session. A waiting session is blocked on a human and therefore sends nothing by definition, so the registry retired the one session that was most certainly alive, the reducer saw no sessions, and the result was `offline` — which strolls.
+- **Fix:** a separate `waitingTimeout`, defaulting to **1800 s**, selected in `isExpired` by activity. Deliberately **not infinite**: an agent killed mid-prompt leaves a session nothing will ever update, and showing `waiting` forever would assert something false. Half an hour is far past any human response time and still bounds that lie. The reasoning is in the source, not only here.
+- **The regression tests were proven to fail without the fix.** All three were run against a temporarily reverted `isExpired`: `aWaitingSessionSurvivesLongPastTheHeartbeatTimeout` and `aWaitingSessionIsStillEventuallyExpired` both failed, and the fix restored them. A regression test that passes either way proves nothing, so this check is the point of the entry. The third test, `leavingWaitingRestoresTheOrdinaryHeartbeatTimeout`, pins that the longer deadline follows the *current activity* and is not an exemption a session keeps after the user answers.
+- Verification: **201 tests pass** (198 + 3). The build initially failed to link, which is the documented `swift package clean` case — a stored property was added to a public struct. Do not debug that linker error; clean first.
+- **Not fixed, deliberately, and filed instead:** a customizable sleep window, and the inertness of `ideating`. Neither is a 0.1 defect and both want an owner design decision. See the issues.
+- **This is app-side behavior that has not been re-observed on screen.** The fix is proven by unit test against injected clocks; nobody has watched a real waiting session survive past two minutes in the installed build. That is a 30-minute observation and it has not been done.
+
 ## Next-session handoff
 
 1. Read this file in full.
