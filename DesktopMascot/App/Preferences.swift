@@ -1,4 +1,5 @@
 import Foundation
+import MascotCore
 
 /// The only things Dock Pet remembers between launches.
 ///
@@ -17,6 +18,16 @@ enum Preferences {
     private enum Key {
         static let roaming = "com.mrshine09.desktopmascot.roaming"
         static let reactionSoundsMuted = "com.mrshine09.desktopmascot.reactionSoundsMuted"
+        static let sleepScheduleEnabled = "com.mrshine09.desktopmascot.sleepScheduleEnabled"
+        static let sleepStartHour = "com.mrshine09.desktopmascot.sleepStartHour"
+        static let sleepEndHour = "com.mrshine09.desktopmascot.sleepEndHour"
+        // The `desktopmascot` prefix is stale — the bundle identifier became
+        // `dockpet` on 2026-08-05 — but it is matched deliberately. These are
+        // arbitrary strings inside the app's own defaults domain, where the
+        // prefix carries no meaning at all, and one consistent namespace is
+        // worth more than a half-migrated one. Do not rename the existing two:
+        // that resets every user's saved choice, which is why `reactionSounds`
+        // is still called that.
     }
 
     /// `UserDefaults.standard` is read through a computed property rather than
@@ -52,5 +63,41 @@ enum Preferences {
         set {
             defaults.set(newValue, forKey: Key.reactionSoundsMuted)
         }
+    }
+
+    /// The nightly sleep window, or `nil` when the user has switched scheduled
+    /// sleep off. Defaults to the documented 23:00–06:00 on a fresh install.
+    ///
+    /// Stored as three keys rather than one encoded value so a partially written
+    /// or hand-edited domain degrades to the default instead of failing to
+    /// decode. `SleepWindow` clamps the hours, so a value outside `0 ... 23`
+    /// cannot reach the reducer.
+    static var sleepWindow: SleepWindow? {
+        get {
+            let enabled = defaults.object(forKey: Key.sleepScheduleEnabled) as? Bool ?? true
+            guard enabled else { return nil }
+            return SleepWindow(
+                startHour: defaults.object(forKey: Key.sleepStartHour) as? Int ?? 23,
+                endHour: defaults.object(forKey: Key.sleepEndHour) as? Int ?? 6
+            )
+        }
+        set {
+            defaults.set(newValue != nil, forKey: Key.sleepScheduleEnabled)
+            // The hours are kept when sleep is switched off, so turning it back
+            // on restores the schedule the user chose rather than the default.
+            if let newValue {
+                defaults.set(newValue.startHour, forKey: Key.sleepStartHour)
+                defaults.set(newValue.endHour, forKey: Key.sleepEndHour)
+            }
+        }
+    }
+
+    /// The hours to show while sleep is switched off, so the menu can present
+    /// the schedule that would resume rather than blanks.
+    static var lastSleepHours: (start: Int, end: Int) {
+        (
+            defaults.object(forKey: Key.sleepStartHour) as? Int ?? 23,
+            defaults.object(forKey: Key.sleepEndHour) as? Int ?? 6
+        )
     }
 }

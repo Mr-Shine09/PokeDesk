@@ -6,7 +6,7 @@ at a glance, what your coding agent is doing.
 When Claude Code or Codex starts working, the pet sits down at a little computer
 and types. When a turn finishes, it does a fist pump. When something fails, it
 gets dizzy. The rest of the time it strolls back and forth along the bottom of
-your screen, and after 23:00 it curls up and sleeps.
+your screen, and on a schedule you set it curls up and sleeps.
 
 Dock Pet is a native macOS menu-bar accessory app. It never activates over your
 work, never appears until you summon it, and never reads a single character of
@@ -59,7 +59,7 @@ The states the pet can show:
 | Success | Sparkling eyes and one quick fist pump |
 | Failure | A short confused, dizzy stumble |
 | Chilling / offline | Strolls along the bottom of the screen |
-| Sleeping | Sleeps under a blanket between 23:00 and 06:00 |
+| Sleeping | Sleeps under a blanket during the scheduled sleep window, 23:00–06:00 by default and adjustable from the menu |
 | Paused | Stands still |
 
 When several sessions are active at once, they reduce deterministically in this
@@ -175,6 +175,7 @@ Click the menu bar paw print:
 | **Sounds** | Mutes all four cues (success, failure, summon, dismiss) |
 | **Roam Along Bottom** | Turns strolling on and off |
 | **Reposition on Current Display** | Returns the pet to the default bottom lane |
+| **Sleep Schedule** | Sets the hours the pet sleeps, or switches scheduled sleep off entirely |
 | **Preview State** | Forces any animation without needing a real agent. Good for a first look |
 | **Agent Hook Setup** | Copies the config snippet described above |
 | **Quit Dock Pet** | Plays the farewell, then quits |

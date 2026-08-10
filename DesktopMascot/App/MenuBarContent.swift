@@ -75,6 +75,53 @@ struct MenuBarContent: View {
             appDelegate.reposition()
         }
 
+        // The nightly window in which a quiet mascot sleeps instead of
+        // strolling. Two 24-item submenus rather than a preset list, because a
+        // preset list is a guess about which schedules matter and this costs
+        // nothing extra to make complete.
+        Menu(appDelegate.sleepScheduleSummary) {
+            Button {
+                appDelegate.setSleepWindow(nil)
+            } label: {
+                Label(
+                    "Off — never sleep",
+                    systemImage: appDelegate.sleepWindow == nil ? "checkmark" : "minus"
+                )
+            }
+            .accessibilityLabel("Turn off scheduled sleep so the mascot never sleeps")
+            Divider()
+            Menu("Sleeps At") {
+                ForEach(0 ..< 24, id: \.self) { hour in
+                    Button {
+                        appDelegate.setSleepStartHour(hour)
+                    } label: {
+                        Label(
+                            AppDelegate.hourLabel(hour),
+                            systemImage: appDelegate.sleepWindow?.startHour == hour
+                                ? "checkmark"
+                                : "minus"
+                        )
+                    }
+                    .accessibilityLabel("Sleep from \(AppDelegate.hourLabel(hour))")
+                }
+            }
+            Menu("Wakes At") {
+                ForEach(0 ..< 24, id: \.self) { hour in
+                    Button {
+                        appDelegate.setSleepEndHour(hour)
+                    } label: {
+                        Label(
+                            AppDelegate.hourLabel(hour),
+                            systemImage: appDelegate.sleepWindow?.endHour == hour
+                                ? "checkmark"
+                                : "minus"
+                        )
+                    }
+                    .accessibilityLabel("Wake at \(AppDelegate.hourLabel(hour))")
+                }
+            }
+        }
+
         // Every animation reachable without an agent, which is otherwise
         // impossible for the states only a real session can produce.
         Menu("Preview State") {
