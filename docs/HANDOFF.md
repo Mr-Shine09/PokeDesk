@@ -18,7 +18,7 @@ Claude Code hooks ─┘                                      |
                                               animation + window controller
 ```
 
-Every stage is implemented and verified against a real Claude Code session. On 2026-08-02 the repaired Codex hooks were also reviewed, trusted, shown Active, and exercised by a fresh real Codex turn through clean shutdown with no hook failure; an independent helper/socket check proved the installed helper can deliver to the running app. The navy mascot's on-screen reaction was not observed during that run, and `waiting` and `failed` remain fixture-only.
+Every stage is implemented and verified against a real Claude Code session. On 2026-08-02 the repaired Codex hooks were also reviewed, trusted, shown Active, and exercised by a fresh real Codex turn through clean shutdown with no hook failure; an independent helper/socket check proved the installed helper can deliver to the running app. The navy mascot's on-screen reaction was not observed during that run, and `failed` remains fixture-only. `waiting` was first observed from a real Claude Code session on 2026-08-09, which is how the waiting-expiry defect was found.
 
 ## Current working state
 

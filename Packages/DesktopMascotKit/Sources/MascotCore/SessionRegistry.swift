@@ -77,6 +77,21 @@ public struct AgentSession: Equatable, Sendable {
 public struct SessionRegistryLimits: Equatable, Sendable {
     /// A session with no event for this long is treated as offline.
     public var heartbeatTimeout: TimeInterval
+    /// The same, for a session that is waiting on the user.
+    ///
+    /// Deliberately far longer than `heartbeatTimeout`, because a waiting
+    /// session is the one case where silence is *evidence the session is still
+    /// there* rather than evidence it is gone: the agent is blocked on a human,
+    /// so by definition it sends nothing until the human answers. Under the
+    /// ordinary timeout the mascot gave up after two minutes and strolled away
+    /// while a permission prompt was still on screen — observed in a real Claude
+    /// Code session on 2026-08-09.
+    ///
+    /// It is not infinite on purpose. An agent killed while waiting leaves a
+    /// session nothing will ever update, and showing `waiting` forever would
+    /// assert something false about the machine's state. Half an hour is far
+    /// past any realistic human response time and still bounds that lie.
+    public var waitingTimeout: TimeInterval
     /// How long a `stopped` session is retained before removal.
     public var stoppedGracePeriod: TimeInterval
     public var successReaction: TimeInterval
@@ -87,12 +102,14 @@ public struct SessionRegistryLimits: Equatable, Sendable {
 
     public init(
         heartbeatTimeout: TimeInterval = 120,
+        waitingTimeout: TimeInterval = 1800,
         stoppedGracePeriod: TimeInterval = 5,
         successReaction: TimeInterval = 3,
         failureReaction: TimeInterval = 4,
         maximumSessions: Int = 64
     ) {
         self.heartbeatTimeout = heartbeatTimeout
+        self.waitingTimeout = waitingTimeout
         self.stoppedGracePeriod = stoppedGracePeriod
         self.successReaction = successReaction
         self.failureReaction = failureReaction
@@ -235,9 +252,17 @@ public struct SessionRegistry: Equatable, Sendable {
         if let reaction = session.reaction, uptime <= reaction.expiresAt {
             return false
         }
-        let deadline = session.activity == .stopped
-            ? limits.stoppedGracePeriod
-            : limits.heartbeatTimeout
+        let deadline: TimeInterval
+        switch session.activity {
+        case .stopped:
+            deadline = limits.stoppedGracePeriod
+        case .waiting:
+            // A blocked agent sends nothing while it waits, so quiet is the
+            // expected condition here rather than a sign of death.
+            deadline = limits.waitingTimeout
+        case .idle, .working, .completed, .failed:
+            deadline = limits.heartbeatTimeout
+        }
         return uptime > session.lastSeen.advanced(by: deadline)
     }
 

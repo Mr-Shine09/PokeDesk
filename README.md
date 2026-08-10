@@ -214,15 +214,18 @@ merely so that it promises not to.
 
 Stated plainly, because you are about to build this yourself:
 
-- **Idle CPU is around 2.2%** with one mascot on screen, against a target of
-  under 1%. The animation loop runs at 12 Hz and pauses when the pet is hidden
-  behind a window, but this is not solved yet.
+- **Idle CPU is around 2.2%** with one mascot on screen — about the same energy
+  cost as `launchd` or `bluetoothd` on the same machine. The animation loop runs
+  at 12 Hz and stops entirely when the pet is hidden behind a window. It is a
+  continuously animated sprite, so it is not free; if that bothers you, dismiss
+  the pet and the cost drops to roughly 0.4%. Two mascots on screen at once have
+  never been measured.
 - **No notarized download.** Build from source; see above.
 - **No launch at login.** Add it manually if you want it.
-- **The `waiting` and `failed` states have never been observed from a real
-  provider run** — they work, and they are covered by tests and by
-  **Preview State**, but no one has watched a genuine agent session produce
-  them.
+- **The `failed` state has never been observed from a real provider run** — it
+  works, and it is covered by tests and by **Preview State**, but no one has
+  watched a genuine agent session produce it. `waiting` was first seen from a
+  real Claude Code session on 2026-08-09.
 - **The Codex mascot has not been watched reacting to a real Codex session.**
   The hooks are installed, trusted, and have been exercised end to end without
   failure, but nobody has confirmed the on-screen reaction.
