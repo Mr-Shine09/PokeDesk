@@ -62,7 +62,7 @@ The reference work is inspiration only. Do not copy Claude's mascot body, palett
 | Chilling means strolling | Outside working and scheduled sleep, the mascot walks along a dedicated Dock-edge lane rather than remaining in a static idle pose. |
 | Working means seated typing | When Claude or ChatGPT/Codex work is active, the mascot sits at a tiny computer and types. |
 | Failure means confused/dizzy | A genuine provider or integration failure triggers a short confused/dizzy reaction before returning to the appropriate ambient state. |
-| Scheduled sleep is 23:00–06:00 local time | During this window the inactive mascot sleeps under a blanket; new work interrupts sleep immediately. |
+| Scheduled sleep defaults to 23:00–06:00 local time | During this window the inactive mascot sleeps under a blanket; new work interrupts sleep immediately. The hours became user-adjustable, and the schedule switchable off entirely, on 2026-08-09. |
 | Independent Dock-edge window | The mascot visually occupies a lane at the Dock edge but does not inject into or modify the macOS Dock. Dock auto-hide may remain enabled. |
 | Dock-only movement for 0.1 | Broader roaming across the lower screen is a later experiment after Dock hit-testing and distraction are validated. |
 | Broad Claude/ChatGPT coverage is the goal | Supported lifecycle hooks are authoritative. Any ordinary ChatGPT app/web coverage must be explicitly labeled best-effort unless a documented lifecycle signal is available. |
@@ -307,7 +307,7 @@ Rules:
 - Failure reaction initially lasts 4 seconds; sparkling-eyes/fist-pump success lasts 3 seconds.
 - Waiting persists until that session emits `active`, `completed`, `failed`, or `stopped`.
 - An active session expires to `offline` after a configurable heartbeat timeout; start with 120 seconds.
-- From 23:00 through 06:00 in the Mac's current local time zone, inactivity becomes scheduled sleep immediately rather than strolling.
+- Inside the scheduled sleep window in the Mac's current local time zone — 23:00 through 06:00 unless the user has changed it, and never if they have switched it off — inactivity becomes scheduled sleep immediately rather than strolling.
 - Any working, ideating, or waiting signal interrupts scheduled sleep immediately. When the last active session ends inside the sleep window, the mascot returns to sleep after the completion reaction.
 - Outside the sleep window, no working, ideating, or waiting session means chilling/strolling.
 - Duplicate events are idempotent.
@@ -1869,6 +1869,21 @@ Owner answers recorded the same day:
 - Corrected in the same change: the ladder is written out in four places (`README.md`, `docs/HANDOFF.md`, `docs/ARCHITECTURE.md`, and the Aggregate state reducer section above), and all four now agree. The historical ledger entry from 2026-07-29 keeps the original order — it is a record of that day, not a live claim, and a note above says so.
 - **Also stale and fixed while here:** `docs/ARCHITECTURE.md` still said the animation controller "advances contract timing at 20 Hz", which stopped being true on 2026-08-05. It now states 12 Hz ambient, 20 Hz for transitions, and the occlusion pause. This is the second time a documented rate outlived the code; check this line whenever the tick changes.
 - Not done: nobody has watched the reordered ideating on screen. The change is proven by unit test only.
+
+### 2026-08-09 — The sleep schedule is user-adjustable, and switchable off
+
+- **Owner request, closing [issue #45](https://github.com/Mr-Shine09/desktop-mascot/issues/45).** A user who works nights got a sleeping pet during their most active hours and had no way to change it.
+- **The core logic needed almost nothing.** `SleepWindow` was already parameterized with correct midnight wrap-around; the whole feature was plumbing. What changed in `MascotCore` is that `MascotStateReducer.sleepWindow` became **optional**, where `nil` means no scheduled sleep at all.
+  - Optional rather than a `Bool` beside the hours, so "no schedule" cannot be confused with "a schedule that happens to be empty", and a disabled schedule carries no stale hours to misread later.
+  - `SleepWindow.init` now **clamps** hours into `0 ... 23` instead of trusting them. These values arrive from persisted preferences, which anything can write and which survive a downgrade; a nonsense hour must produce a usable window rather than a crash or a silently dead schedule.
+- Menu: a **Sleep Schedule** submenu whose own title shows the current setting, an "Off — never sleep" entry, and two 24-hour submenus. Two full hour lists rather than a preset list, because a preset list is a guess about which schedules matter and the complete version costs nothing. Choosing an hour while sleep is off turns it back on, using the saved hours for the end the user did not touch.
+- Persistence: three keys — enabled, start, end. Separate keys rather than one encoded value, so a partially written domain degrades to the default instead of failing to decode. **The hours are retained when sleep is switched off**, so turning it back on restores the user's schedule rather than the factory one. The keys keep the stale `com.mrshine09.desktopmascot.` prefix deliberately: it is meaningless inside the app's own defaults domain, and one consistent namespace beats a half-migrated one.
+- **The bug this feature would most likely have shipped with, and did not:** a restored preference that never reaches the reducer. `@Published var sleepWindow = Preferences.sleepWindow` populates the menu's checkmarks, but the bridge's reducer still holds its own default, so the setting would appear to work and silently revert on every relaunch. `applicationDidFinishLaunching` now pushes the restored window into the bridge before `start()`, with a comment saying why.
+- Setting the window **refreshes immediately** rather than waiting for the next tick, so moving the schedule across the current hour wakes or sleeps the pet at once. A 15-second delay would be harmless but reads as the setting not having worked.
+- Hours are rendered with the locale's preferred clock format, so a 12-hour region sees "11 PM" rather than "23:00".
+- Verification: **208 tests pass** (203 + 5), and the Xcode Debug build succeeds. The new tests cover a `nil` window across **all 24 hours** — not just the ones the default window excluded, which would have passed against the old behavior too — a custom night-worker window, equal hours reducing to an empty window, hour clamping, and work still interrupting a custom window.
+- Documentation: five files stated 23:00–06:00 as a fixed fact (`README.md` twice, `docs/HANDOFF.md`, and this ledger twice). All now say it is the default. `README.md`, `docs/HANDOFF.md`, and `CLAUDE.md` gained the menu entry.
+- **Not done:** nobody has opened the menu or watched the pet sleep on a changed schedule. Proven by unit test and a successful build only. The cheapest hands-on check is to set the sleep hour to the current hour and see the pet lie down.
 
 ## Next-session handoff
 

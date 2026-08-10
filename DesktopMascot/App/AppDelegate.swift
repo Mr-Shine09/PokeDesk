@@ -28,6 +28,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published var isIdeating = false
     /// Restored from preferences, so a deliberate choice survives relaunch.
     @Published var isRoaming = Preferences.roaming
+    /// The nightly sleep window, or `nil` when scheduled sleep is off.
+    /// Restored from preferences, like roaming.
+    @Published private(set) var sleepWindow = Preferences.sleepWindow
     /// Forces one animation for inspection. Never persisted: it is a testing
     /// mode, and finding the pet stuck in a fake state after a relaunch with no
     /// memory of choosing it would be its own bug.
@@ -92,6 +95,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        // The restored schedule has to reach the reducer before the first
+        // reduction. Without this the saved window lives only in the menu's
+        // checkmarks while the pet keeps the built-in 23:00–06:00 — a setting
+        // that appears to work until the app is relaunched.
+        eventBridge.sleepWindow = sleepWindow
         // Started before the mascot loads so a resource failure below still
         // leaves the event path diagnosable from the menu bar.
         eventBridge.start()
@@ -318,6 +326,69 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         for mascot in mascots { mascot.setRoaming(roaming) }
         Preferences.roaming = roaming
         refreshDiagnostics()
+    }
+
+    /// Sets the nightly sleep window, or turns scheduled sleep off with `nil`.
+    ///
+    /// The reducer is the only thing that decides whether the pet is asleep, so
+    /// this changes an input to the reduction rather than the animation — the
+    /// same rule every other state change here follows.
+    func setSleepWindow(_ window: SleepWindow?) {
+        sleepWindow = window
+        Preferences.sleepWindow = window
+        eventBridge.sleepWindow = window
+        refreshDiagnostics()
+    }
+
+    /// Choosing an hour while sleep is off turns it back on, using the saved
+    /// hours for the end the user did not touch. Picking a bedtime from a menu
+    /// that then does nothing because a separate switch is off would be a small
+    /// puzzle with no upside.
+    func setSleepStartHour(_ hour: Int) {
+        let end = sleepWindow?.endHour ?? Preferences.lastSleepHours.end
+        setSleepWindow(SleepWindow(startHour: hour, endHour: end))
+    }
+
+    func setSleepEndHour(_ hour: Int) {
+        let start = sleepWindow?.startHour ?? Preferences.lastSleepHours.start
+        setSleepWindow(SleepWindow(startHour: start, endHour: hour))
+    }
+
+    /// The submenu's own title, so the current schedule is readable without
+    /// opening it.
+    var sleepScheduleSummary: String {
+        guard let sleepWindow else { return "Sleep Schedule: Off" }
+        let start = Self.hourLabel(sleepWindow.startHour)
+        let end = Self.hourLabel(sleepWindow.endHour)
+        // An empty window is reachable — both menus are free — and silently
+        // never sleeping would look like a bug rather than a choice.
+        guard sleepWindow.startHour != sleepWindow.endHour else {
+            return "Sleep Schedule: \(start)–\(end) (never)"
+        }
+        return "Sleep Schedule: \(start)–\(end)"
+    }
+
+    /// Formats an hour the way the user's own locale writes clock times, so a
+    /// 12-hour region sees "11 PM" rather than "23:00".
+    static func hourLabel(_ hour: Int) -> String {
+        let calendar = Calendar.current
+        guard
+            let date = calendar.date(
+                from: DateComponents(year: 2000, month: 1, day: 1, hour: hour)
+            )
+        else {
+            return String(format: "%02d:00", hour)
+        }
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        // "j" is the locale's preferred hour field, which is what decides
+        // between a 24-hour and a 12-hour presentation.
+        formatter.dateFormat = DateFormatter.dateFormat(
+            fromTemplate: "j",
+            options: 0,
+            locale: .current
+        ) ?? "HH"
+        return formatter.string(from: date)
     }
 
     /// Describes what the pet is actually doing, without implying that a state

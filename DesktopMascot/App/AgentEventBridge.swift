@@ -34,6 +34,21 @@ final class AgentEventBridge: ObservableObject {
         }
     }
 
+    /// The nightly sleep window, or `nil` for no scheduled sleep at all.
+    ///
+    /// Refreshes on change rather than waiting for the next tick, so moving the
+    /// schedule across the current hour wakes or sleeps the pet immediately
+    /// instead of up to 15 seconds later. That delay would be harmless, but it
+    /// reads as the setting not having worked.
+    var sleepWindow: SleepWindow? {
+        get { pipeline.reducer.sleepWindow }
+        set {
+            guard pipeline.reducer.sleepWindow != newValue else { return }
+            pipeline.reducer.sleepWindow = newValue
+            refresh()
+        }
+    }
+
     /// Cadence while sessions are tracked: reaction windows are seconds long, so
     /// a second of latency is invisible.
     private static let activeRefreshInterval: TimeInterval = 1

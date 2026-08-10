@@ -43,11 +43,22 @@ public struct SleepWindow: Equatable, Sendable {
     /// Exclusive local hour at which sleep ends, so 06:00 is already awake.
     public var endHour: Int
 
+    /// Hours outside `0 ... 23` are clamped rather than rejected.
+    ///
+    /// The values reach here from persisted preferences, which any process can
+    /// write and which survive an app downgrade. A nonsense hour must produce a
+    /// usable window, not a crash and not a silently dead sleep schedule.
     public init(startHour: Int = 23, endHour: Int = 6) {
-        self.startHour = startHour
-        self.endHour = endHour
+        self.startHour = min(max(startHour, 0), 23)
+        self.endHour = min(max(endHour, 0), 23)
     }
 
+    /// Equal hours mean the window is empty, not that it covers the whole day.
+    ///
+    /// This falls out of the half-open comparison below, and it is the reason
+    /// "never sleep" is expressed as a `nil` window rather than as `0 ... 0`:
+    /// an empty window and a disabled schedule should not be the same value by
+    /// coincidence.
     public func contains(hour: Int) -> Bool {
         startHour <= endHour
             ? (hour >= startHour && hour < endHour)
@@ -85,10 +96,16 @@ public struct MascotVisibleState: Equatable, Sendable {
 /// local sleep window) and the monotonic instant (for reaction and expiry
 /// windows) separately, because the two must not be conflated.
 public struct MascotStateReducer: Sendable {
-    public var sleepWindow: SleepWindow
+    /// `nil` disables scheduled sleep entirely: the mascot then strolls at 03:00
+    /// exactly as it does at noon.
+    ///
+    /// Optional rather than a `Bool` beside the hours, so "no schedule" cannot
+    /// be confused with "a schedule that happens to be empty", and so a disabled
+    /// schedule has no stale hours to misread.
+    public var sleepWindow: SleepWindow?
     public var calendar: Calendar
 
-    public init(sleepWindow: SleepWindow = SleepWindow(), calendar: Calendar = .current) {
+    public init(sleepWindow: SleepWindow? = SleepWindow(), calendar: Calendar = .current) {
         self.sleepWindow = sleepWindow
         self.calendar = calendar
     }
@@ -142,7 +159,7 @@ public struct MascotStateReducer: Sendable {
         // Any work, ideating, or waiting above already interrupted sleep. Reaching
         // here inside the window means the last turn's reaction has finished, so
         // the mascot goes back to sleep.
-        if sleepWindow.contains(hour: calendar.component(.hour, from: now)) {
+        if let sleepWindow, sleepWindow.contains(hour: calendar.component(.hour, from: now)) {
             return MascotVisibleState(state: .sleeping, providers: presentProviders)
         }
 

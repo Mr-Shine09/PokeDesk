@@ -230,6 +230,67 @@ private func reduce(
     #expect(reduce([], now: nighttime).state == .sleeping)
 }
 
+// MARK: - A customized or disabled sleep window
+
+@Test func aNilSleepWindowNeverSleeps() {
+    let reducer = MascotStateReducer(sleepWindow: nil, calendar: testCalendar)
+    let storage = registry([(.started, .claudeCode, "a")])
+    let stateAt = { (hour: Int) in
+        reducer.reduce(registry: storage, now: localTime(hour: hour), uptime: boot).state
+    }
+
+    // Every hour of the day, so this cannot pass by testing only the hours the
+    // default window happened to exclude.
+    #expect((0 ..< 24).allSatisfy { stateAt($0) == .idle })
+}
+
+@Test func aCustomWindowSleepsOnItsOwnHoursAndNotTheDefaultOnes() {
+    // A night worker: awake through the small hours, asleep in the morning.
+    let reducer = MascotStateReducer(
+        sleepWindow: SleepWindow(startHour: 7, endHour: 14),
+        calendar: testCalendar
+    )
+    let storage = registry([(.started, .claudeCode, "a")])
+    let stateAt = { (hour: Int) in
+        reducer.reduce(registry: storage, now: localTime(hour: hour), uptime: boot).state
+    }
+
+    #expect(stateAt(7) == .sleeping)
+    #expect(stateAt(13) == .sleeping)
+    #expect(stateAt(14) == .idle)
+    // The hours the built-in window would have slept through.
+    #expect(stateAt(23) == .idle)
+    #expect(stateAt(2) == .idle)
+}
+
+@Test func aWindowWithEqualHoursIsEmptyRatherThanAllDay() {
+    let reducer = MascotStateReducer(
+        sleepWindow: SleepWindow(startHour: 3, endHour: 3),
+        calendar: testCalendar
+    )
+    let storage = registry([(.started, .claudeCode, "a")])
+
+    #expect((0 ..< 24).allSatisfy {
+        reducer.reduce(registry: storage, now: localTime(hour: $0), uptime: boot).state == .idle
+    })
+}
+
+@Test func sleepWindowHoursAreClampedRatherThanTrusted() {
+    // These arrive from persisted preferences, which anything can write.
+    #expect(SleepWindow(startHour: -5, endHour: 99) == SleepWindow(startHour: 0, endHour: 23))
+    #expect(SleepWindow(startHour: 24, endHour: 24) == SleepWindow(startHour: 23, endHour: 23))
+}
+
+@Test func workInterruptsACustomWindowJustAsItInterruptsTheDefault() {
+    let reducer = MascotStateReducer(
+        sleepWindow: SleepWindow(startHour: 7, endHour: 14),
+        calendar: testCalendar
+    )
+    let storage = registry([(.active, .codex, "a")])
+
+    #expect(reducer.reduce(registry: storage, now: localTime(hour: 9), uptime: boot).state == .working)
+}
+
 // MARK: - Concurrent providers
 
 @Test func concurrentProvidersCollapseToOneWorkingStateAndSurfaceBoth() {
