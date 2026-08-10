@@ -85,10 +85,31 @@ private func reduce(
     #expect(visible.providers == [.claudeCode])
 }
 
-@Test func workingOutranksManualIdeating() {
+@Test func manualIdeatingOutranksWorking() {
+    // Reversed on 2026-08-09. Below `working`, the menu toggle was inert
+    // whenever an agent was running, which is when the pet is being watched.
     let visible = reduce([(.active, .codex, "a")], overrides: ManualOverrides(isIdeating: true))
 
-    #expect(visible.state == .working)
+    #expect(visible.state == .ideating)
+    // Still a manual mode with no originating session, even though a real
+    // working session exists and is being outranked.
+    #expect(visible.providers.isEmpty)
+}
+
+@Test func waitingStillOutranksManualIdeating() {
+    // The ceiling on the change above: ideating is a standing preference, and a
+    // waiting session is asking the user for something right now.
+    let visible = reduce([(.waiting, .claudeCode, "a")], overrides: ManualOverrides(isIdeating: true))
+
+    #expect(visible.state == .waiting)
+    #expect(visible.providers == [.claudeCode])
+}
+
+@Test func aRecentFailureStillOutranksManualIdeating() {
+    let visible = reduce([(.failed, .codex, "a")], overrides: ManualOverrides(isIdeating: true))
+
+    #expect(visible.state == .failure)
+    #expect(visible.providers == [.codex])
 }
 
 @Test func manualIdeatingOutranksARecentSuccess() {

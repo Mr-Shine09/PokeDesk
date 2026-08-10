@@ -8,7 +8,7 @@
 
 `MenuBarContent.swift` is the reliable control surface. `MascotPreviewView.swift` renders the current `NSImage` with `.interpolation(.none)`.
 
-`AmbientAnimationController.swift` is intentionally temporary orchestration. It caches frames, advances contract timing at 20 Hz, moves at 24 points/second, alternates walk direction, pauses randomly in `offline`, and plays `hanging` during drag. It does **not** own pause or ideating: those reach it as `.paused` and `.ideating` through the reducer's overrides, and `MascotVisibleState` is the single source of what plays. Roaming stays a separate flag because it is about placement, not about what the agent is doing. `onStateAppeared` fires when a state reaches the screen, after the selector's dwell, and is what the reaction cues hang off.
+`AmbientAnimationController.swift` is intentionally temporary orchestration. It caches frames, advances contract timing at 12 Hz ambient — 20 Hz during summon, dismiss, and drag, and stopped entirely while the panel is occluded, since 2026-08-05 — moves at 24 points/second, alternates walk direction, pauses randomly in `offline`, and plays `hanging` during drag. It does **not** own pause or ideating: those reach it as `.paused` and `.ideating` through the reducer's overrides, and `MascotVisibleState` is the single source of what plays. Roaming stays a separate flag because it is about placement, not about what the agent is doing. `onStateAppeared` fires when a state reaches the screen, after the selector's dwell, and is what the reaction cues hang off.
 
 ### MascotCore
 
@@ -100,7 +100,7 @@ Allow only `started`, `active`, `waiting`, `completed`, `failed`, `stopped`, and
 Priority:
 
 ```text
-paused > failure-recent > waiting > working > ideating > success-recent > scheduled-sleep > idle/strolling > offline
+paused > failure-recent > waiting > ideating > working > success-recent > scheduled-sleep > idle/strolling > offline
 ```
 
 - Manual pause is authoritative.

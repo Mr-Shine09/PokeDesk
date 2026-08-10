@@ -71,8 +71,15 @@ public struct MascotVisibleState: Equatable, Sendable {
 /// Collapses every tracked session plus the manual overrides into one visible
 /// state, using the documented priority:
 ///
-/// `paused > failure-recent > waiting > working > ideating > success-recent >
+/// `paused > failure-recent > waiting > ideating > working > success-recent >
 /// scheduled-sleep > idle/strolling > offline`
+///
+/// Manual ideating moved above `working` on 2026-08-09 (owner decision). It is
+/// an explicit user action, and below `working` it was unreachable in practice:
+/// any live agent session outranked it, so the menu toggle did nothing at
+/// exactly the moment someone was most likely to be watching the pet. It stays
+/// below `waiting` and `failure` on purpose — both of those need the user, and a
+/// standing preference must not hide something that is asking for attention.
 ///
 /// The reducer reads no clock of its own. Callers pass the wall clock (for the
 /// local sleep window) and the monotonic instant (for reaction and expiry
@@ -117,14 +124,14 @@ public struct MascotStateReducer: Sendable {
             return MascotVisibleState(state: .waiting, providers: Self.providers(of: awaiting))
         }
 
-        let working = sessions.filter { $0.activity == .working }
-        if !working.isEmpty {
-            return MascotVisibleState(state: .working, providers: Self.providers(of: working))
-        }
-
         if overrides.isIdeating {
             // Manual ideating has no originating session, so it surfaces no provider.
             return MascotVisibleState(state: .ideating)
+        }
+
+        let working = sessions.filter { $0.activity == .working }
+        if !working.isEmpty {
+            return MascotVisibleState(state: .working, providers: Self.providers(of: working))
         }
 
         let succeeding = sessions.filter { Self.hasLiveReaction($0, kind: .success, at: uptime) }
