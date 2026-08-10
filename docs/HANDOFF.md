@@ -101,7 +101,7 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 - Multiple sessions must reduce deterministically with this priority:
 
 ```text
-paused > failure-recent > waiting > working > ideating > success-recent > scheduled-sleep > idle/strolling > offline
+paused > failure-recent > waiting > ideating > working > success-recent > scheduled-sleep > idle/strolling > offline
 ```
 
 - Scheduled inactive sleep is 23:00–06:00 local time; work interrupts it immediately.

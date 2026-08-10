@@ -66,7 +66,7 @@ When several sessions are active at once, they reduce deterministically in this
 priority order:
 
 ```text
-paused > failure > waiting > working > ideating > success > sleep > idle > offline
+paused > failure > waiting > ideating > working > success > sleep > idle > offline
 ```
 
 ## Requirements

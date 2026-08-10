@@ -297,7 +297,9 @@ The product goal includes non-coding Claude and ChatGPT use, with the ideating a
 
 Track every session independently. Reduce to the visible state using this priority:
 
-`paused > failure-recent > waiting > working > ideating > success-recent > scheduled-sleep > idle/strolling > offline`
+`paused > failure-recent > waiting > ideating > working > success-recent > scheduled-sleep > idle/strolling > offline`
+
+Ideating sat below `working` until 2026-08-09; the historical entries below that date describe the original order and are not wrong about their own time.
 
 Rules:
 
@@ -1855,6 +1857,18 @@ Owner answers recorded the same day:
 - Verification: **201 tests pass** (198 + 3). The build initially failed to link, which is the documented `swift package clean` case — a stored property was added to a public struct. Do not debug that linker error; clean first.
 - **Not fixed, deliberately, and filed instead:** a customizable sleep window, and the inertness of `ideating`. Neither is a 0.1 defect and both want an owner design decision. See the issues.
 - **This is app-side behavior that has not been re-observed on screen.** The fix is proven by unit test against injected clocks; nobody has watched a real waiting session survive past two minutes in the installed build. That is a 30-minute observation and it has not been done.
+
+### 2026-08-09 — Manual ideating raised above working
+
+- **Owner decision, closing [issue #46](https://github.com/Mr-Shine09/desktop-mascot/issues/46).** The ladder is now `paused > failure-recent > waiting > ideating > working > success-recent > scheduled-sleep > idle/strolling > offline`.
+- Why: below `working`, manual ideating was **unreachable in practice**. Any live agent session outranked it, so the menu toggle did nothing at exactly the moment someone was most likely to be watching the pet — which is what the owner reported as "no valid operation for Ideating motion." The animation existed and was effectively dead.
+- **It was raised above `working` only, not to the top.** `waiting` and `failure-recent` still outrank it, deliberately: ideating is a standing preference the user set once, while those two are asking for attention right now. A preference must not hide a prompt. Both boundaries are pinned by their own tests (`waitingStillOutranksManualIdeating`, `aRecentFailureStillOutranksManualIdeating`) so a future reordering has to break something explicit.
+- **Exactly one existing test asserted the old order** — `workingOutranksManualIdeating`. It was inverted and renamed rather than deleted, because the relationship still needs pinning, just in the other direction. That single failure is also the evidence the ordering was genuinely load-bearing and not merely incidental.
+- Ideating still surfaces **no provider**, even while outranking a real working session that has one. It has no originating session, and inventing one would put a fabricated provider into the interface.
+- Verification: **203 tests pass** (201 + 2 new boundary tests). No behavior outside the reducer changed; nothing sets a row directly.
+- Corrected in the same change: the ladder is written out in four places (`README.md`, `docs/HANDOFF.md`, `docs/ARCHITECTURE.md`, and the Aggregate state reducer section above), and all four now agree. The historical ledger entry from 2026-07-29 keeps the original order — it is a record of that day, not a live claim, and a note above says so.
+- **Also stale and fixed while here:** `docs/ARCHITECTURE.md` still said the animation controller "advances contract timing at 20 Hz", which stopped being true on 2026-08-05. It now states 12 Hz ambient, 20 Hz for transitions, and the occlusion pause. This is the second time a documented rate outlived the code; check this line whenever the tick changes.
+- Not done: nobody has watched the reordered ideating on screen. The change is proven by unit test only.
 
 ## Next-session handoff
 
