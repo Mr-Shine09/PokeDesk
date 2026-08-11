@@ -14,6 +14,11 @@ the sound-toggle persistence items, icon sizes, `@1x` behavior, the rest of the
 display matrix, and the future release gates. `failed` is the only mascot state
 never produced by a real provider.
 
+**Also updated 2026-08-10.** The window/display matrix was reopened: all but two
+of its rows had been ticked by that same blanket verdict, so the ticks were
+withdrawn and each row now names the observation that would settle it. Read that
+section's preamble before assuming any display behavior is witnessed.
+
 ## Automated baseline
 
 - [x] `git diff --check` passes.
@@ -149,22 +154,65 @@ icon; the current build shows the mascot headshot.
 
 ## Window/display matrix
 
-Owner completed this matrix on 2026-08-02 except where noted. The multi-display
-clamp fix landed the same day; only the two-display arrangement on the owner's
-machine (built-in `0,0 1280x832` plus external `1280,-248 1920x1080`) was
-exercised.
+**Reopened 2026-08-10.** Every row below except the first and last was ticked
+from the 2026-08-02 blanket verdict — the same single "smooth" that ticked the
+four dismiss edge cases nobody had walked. That precedent is recorded in the
+ledger: *a tick is a claim about an observation, not about the code.* The ticks
+are therefore withdrawn rather than trusted. Nothing here is known to be broken;
+it is unwitnessed, which is a different thing. The ledger and `docs/HANDOFF.md`
+have both said "the rest of the display matrix" remained open the whole time, so
+this section was the optimistic half of a disagreement, in the same direction as
+the dismiss one.
 
-- [x] Single Retina display, bottom Dock: initial prototype pass completed.
-- [x] Bottom Dock with auto-hide on/off.
-- [x] Left Dock.
-- [x] Right Dock.
-- [x] Multiple displays with different scales.
-- [x] Move between displays, including unplugging a display with a mascot on it.
-- [x] Full-screen Spaces and ordinary Spaces.
-- [x] Display sleep/wake and laptop sleep/wake.
-- [x] Screen lock/unlock.
+The two-display arrangement on the owner's machine is built-in `0,0 1280x832`
+plus external `1280,-248 1920x1080`. Only the drop-clamp fix was genuinely
+exercised against it, on 2026-08-02.
+
+**Before walking any row:** confirm `~/Applications/Dock Pet.app`'s binary is
+newer than the last commit that changed window behavior (handoff item 32), and
+do not run `tools/install_app.sh` mid-walk — it quits the app. Summon both
+mascots and drag one to a manual height, since half these rows behave
+differently for a manually placed pet than for a default-lane one.
+
+Each row names what to expect, because a row that only says "check it" cannot
+distinguish a pass from nothing happening.
+
+- [x] Single Retina display, bottom Dock. Exercised continuously since the
+  prototype and daily by the author; this one is genuinely earned.
+- [ ] **Bottom Dock, auto-hide toggled in System Settings.** Two distinct
+  observations, and they must not be confused. Toggling the *setting* changes
+  `visibleFrame` and posts `didChangeScreenParameters`, so a default-lane pet
+  re-settles: with the Dock shown it stands on the Dock's top edge, with
+  auto-hide on it drops flush to the screen's bottom edge (the 10 pt visual
+  inset is clamped away by `DockGeometry`). The Dock merely *sliding* away on
+  hover does not change `visibleFrame`, so the pet must **not** move then. A
+  manually placed pet keeps its height through both.
+- [ ] **Left Dock** — expect the pet to stay bottom-anchored and unaffected.
+  `DockGeometry` tracks no Dock edge at all, by decision; the file says so in
+  its own doc comment. This row can never have been a meaningful pass, and it
+  is a check that the deferral holds, not that placement follows the Dock.
+- [ ] **Right Dock** — same expectation as Left Dock.
+- [ ] **Two displays with different backing scales.** The pet stays on the
+  display it was summoned or dropped on and roams within that display's bounds.
+  It must not jump displays when keyboard focus moves to the other one — that
+  was a real defect, fixed 2026-08-02 in `referenceScreen`, and moving focus
+  back and forth is what would resurrect it.
+- [ ] **Unplugging the display the mascot is on.** A manually dropped height is
+  re-clamped onto the surviving display, **not** discarded. Expect a height from
+  a 1080-tall external to land near the *top* of the 832-tall built-in, because
+  clamping preserves the intent it can and the drop was above the shorter
+  screen's ceiling. That looks wrong and is correct; Reposition is the way back.
+  A default-lane pet simply repositions to the new bottom lane.
+- [ ] Full-screen Spaces and ordinary Spaces.
+- [ ] **Display sleep/wake and laptop sleep/wake.** `NSWorkspace.didWake` is
+  wired to the same handler as a screen-parameter change, so expect the pet
+  present and correctly placed on wake. Watch specifically for a manual height
+  surviving, since wake runs `settleAfterDrop()` rather than `reposition()`.
+- [ ] Screen lock/unlock.
 - [ ] Non-Retina or deliberately authored `@1x` behavior.
-- [x] No app focus theft during timer/state changes.
+- [x] No app focus theft during timer/state changes. Verified separately: the
+  background launch (`open -g`) left ChatGPT/Codex frontmost, and the panel is
+  non-activating by construction with a test covering it.
 
 ## Event system acceptance
 
