@@ -1982,6 +1982,17 @@ Eight commits landed directly on `main`, every one documentation. **No source, a
 - No source, art, or contract changed. The 208-test baseline and atlas validation were run at session start.
 - **Exact next step:** the owner walks the reopened rows, which is now a script rather than a category. The `@1x` row needs hardware this machine may not have; skip and record it as unavailable rather than guessing.
 
+### 2026-08-10 — The display matrix was walked row by row, and seven rows are now earned
+
+- **Owner-walked from the installed build the same day it was reopened**, with both mascots summoned and one dragged to a manual height so the two code paths were exercised together. **The owner reported per row rather than as one verdict, which is the entire difference from 2026-08-02** — the blanket "smooth" is what produced nine ticks nobody could stand behind.
+- **Seven rows pass.** Dock auto-hide, both halves and exactly as predicted: flipping the *setting* re-settled the bottom pet while the Dock merely sliding on hover moved nothing. Left and right Dock: the pets ignored the Dock, so the deferral holds. Two displays: moving keyboard focus between them moved neither pet, so the `referenceScreen` defect has not returned. Sleep/wake and lock/unlock: both pets present afterward.
+- **One row is `[~]` — walked, but the observation does not settle it.** On the unplug, the pet survived and kept its dragged height, which is the claim's main half. The *re-clamp* half only shows when the dragged height sits above the surviving display's ceiling, and nothing in the report establishes that it did. **A pass that would look identical if the feature were absent is not a pass**, so the row stays open with the missing detail named: drag near the top of the 1080-tall external before unplugging. This is the same class of error as an Auto-mode window that never prompts.
+- **Full-screen Spaces passed as a test and opened a product question.** The pets remain visible *over* full-screen apps rather than being hidden by them. That is recorded as observed behavior, explicitly **not** as approval — the matrix can establish what happens and cannot establish whether it should. It needs an owner decision, and it is the first thing this walk surfaced that is not a documentation problem.
+- **The `@1x` row was assumed to need hardware nobody had, and that assumption was wrong.** The owner's external display is a **Dell P2217H**, a 1920x1080 non-Retina panel. The instruction offered "skip and record it as unavailable" — which would have written a false unavailability into the checklist and closed the row by giving up. It is now the only untouched row in the matrix. **An instruction that offers an escape hatch should not assume the hatch is needed**; ask what hardware exists before writing the row off.
+- **Owner preference recorded:** hands-on steps are to be written as numbered tests with explicit Expect and Fail lines and real menu titles, not handed over as a category to go verify. Stored in this session's memory, and it is what the last two walks did that the 2026-08-02 pass did not.
+- No source, art, or contract changed. Documentation only.
+- **Exact next step:** the `@1x` walk on the Dell P2217H, then the unplug redo with the pet dragged high. After those the matrix is complete except for the Spaces product decision.
+
 ## Next-session handoff
 
 1. Read this file in full.

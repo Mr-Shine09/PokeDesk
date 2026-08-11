@@ -228,8 +228,10 @@ Stated plainly, because you are about to build this yourself:
   watched a genuine agent session produce it. `waiting` was first seen from a
   real Claude Code session on 2026-08-09, and both providers have now been
   watched driving their own mascot on screen — Codex on 2026-08-10.
-- **The multi-display matrix is partly untested by hand** — Dock auto-hide,
-  full-screen Spaces, sleep/wake, and non-Retina displays especially.
+- **One display case is untested by hand** — non-Retina / `@1x` rendering. Dock
+  auto-hide, left/right Dock, two displays, full-screen Spaces, sleep/wake, and
+  lock/unlock were each walked on 2026-08-10. Unplugging a display with a
+  mascot on it is walked but not fully settled.
 - **Reduce Motion** is honored for the summon and dismiss transitions; broader
   coverage is still open.
 - **Ordinary (non-coding) Claude and ChatGPT chats are not detected.** Use

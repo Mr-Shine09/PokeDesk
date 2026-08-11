@@ -177,9 +177,19 @@ differently for a manually placed pet than for a default-lane one.
 Each row names what to expect, because a row that only says "check it" cannot
 distinguish a pass from nothing happening.
 
+**Walked the same day, 2026-08-10, and this time the ticks are earned.** The
+owner walked the reopened rows from the installed build with both mascots
+summoned and one dragged to a manual height, and reported per row rather than as
+one verdict — which is the whole difference from 2026-08-02. Seven rows pass.
+One is `[~]`, meaning walked but not fully settled: the observation made does
+not distinguish pass from pass-for-the-wrong-reason, and the row says which
+missing detail would. One row is untouched, and it turned out to be testable
+after all.
+
 - [x] Single Retina display, bottom Dock. Exercised continuously since the
   prototype and daily by the author; this one is genuinely earned.
-- [ ] **Bottom Dock, auto-hide toggled in System Settings.** Two distinct
+- [x] **Bottom Dock, auto-hide toggled in System Settings.** Owner-walked
+  2026-08-10, both halves, and both as predicted. Two distinct
   observations, and they must not be confused. Toggling the *setting* changes
   `visibleFrame` and posts `didChangeScreenParameters`, so a default-lane pet
   re-settles: with the Dock shown it stands on the Dock's top edge, with
@@ -187,29 +197,47 @@ distinguish a pass from nothing happening.
   inset is clamped away by `DockGeometry`). The Dock merely *sliding* away on
   hover does not change `visibleFrame`, so the pet must **not** move then. A
   manually placed pet keeps its height through both.
-- [ ] **Left Dock** — expect the pet to stay bottom-anchored and unaffected.
+- [x] **Left Dock** — owner-walked 2026-08-10; the pets ignored the Dock and
+  stayed bottom-anchored, so the deferral holds. expect the pet to stay bottom-anchored and unaffected.
   `DockGeometry` tracks no Dock edge at all, by decision; the file says so in
   its own doc comment. This row can never have been a meaningful pass, and it
   is a check that the deferral holds, not that placement follows the Dock.
-- [ ] **Right Dock** — same expectation as Left Dock.
-- [ ] **Two displays with different backing scales.** The pet stays on the
+- [x] **Right Dock** — same expectation, walked in the same pass and same result.
+- [x] **Two displays with different backing scales.** Owner-walked 2026-08-10:
+  moving keyboard focus between displays did not move either pet, so the
+  focus-following defect has not returned. The pet stays on the
   display it was summoned or dropped on and roams within that display's bounds.
   It must not jump displays when keyboard focus moves to the other one — that
   was a real defect, fixed 2026-08-02 in `referenceScreen`, and moving focus
   back and forth is what would resurrect it.
-- [ ] **Unplugging the display the mascot is on.** A manually dropped height is
+- [~] **Unplugging the display the mascot is on. Partially walked 2026-08-10.**
+  The pet survived the unplug and kept its dragged height, which is the
+  behavior's main claim. What is *not* settled is the re-clamp: it only shows
+  when the dragged height sits above the surviving display's ceiling, and the
+  report did not establish that it did. Redo with the pet dragged near the top
+  of the 1080-tall external before unplugging. A manually dropped height is
   re-clamped onto the surviving display, **not** discarded. Expect a height from
   a 1080-tall external to land near the *top* of the 832-tall built-in, because
   clamping preserves the intent it can and the drop was above the shorter
   screen's ceiling. That looks wrong and is correct; Reposition is the way back.
   A default-lane pet simply repositions to the new bottom lane.
-- [ ] Full-screen Spaces and ordinary Spaces.
-- [ ] **Display sleep/wake and laptop sleep/wake.** `NSWorkspace.didWake` is
+- [x] **Full-screen Spaces and ordinary Spaces.** Owner-walked 2026-08-10: the
+  pets stayed visible over full-screen apps rather than being hidden by them,
+  and no focus was stolen. **Recorded as observed behavior, not as approval** —
+  whether a pet should float over a full-screen app is a product question the
+  matrix cannot answer. Raise it with the owner rather than treating it as
+  settled.
+- [x] **Display sleep/wake and laptop sleep/wake.** Owner-walked 2026-08-10;
+  both pets present after wake. `NSWorkspace.didWake` is
   wired to the same handler as a screen-parameter change, so expect the pet
   present and correctly placed on wake. Watch specifically for a manual height
   surviving, since wake runs `settleAfterDrop()` rather than `reposition()`.
-- [ ] Screen lock/unlock.
-- [ ] Non-Retina or deliberately authored `@1x` behavior.
+- [x] Screen lock/unlock. Owner-walked 2026-08-10; both pets present after
+  unlock.
+- [ ] **Non-Retina or deliberately authored `@1x` behavior. Testable — do not
+  record this as unavailable.** The owner has a **Dell P2217H**, a 1920x1080
+  non-Retina panel, confirmed 2026-08-10. This row was assumed to need hardware
+  nobody had; it does not, and it is now the only untouched row in the matrix.
 - [x] No app focus theft during timer/state changes. Verified separately: the
   background launch (`open -g`) left ChatGPT/Codex frontmost, and the panel is
   non-activating by construction with a test covering it.
