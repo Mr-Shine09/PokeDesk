@@ -180,6 +180,18 @@ public final class WindowCoordinator: NSObject {
     /// A display change must not silently discard a dropped height, but it can
     /// leave one stranded off the new screen, so the placement is re-clamped
     /// rather than reset.
+    ///
+    /// - Note: **This does not hold for an unplugged display, observed
+    ///   2026-08-10.** A mascot dragged near the top of an external display
+    ///   comes back to the built-in display at the *bottom*, and clamping does
+    ///   not explain it — the two displays' top edges are aligned, so that
+    ///   height needed no clamping to fit. The untested hypothesis is that
+    ///   AppKit relocates the window off the removed display before this
+    ///   handler runs, so `settleAfterDrop()` reads the system's position out
+    ///   of `panel.frame` and stores *that* as `manualLaneY`. Do not change
+    ///   this code on the strength of the comment above: the mechanism is not
+    ///   established, and which behavior is wanted is an open owner question.
+    ///   See the display matrix in `docs/QA_CHECKLIST.md`.
     @objc private func screenParametersChanged() {
         guard manualLaneY != nil else {
             reposition()

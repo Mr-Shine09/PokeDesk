@@ -10,14 +10,17 @@ commentary. The automated baseline was re-run the same day.
 **Updated 2026-08-10.** A live Codex session drove the navy mascot on screen and
 the four dismiss edge cases were each walked, so neither is a gap any more.
 What remains unticked below is genuinely untested: the core app smoke test,
-the sound-toggle persistence items, icon sizes, `@1x` behavior, the rest of the
-display matrix, and the future release gates. `failed` is the only mascot state
+the sound-toggle persistence items, icon sizes, and the future release gates.
+`@1x` was walked on 2026-08-10 and passes. `failed` is the only mascot state
 never produced by a real provider.
 
-**Also updated 2026-08-10.** The window/display matrix was reopened: all but two
-of its rows had been ticked by that same blanket verdict, so the ticks were
-withdrawn and each row now names the observation that would settle it. Read that
-section's preamble before assuming any display behavior is witnessed.
+**Also updated 2026-08-10.** The window/display matrix was reopened — all but
+two of its rows had been ticked by that same blanket verdict — and then walked
+row by row the same day. Eight rows pass on per-row evidence. **The unplug row
+fails:** a dragged height is lost when the display it was on is disconnected,
+which contradicts what this file and the source comments both claim. It is
+undiagnosed, and it is the only behavioral defect any of the 2026-08-10 walks
+produced.
 
 ## Automated baseline
 
@@ -180,11 +183,12 @@ distinguish a pass from nothing happening.
 **Walked the same day, 2026-08-10, and this time the ticks are earned.** The
 owner walked the reopened rows from the installed build with both mascots
 summoned and one dragged to a manual height, and reported per row rather than as
-one verdict — which is the whole difference from 2026-08-02. Seven rows pass.
-One is `[~]`, meaning walked but not fully settled: the observation made does
-not distinguish pass from pass-for-the-wrong-reason, and the row says which
-missing detail would. One row is untouched, and it turned out to be testable
-after all.
+one verdict — which is the whole difference from 2026-08-02. **Every row has now
+been walked.** Eight pass, including the `@1x` row that was assumed to need
+hardware nobody had. **One fails:** unplugging a display does not preserve a
+dragged height, contrary to what this file, the ledger, and the source comments
+all say. That row is the only thing the matrix found that is not a
+documentation problem, and it is not yet diagnosed.
 
 - [x] Single Retina display, bottom Dock. Exercised continuously since the
   prototype and daily by the author; this one is genuinely earned.
@@ -210,17 +214,30 @@ after all.
   It must not jump displays when keyboard focus moves to the other one — that
   was a real defect, fixed 2026-08-02 in `referenceScreen`, and moving focus
   back and forth is what would resurrect it.
-- [~] **Unplugging the display the mascot is on. Partially walked 2026-08-10.**
-  The pet survived the unplug and kept its dragged height, which is the
-  behavior's main claim. What is *not* settled is the re-clamp: it only shows
-  when the dragged height sits above the surviving display's ceiling, and the
-  report did not establish that it did. Redo with the pet dragged near the top
-  of the 1080-tall external before unplugging. A manually dropped height is
-  re-clamped onto the surviving display, **not** discarded. Expect a height from
-  a 1080-tall external to land near the *top* of the 832-tall built-in, because
-  clamping preserves the intent it can and the drop was above the shorter
-  screen's ceiling. That looks wrong and is correct; Reposition is the way back.
-  A default-lane pet simply repositions to the new bottom lane.
+- [ ] **Unplugging the display the mascot is on. Walked twice 2026-08-10; the
+  documented behavior did not happen.** With the pet dragged near the top of the
+  1920x1080 external and the display then disconnected, it came back to the
+  built-in display **at the bottom**, not near the top. The dragged height was
+  not preserved.
+  - The owner's two displays have aligned top edges (built-in `0,0 1280x832`,
+    external `1280,-248 1920x1080`, both topping out at 832), so a height near
+    the external's top needed **no clamping at all** to fit the built-in. The
+    height was discarded rather than squeezed.
+  - Leading hypothesis, **not yet established**: AppKit relocates a window off a
+    disconnected display on its own, and `screenParametersChanged` then calls
+    `settleAfterDrop()`, which reads `panel.frame.minY` — by then the system's
+    chosen position, not the user's. The code would be adopting the relocation
+    and storing it as `manualLaneY`, so the height is lost before our handler
+    ever runs. This is inferred from reading `WindowCoordinator`, not observed.
+  - The behavior may well be *preferable* — a pet reappearing at the bottom is
+    easy to find. What is not acceptable is the documentation asserting a
+    re-clamp that does not occur. Settle the mechanism first, then let the owner
+    decide which behavior is wanted; do not "fix" it toward the docs by default.
+  - **Discriminating check, cheaper than another unplug:** drag a pet high on
+    the *built-in* display and change resolution or arrangement in System
+    Settings. That posts the same notification **without** removing a display,
+    so AppKit has no reason to relocate the window. Height surviving that but
+    not the unplug confirms the hypothesis.
 - [x] **Full-screen Spaces and ordinary Spaces.** Owner-walked 2026-08-10: the
   pets stayed visible over full-screen apps rather than being hidden by them,
   and no focus was stolen. **Recorded as observed behavior, not as approval** —
@@ -234,10 +251,13 @@ after all.
   surviving, since wake runs `settleAfterDrop()` rather than `reposition()`.
 - [x] Screen lock/unlock. Owner-walked 2026-08-10; both pets present after
   unlock.
-- [ ] **Non-Retina or deliberately authored `@1x` behavior. Testable — do not
-  record this as unavailable.** The owner has a **Dell P2217H**, a 1920x1080
-  non-Retina panel, confirmed 2026-08-10. This row was assumed to need hardware
-  nobody had; it does not, and it is now the only untouched row in the matrix.
+- [x] **Non-Retina `@1x` behavior. Owner-walked 2026-08-10 on a Dell P2217H**
+  (1920x1080, non-Retina). The mascot renders as crisply as on the Retina
+  built-in, stays sharp and the same apparent size when dragged between the two
+  displays, and the walk cycle shows no jitter or vertical drift over ~30 s.
+  Nearest-neighbor rendering holds at `@1x`. Note for anyone re-reading the
+  history: this row was assumed to need hardware nobody had, which was simply
+  never checked.
 - [x] No app focus theft during timer/state changes. Verified separately: the
   background launch (`open -g`) left ChatGPT/Codex frontmost, and the panel is
   non-activating by construction with a test covering it.
