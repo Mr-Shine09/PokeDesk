@@ -43,6 +43,15 @@ Unused cells after a row's final frame are fully transparent with zero RGB. Dura
 | 10 | `walk-left` | 6 | loop | `140, 120, 140, 120, 140, 120` | Left-facing equivalent. A mirror is allowed only if glasses, hair, clothing, light direction, and temporal frame order remain correct. |
 | 11 | `sit-shake-right` | 6 | loop | `220, 180, 220, 180, 220, 360` | Ambient right-facing chair pose: sit on a small freestanding chair and casually swing one lower leg while the torso and chair stay stable. |
 | 12 | `sit-shake-left` | 6 | loop | `220, 180, 220, 180, 220, 360` | Mirrored left-facing chair pose with temporal order preserved. |
+
+> **Rows 11 and 12 are authored, validated, and deliberately unused by the app
+> (owner decision, 2026-08-11).** Nothing in the runtime selects them; the only
+> Swift that names them is `MascotState` and a test that checks they load. They
+> were considered for the stationary pose when roaming is switched off — the
+> owner kept the calmer standing `idle` blink instead. Keep the rows: they cost
+> nothing, they are inside the frozen contract, and removing them would be a
+> geometry revision. **Do not treat them as a bug, an oversight, or dead art to
+> clean up**, and do not wire them in without a fresh owner decision.
 | 13 | `hanging` | 6 | loop | `160, 160, 220, 160, 160, 220` | One raised hand grips the cursor anchor while the body, free arm, and legs swing left through center to right; no ledge, rope, cursor art, or ground contact. |
 | 14 | `hand-sign` | 4 | once-hold | `110, 110, 130, hold` | Dismiss-only ninja seal: the hands lift from the hips, the palms join at the chest, two finger pairs rise, and the last frame holds under the smoke poof. |
 | 15 | `poof` | 8 | once-hold | `70, 70, 80, 80, 90, 90, 100, hold` | Dismiss-only smoke cloud, drawn **over** the character rather than as a pose. Bursts already near full size, churns, drifts upward, and breaks up from its edges. The layer's opacity fade, not the art, finishes the disappearance. |

@@ -239,10 +239,10 @@ which was diagnosed, fixed, and re-walked on screen from a rebuilt install.
     observation rather than standing alone.
 - [x] **Full-screen Spaces and ordinary Spaces.** Owner-walked 2026-08-10: the
   pets stayed visible over full-screen apps rather than being hidden by them,
-  and no focus was stolen. **Recorded as observed behavior, not as approval** —
-  whether a pet should float over a full-screen app is a product question the
-  matrix cannot answer. Raise it with the owner rather than treating it as
-  settled.
+  and no focus was stolen. **Owner decision 2026-08-11: this is wanted — the
+  pets float over full-screen apps and it stays that way.** Do not "fix" a pet
+  appearing over a full-screen app; it is the approved behavior, not a window
+  level bug.
 - [x] **Display sleep/wake and laptop sleep/wake.** Owner-walked 2026-08-10;
   both pets present after wake. `NSWorkspace.didWake` is
   wired to the same handler as a screen-parameter change, so expect the pet
