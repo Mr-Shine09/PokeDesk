@@ -18,7 +18,7 @@ Claude Code hooks ─┘                                      |
                                               animation + window controller
 ```
 
-Every stage is implemented and verified against a real Claude Code session. On 2026-08-02 the repaired Codex hooks were also reviewed, trusted, shown Active, and exercised by a fresh real Codex turn through clean shutdown with no hook failure; an independent helper/socket check proved the installed helper can deliver to the running app. The navy mascot's on-screen reaction was not observed during that run, and `failed` remains fixture-only. `waiting` was first observed from a real Claude Code session on 2026-08-09, which is how the waiting-expiry defect was found — and the fix for it was watched holding past three minutes against a real permission prompt on 2026-08-10, along with the other two behavior changes from that day.
+Every stage is implemented and verified against a real Claude Code session. On 2026-08-02 the repaired Codex hooks were also reviewed, trusted, shown Active, and exercised by a fresh real Codex turn through clean shutdown with no hook failure; an independent helper/socket check proved the installed helper can deliver to the running app. The navy mascot's on-screen reaction was not observed during that run — that happened on 2026-08-10, closing the claim. `failed` remains fixture-only. `waiting` was first observed from a real Claude Code session on 2026-08-09, which is how the waiting-expiry defect was found — and the fix for it was watched holding past three minutes against a real permission prompt on 2026-08-10, along with the other two behavior changes from that day.
 
 ## Current working state
 
@@ -69,7 +69,7 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 4. Build the app and confirm the bundled atlas/contract match the workspace versions.
 5. Ask the owner to drag the mascot from several body points and confirm the cursor snap/swing feels right, then to drop it from several heights and confirm it carries on roaming at the height it landed at.
 6. Record the QA result in `DesktopMascot.md`.
-7. **The 0.1 hands-on QA gates closed on 2026-08-02.** The owner ran the two-mascot pass (each alone and both together, side-by-side placement, per-mascot menus, independent dismiss and dragged positions, a real Claude Code task animating the orange mascot while the navy one strolled, one cue per window), the corrected orange wardrobe, the display matrix, the drag pass, and the four dismiss edge cases, all from the installed build, and reported them smooth. It was one overall verdict rather than per-item commentary — do not cite a single checklist tick as an independently narrated observation. The event path remains live-verified for Claude Code. **Still open:** a real Codex session driving the navy mascot on screen; its hooks are installed, trusted, and were exercised by a real turn, but nobody has watched the mascot react.
+7. **The 0.1 hands-on QA gates closed on 2026-08-02.** The owner ran the two-mascot pass (each alone and both together, side-by-side placement, per-mascot menus, independent dismiss and dragged positions, a real Claude Code task animating the orange mascot while the navy one strolled, one cue per window), the corrected orange wardrobe, the display matrix, the drag pass, and the four dismiss edge cases, all from the installed build, and reported them smooth. It was one overall verdict rather than per-item commentary — do not cite a single checklist tick as an independently narrated observation. The event path remains live-verified for Claude Code. **Closed 2026-08-10:** a real Codex session drove the navy mascot on screen — to its computer, then through the success reaction — while the orange mascot was unaffected, which also proves per-provider attribution visually for the first time.
 8. The two menu-bar lines (`Event socket:` and `Reduced state:`) were owner-verified on screen on 2026-07-30 and need no re-check.
 
 ## Key ownership boundaries
@@ -87,7 +87,7 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 | Atlas contract and output | `art/animation/` | Revision 6 geometry/timing; classic and provider-selected Codex fashion atlases; `hand-sign` and `poof` dismiss rows added 2026-08-01 |
 | App icon | `DesktopMascot/App/Assets.xcassets/` | Generated from the frozen base by `tools/render_app_icon.py` 2026-08-01; do not hand-edit |
 | Deterministic art tooling | `tools/` | Implemented and reusable |
-| Provider lifecycle adapters | `Packages/DesktopMascotKit/Sources/MascotTransport/HookPayload.swift` | Implemented 2026-07-30 as helper `--hook` mode for both providers; Claude Code observed live, Codex never run |
+| Provider lifecycle adapters | `Packages/DesktopMascotKit/Sources/MascotTransport/HookPayload.swift` | Implemented 2026-07-30 as helper `--hook` mode for both providers; **both observed live on screen** — Claude Code 2026-07-30, Codex 2026-08-10 |
 | Local event reducer | `Packages/DesktopMascotKit/Sources/MascotCore/` | Registry and priority reducer implemented 2026-07-29; issue #6 closed 2026-07-30; drives animation since 2026-07-30 |
 | Local event transport | `Packages/DesktopMascotKit/Sources/MascotTransport/` | Socket server, client, framing, and helper implemented 2026-07-29; run by the app since 2026-07-30 |
 | Event helper CLI | `Packages/DesktopMascotKit/Sources/dockpet-event/` | Bundled at `Contents/MacOS/dockpet-event`; also the hook adapter via `--hook`, and prints its own install snippet via `--print-hooks` |
@@ -121,7 +121,7 @@ Build the core event system before provider-specific installers. Steps 1–6 are
 8. ~~Run the server inside the app, feed the registry and reducer, and surface the result in menu-bar diagnostics before changing any animation.~~
 9. ~~Connect reducer output to animation selection, preserving manual pause/ideating behavior and keeping ambient roaming as the no-signal default.~~
 10. ~~Bundle the helper inside the app bundle so a hook can invoke it by path, then add the Codex and Claude Code adapters (#8, #9).~~
-11. ~~Install the printed hook snippet and observe a real Claude Code or Codex session driving the mascot.~~ Done 2026-07-30 for **Claude Code only**. Codex shares the adapter but has never been run live, and `waiting`/`failed` have never been seen from a real provider.
+11. ~~Install the printed hook snippet and observe a real Claude Code or Codex session driving the mascot.~~ Done for **both providers** — Claude Code 2026-07-30, Codex 2026-08-10. `waiting` was seen from a real session on 2026-08-09; **`failed` is the only state still fixture-only**, since neither provider reports a turn-level failure in ordinary use.
 
 Acceptance criteria are in the Phase 3 section of `DesktopMascot.md`.
 

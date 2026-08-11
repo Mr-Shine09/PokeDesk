@@ -226,10 +226,8 @@ Stated plainly, because you are about to build this yourself:
 - **The `failed` state has never been observed from a real provider run** — it
   works, and it is covered by tests and by **Preview State**, but no one has
   watched a genuine agent session produce it. `waiting` was first seen from a
-  real Claude Code session on 2026-08-09.
-- **The Codex mascot has not been watched reacting to a real Codex session.**
-  The hooks are installed, trusted, and have been exercised end to end without
-  failure, but nobody has confirmed the on-screen reaction.
+  real Claude Code session on 2026-08-09, and both providers have now been
+  watched driving their own mascot on screen — Codex on 2026-08-10.
 - **The multi-display matrix is partly untested by hand** — Dock auto-hide,
   full-screen Spaces, sleep/wake, and non-Retina displays especially.
 - **Reduce Motion** is honored for the summon and dismiss transitions; broader

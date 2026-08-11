@@ -51,7 +51,7 @@ only in the hoodie and the sleeping blanket.
 - [x] A real Claude Code task animates the orange mascot while the navy one strolls.
 - [x] One completed task plays a single success cue, not one per mascot.
 - [x] Quitting with both on screen poofs both, then terminates.
-- [ ] A **real Codex session** drives the navy mascot on screen. Its hooks are installed, trusted, and were exercised by a real turn on 2026-08-02, but nobody has watched the mascot respond. Still the last unproven provider claim.
+- [x] A **real Codex session** drives the navy mascot on screen — **owner-observed 2026-08-10**. The navy mascot went to its computer and played the success reaction at the end of the turn, and the orange mascot was unaffected throughout, which is also the first on-screen evidence of per-provider attribution. Check Manual Ideating is off before rerunning this: it reaches both mascots and outranks `working`, so it masks the whole test.
 
 ## Core app smoke test
 
