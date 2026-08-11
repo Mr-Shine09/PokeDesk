@@ -5,10 +5,14 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 **Status 2026-08-02.** The owner completed the two-mascot, wardrobe, display-matrix,
 drag, and dismiss-edge-case passes from the installed `~/Applications` build and
 reported them smooth. That was one overall verdict rather than per-item
-commentary. The automated baseline was re-run the same day. What remains
-unticked below is genuinely untested — chiefly a live Codex session driving its
-mascot on screen, the sound-toggle persistence items, icon sizes, `@1x`
-behavior, and the future release gates.
+commentary. The automated baseline was re-run the same day.
+
+**Updated 2026-08-10.** A live Codex session drove the navy mascot on screen and
+the four dismiss edge cases were each walked, so neither is a gap any more.
+What remains unticked below is genuinely untested: the core app smoke test,
+the sound-toggle persistence items, icon sizes, `@1x` behavior, the rest of the
+display matrix, and the future release gates. `failed` is the only mascot state
+never produced by a real provider.
 
 ## Automated baseline
 
@@ -17,7 +21,7 @@ behavior, and the future release gates.
 - [x] Complete atlas validates. The classic atlas passes outright. The orange atlas is reported as three colors outside the frozen palette, which is **expected for that file alone**: they are exactly the three shades declared in `tools/author_codex_fashion_atlas.py`, verified by set difference against the classic atlas, and it removes no palette color.
 - [ ] Every changed frame row validates.
 - [x] Full QA sheets and motion previews are regenerated after atlas changes.
-- [x] Swift package tests pass (current baseline: 198; original handoff baseline: 10).
+- [x] Swift package tests pass (current baseline: **208** as of 2026-08-09; original handoff baseline: 10).
   - The former `aDropPastAnEdgeIsClampedBackIntoView` exception was **fixed on 2026-08-02**; the suite passes in full with a second display attached. Do not reinstate the exception.
 - [x] Release Xcode build succeeds (`tools/install_app.sh`, 2026-08-02).
 - [x] Built atlas hash matches workspace atlas — both atlases byte-identical in the installed bundle.
@@ -82,9 +86,15 @@ only in the hoodie and the sleeping blanket.
 
 ## Dismiss transition acceptance
 
-Owner ran summon, dismiss, and quit on 2026-08-01 and approved the result. Only
-the happy path was walked; everything still unticked below is an edge case
-nobody has exercised, not a known failure.
+Owner ran summon, dismiss, and quit on 2026-08-01 and approved the result: the
+happy path. **The four edge cases below — Reduce Motion, re-summon mid-poof,
+dismiss-while-paused, and the second Quit — were each walked individually on
+2026-08-10 and each passed.** Until that day they carried ticks from the
+2026-08-02 blanket verdict while the ledger recorded them as unexercised, which
+is the contradiction the run resolved. The outcome vindicated those ticks; the
+evidence behind them did not — a tick that outruns its observation is a false
+pass waiting to happen, and this one sat unnoticed for eight days. Anything
+still unticked is an edge case nobody has exercised, not a known failure.
 
 - [x] Dismiss plays the ninja seal: hands lift, palms join, two finger pairs rise.
 - [x] The seal is finished and held before the smoke starts, not cut off by it.
@@ -95,10 +105,10 @@ nobody has exercised, not a known failure.
 - [x] The smoke clears completely; no haze is left behind on the desktop.
 - [x] Total transition feels quick rather than something to wait through.
 - [x] **Quit** plays the same farewell, then the app actually terminates.
-- [x] Reduce Motion replaces the whole thing with a short stationary fade, no seal and no smoke.
-- [x] Re-summoning part-way through the poof brings the mascot back rather than hiding it a moment later.
-- [x] Dismissing a paused mascot still plays the transition.
-- [x] A second Quit during the farewell terminates immediately.
+- [x] Reduce Motion replaces the whole thing with a short stationary fade, no seal and no smoke. *(walked 2026-08-10; summon also fades in place, with no Dock portal.)*
+- [x] Re-summoning part-way through the poof brings the mascot back rather than hiding it a moment later. *(walked 2026-08-10; the pet stayed, so the pending hide really is cancelled.)*
+- [x] Dismissing a paused mascot still plays the transition. *(walked 2026-08-10; the frozen pet played the seal and left, so dismiss outranks pause as intended.)*
+- [x] A second Quit during the farewell terminates immediately. *(walked 2026-08-10; the animation was cut off, which is the correct outcome — quitting must never wait on it.)*
 - [ ] Quitting with no mascot summoned terminates at once, with no transition.
 - [ ] Summoning during a quit does not keep the app alive.
 - [ ] The transition reads on both light and dark desktop backgrounds.
