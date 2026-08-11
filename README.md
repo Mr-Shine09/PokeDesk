@@ -173,7 +173,7 @@ Click the menu bar paw print:
 | **Pause** | Freezes animation for both mascots |
 | **Manual Ideating** | Forces the thinking pose — for ordinary chats that emit no hooks |
 | **Sounds** | Mutes all four cues (success, failure, summon, dismiss) |
-| **Stay in One Place** | Checked, the pet stops strolling and stays exactly where it is, still animating in place — drag it somewhere first and it stays there, across relaunches. Unchecked (the default), it roams |
+| **⟨mascot⟩ Stays in One Place** | One entry per mascot, next to its Summon. Checked, that pet stops strolling and stays exactly where it is, still animating in place — drag it somewhere first and it stays there, across relaunches. Unchecked (the default), it roams. The two mascots are independent |
 | **Reposition on Current Display** | Returns the pet to the default bottom lane |
 | **Sleep Schedule** | Sets the hours the pet sleeps, or switches scheduled sleep off entirely |
 | **Preview State** | Forces any animation without needing a real agent. Good for a first look |
@@ -183,13 +183,15 @@ Click the menu bar paw print:
 You can also interact with the pet directly:
 
 - **Click or right-click** it for Pause, Stay in One Place, Dismiss, and Quit.
+  Stay in One Place here affects only the pet you clicked.
 - **Drag** it anywhere, at any time. It grabs on with one hand while you drag.
   Dropping is placement only — it keeps roaming, at whatever height you let go
   at. Use **Reposition** to send it back to the bottom.
-- **To pin the pet in one spot**, drag it where you want it and tick **Stay in
-  One Place**. It stays put and keeps its idle animation, and still reacts to
-  your agent normally — working, waiting, and the rest are stationary poses
-  anyway.
+- **To pin a pet in one spot**, drag it where you want it and tick **Stay in
+  One Place** — from its own click menu, or from its entry in the menu bar. It
+  stays put and keeps its idle animation, and still reacts to your agent
+  normally, since working, waiting, and the rest are stationary poses anyway.
+  Each mascot is set independently, and the choice survives relaunch.
 
 Summoning and dismissing are animated: the pet steps out of a portal at the
 Dock, and on dismiss it forms a two-handed seal and vanishes in a puff of smoke.

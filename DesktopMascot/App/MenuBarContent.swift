@@ -32,6 +32,28 @@ struct MenuBarContent: View {
                     ? "Dismiss the \(mascot.displayName) mascot"
                     : "Summon the \(mascot.displayName) mascot to the screen"
             )
+
+            // Sits with its own mascot's Summon entry rather than in the
+            // app-wide block below, because it belongs to one pet. Owner
+            // decision, 2026-08-11, after finding that stopping one stopped
+            // both. Named for the mode it switches *on* and checked when
+            // roaming is off: it read "Roam Along Bottom" until the owner asked
+            // for a stay-in-place option that had existed all along, which is
+            // what a menu item named after what unchecking it does costs.
+            let stationary = !appDelegate.isRoaming(mascot.provider)
+            Button {
+                appDelegate.setRoaming(stationary, for: mascot.provider)
+            } label: {
+                Label(
+                    "\(mascot.displayName) Stays in One Place",
+                    systemImage: stationary ? "checkmark" : "minus"
+                )
+            }
+            .accessibilityLabel(
+                stationary
+                    ? "Let the \(mascot.displayName) mascot roam along the bottom of the screen again"
+                    : "Keep the \(mascot.displayName) mascot in one place instead of roaming"
+            )
         }
 
         Button {
@@ -60,22 +82,6 @@ struct MenuBarContent: View {
 
         Divider()
 
-        // Named for the mode it switches *on*, checked when roaming is off.
-        // It read "Roam Along Bottom" until 2026-08-11, when the owner asked for
-        // a stay-in-place option that had existed all along: a menu item named
-        // after what unchecking it does is not findable by someone looking for
-        // the mode. The inversion is in the label only — `isRoaming` and its
-        // defaults key are unchanged, so no existing choice is reset.
-        Button {
-            appDelegate.setRoaming(!appDelegate.isRoaming)
-        } label: {
-            Label("Stay in One Place", systemImage: appDelegate.isRoaming ? "minus" : "checkmark")
-        }
-        .accessibilityLabel(
-            appDelegate.isRoaming
-                ? "Keep the mascot in one place instead of roaming"
-                : "Let the mascot roam along the bottom of the screen again"
-        )
         Text("Click for options • Drag anytime")
         Button("Reposition on Current Display") {
             appDelegate.reposition()

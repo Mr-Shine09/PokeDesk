@@ -16,7 +16,12 @@ import MascotCore
 ///   stuck in a fabricated state with no memory of having asked for it.
 enum Preferences {
     private enum Key {
+        /// The pre-2026-08-11 app-wide roaming key. Read only, as the default
+        /// for a provider that has not been set individually.
         static let roaming = "com.mrshine09.desktopmascot.roaming"
+        static func roaming(for provider: EventProvider) -> String {
+            "\(roaming).\(provider.rawValue)"
+        }
         static let reactionSoundsMuted = "com.mrshine09.desktopmascot.reactionSoundsMuted"
         static let sleepScheduleEnabled = "com.mrshine09.desktopmascot.sleepScheduleEnabled"
         static let sleepStartHour = "com.mrshine09.desktopmascot.sleepStartHour"
@@ -36,15 +41,26 @@ enum Preferences {
     /// per access is free and keeps the type stateless.
     private static var defaults: UserDefaults { .standard }
 
-    /// Whether the mascot strolls or holds its position. Defaults to `true` so a
-    /// first launch behaves as the owner approved.
-    static var roaming: Bool {
-        get {
-            defaults.object(forKey: Key.roaming) as? Bool ?? true
-        }
-        set {
-            defaults.set(newValue, forKey: Key.roaming)
-        }
+    /// Whether one provider's mascot strolls or holds its position.
+    ///
+    /// Per mascot since 2026-08-11 (owner decision, after reporting that
+    /// switching one pet to Stay in One Place stopped both). Each provider gets
+    /// its own key, suffixed with the provider's raw value.
+    ///
+    /// The old app-wide `Key.roaming` is still **read** as the default for a
+    /// provider that has no key of its own, so anyone who had already switched
+    /// roaming off keeps that choice for both mascots on first launch after the
+    /// upgrade. It is deliberately never written again — writing both would make
+    /// two sources of truth for the same question. Do not delete the fallback to
+    /// "tidy up": it is a one-way migration that costs one `object(forKey:)` and
+    /// silently resets a saved choice if removed.
+    static func roaming(for provider: EventProvider) -> Bool {
+        let inherited = defaults.object(forKey: Key.roaming) as? Bool ?? true
+        return defaults.object(forKey: Key.roaming(for: provider)) as? Bool ?? inherited
+    }
+
+    static func setRoaming(_ roaming: Bool, for provider: EventProvider) {
+        defaults.set(roaming, forKey: Key.roaming(for: provider))
     }
 
     /// Whether every cue is silenced — reactions and transitions alike.

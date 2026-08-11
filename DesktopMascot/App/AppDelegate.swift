@@ -26,8 +26,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var isVisible: Bool { !summoned.isEmpty }
     @Published var isPaused = false
     @Published var isIdeating = false
-    /// Restored from preferences, so a deliberate choice survives relaunch.
-    @Published var isRoaming = Preferences.roaming
+    /// Whether each provider's mascot strolls, restored from preferences so a
+    /// deliberate choice survives relaunch.
+    ///
+    /// Per mascot since 2026-08-11: the owner reported that switching one pet
+    /// to Stay in One Place stopped both. Presence and placement were already
+    /// per mascot, so an app-wide roaming flag was the odd one out — unlike
+    /// Pause and Manual Ideating, which are aimed at the app on purpose.
+    @Published var roamingByProvider: [EventProvider: Bool] = Dictionary(
+        uniqueKeysWithValues: EventProvider.allCases.map { ($0, Preferences.roaming(for: $0)) }
+    )
+
+    func isRoaming(_ provider: EventProvider) -> Bool {
+        roamingByProvider[provider] ?? true
+    }
     /// The nightly sleep window, or `nil` when scheduled sleep is off.
     /// Restored from preferences, like roaming.
     @Published private(set) var sleepWindow = Preferences.sleepWindow
@@ -122,6 +134,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                     laneOffset: CGFloat(index) * MascotPanel.defaultContentSize.width
                 )
                 wire(mascot)
+                // The restored roaming choice has to reach the animation
+                // controller, not just the menu's checkmark. Without this a pet
+                // saved as Stay in One Place strolls again after a relaunch
+                // while the menu insists it is stationary — the same shape of
+                // bug the sleep schedule avoided by pushing its window into the
+                // bridge before `start()`.
+                mascot.setRoaming(isRoaming(provider))
                 mascots.append(mascot)
             }
 
@@ -321,10 +340,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         sounds.isMuted = muted
     }
 
-    func setRoaming(_ roaming: Bool) {
-        isRoaming = roaming
-        for mascot in mascots { mascot.setRoaming(roaming) }
-        Preferences.roaming = roaming
+    func setRoaming(_ roaming: Bool, for provider: EventProvider) {
+        roamingByProvider[provider] = roaming
+        mascot(for: provider)?.setRoaming(roaming)
+        Preferences.setRoaming(roaming, for: provider)
         refreshDiagnostics()
     }
 
@@ -411,18 +430,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             .filter { summoned.contains($0.provider) }
             .map { mascot -> String in
                 let state = eventBridge.visibleStates[mascot.provider]?.state ?? .offline
-                return "\(mascot.displayName): \(describe(state))"
+                return "\(mascot.displayName): \(describe(state, roaming: isRoaming(mascot.provider)))"
             }
         diagnostics = lines.joined(separator: " • ")
     }
 
     /// What one mascot is doing, without implying that a state with no provider
     /// behind it came from an agent.
-    private func describe(_ state: MascotState) -> String {
+    private func describe(_ state: MascotState, roaming: Bool) -> String {
         switch state {
         case .paused: "animation paused"
         case .ideating: "manual ideating"
-        case .offline: isRoaming
+        case .offline: roaming
             ? "ambient roaming — agent not running"
             : "resting at manual position — agent not running"
         case .idle: "strolling — idle"
@@ -500,7 +519,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         menu.addItem(withTitle: isPaused ? "Resume Animation" : "Pause Animation", action: #selector(togglePauseFromMascot), keyEquivalent: "")
         // Phrased as the action taken, matching the menu bar's "Stay in One
         // Place" mode name rather than the older roaming vocabulary.
-        menu.addItem(withTitle: isRoaming ? "Stay in One Place" : "Start Roaming Again", action: #selector(toggleRoamingFromMascot), keyEquivalent: "")
+        let roamingItem = NSMenuItem(
+            title: isRoaming(mascot.provider) ? "Stay in One Place" : "Start Roaming Again",
+            action: #selector(toggleRoamingFromMascot(_:)),
+            keyEquivalent: ""
+        )
+        roamingItem.representedObject = mascot.provider.rawValue
+        menu.addItem(roamingItem)
         menu.addItem(.separator())
         // Names the pet that was clicked, so with two on screen it is never
         // ambiguous which one is about to leave.
@@ -519,7 +544,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     @objc private func togglePauseFromMascot() { setPaused(!isPaused) }
-    @objc private func toggleRoamingFromMascot() { setRoaming(!isRoaming) }
+    /// Toggles only the pet that was clicked. The provider rides on the menu
+    /// item, the same way `dismissClickedMascot` identifies its target.
+    @objc private func toggleRoamingFromMascot(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let provider = EventProvider(rawValue: raw) else { return }
+        setRoaming(!isRoaming(provider), for: provider)
+    }
     @objc private func dismissClickedMascot(_ sender: NSMenuItem) {
         guard
             let raw = sender.representedObject as? String,

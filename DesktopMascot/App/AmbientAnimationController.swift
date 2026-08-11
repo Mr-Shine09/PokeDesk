@@ -330,9 +330,17 @@ final class AmbientAnimationController {
         if let timer, abs(timer.timeInterval - interval) < 0.0001 { return }
         stopTimer()
         previousTickTime = ProcessInfo.processInfo.systemUptime
-        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+        // Scheduled by hand into `.common` modes rather than with
+        // `Timer.scheduledTimer`, which installs into `.default` only. While an
+        // `NSMenu` tracks — the mascot's own click menu, or the menu bar's —
+        // the run loop is in `NSEventTrackingRunLoopMode`, and a `.default`
+        // timer does not fire there. Every mascot froze for as long as either
+        // menu was open, because they all use this one path. Reported by the
+        // owner 2026-08-11 as "clicking one mascot stops both".
+        let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
         }
+        RunLoop.main.add(timer, forMode: .common)
         // Tolerance lets the kernel coalesce these wakeups with ones already
         // scheduled instead of waking the CPU on its own. Elapsed time is
         // measured per tick rather than assumed, so a late tick still moves the
