@@ -131,15 +131,25 @@ without it.
 
 ## Project page screenshot
 
-`README.md` describes a visible thing and has no picture of it. The capture is
-an **owner action**: `screencapture` from an agent session returns a blank frame
-because that process has no Screen Recording permission, and an image assembled
-from atlas cells would show sprites rather than the app, which is the one thing
-a project page screenshot exists to prove.
+`README.md` describes a visible thing, and until 2026-08-11 had no picture of
+it. The image must be a real capture of the running app: one assembled from
+atlas cells would show sprites rather than the app, which is the one thing a
+project page screenshot exists to prove. **Staging the desktop is an owner
+action** — summoning has no CLI behind it — while the capture itself can be
+taken by an agent session, subject to the probe below.
 
 Target file: `docs/images/readme-hero@2x.png`. The README gains its `![…]` link
 in the same commit that adds the file — do not commit the link ahead of the
 image, since the repository is public and a broken image is worse than none.
+
+**Taken 2026-08-11 and now in place**, so this section is a record of how, not
+an open task. Two things the run changed about the advice above. Capture from
+an agent session **worked** — the blanket claim that it cannot see the screen
+was already stale, so probe rather than assume. And the real obstacle was not
+permission but **what else is on screen**: the first frame contained a personal
+photo in the Dock, which no crop could remove without also losing a mascot,
+because the pet was standing to the right of it. Check the Dock, the wallpaper,
+and every window edge before capturing, not after.
 
 Setup, in this order:
 
@@ -154,9 +164,17 @@ Setup, in this order:
    so left on it overrides whatever the frame is meant to show.
 4. Confirm the schedule is outside the sleep window, or both pets are asleep
    under blankets.
-5. Drive one mascot to a non-idle state — a real Claude Code turn puts the
-   orange one at its computer — and leave the other strolling. A frame of two
-   identical strolls does not distinguish the states the page lists.
+5. Drive one mascot to a non-idle state and leave the other strolling. A frame
+   of two identical strolls does not distinguish the states the page lists. A
+   real Claude Code turn works; so does the bundled helper, which is what the
+   2026-08-11 capture used and needs no agent:
+
+   ```bash
+   "$HOME/Applications/Dock Pet.app/Contents/MacOS/dockpet-event" \
+     --provider claude-code --event active --session readme-shot --verbose
+   ```
+
+   The reaction is time-limited, so capture within a few seconds of sending it.
 
 Capture with a region rather than a window: the panel is non-activating and
 borderless, so a window capture picks up a bare rectangle with no context.

@@ -38,6 +38,14 @@ your prompts, code, or terminal output.
 
 ## What it looks like
 
+![Two pixel-art mascots along the bottom of a macOS desktop: the orange Claude
+mascot sits at a small computer typing while the navy Codex mascot strolls past
+the Dock](docs/images/readme-hero@2x.png)
+
+The orange mascot is reacting to a live Claude Code session — sitting at its
+computer, typing. The navy one has no Codex session to report on, so it carries
+on strolling. Each pet only ever reacts to its own provider.
+
 There is one mascot per provider, and each has its own wardrobe:
 
 | Provider | Wardrobe |
