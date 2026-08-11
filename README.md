@@ -228,11 +228,10 @@ Stated plainly, because you are about to build this yourself:
   watched a genuine agent session produce it. `waiting` was first seen from a
   real Claude Code session on 2026-08-09, and both providers have now been
   watched driving their own mascot on screen — Codex on 2026-08-10.
-- **A mascot dragged to a custom height loses it when you unplug the display it
-  is on** — it comes back at the bottom of the remaining display. Everything
-  else in the display matrix was walked on 2026-08-10 and works: Dock auto-hide,
-  left/right Dock, two displays, full-screen Spaces, sleep/wake, lock/unlock,
-  and non-Retina rendering.
+- **The display matrix was walked on 2026-08-10** — Dock auto-hide, left/right
+  Dock, two displays, full-screen Spaces, sleep/wake, lock/unlock, and
+  non-Retina rendering all work. Unplugging a display used to lose a mascot's
+  dragged height; that is fixed but has not yet been re-checked by hand.
 - **Reduce Motion** is honored for the summon and dismiss transitions; broader
   coverage is still open.
 - **Ordinary (non-coding) Claude and ChatGPT chats are not detected.** Use

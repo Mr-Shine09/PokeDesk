@@ -181,23 +181,35 @@ public final class WindowCoordinator: NSObject {
     /// leave one stranded off the new screen, so the placement is re-clamped
     /// rather than reset.
     ///
-    /// - Note: **This does not hold for an unplugged display, observed
-    ///   2026-08-10.** A mascot dragged near the top of an external display
-    ///   comes back to the built-in display at the *bottom*, and clamping does
-    ///   not explain it — the two displays' top edges are aligned, so that
-    ///   height needed no clamping to fit. The untested hypothesis is that
-    ///   AppKit relocates the window off the removed display before this
-    ///   handler runs, so `settleAfterDrop()` reads the system's position out
-    ///   of `panel.frame` and stores *that* as `manualLaneY`. Do not change
-    ///   this code on the strength of the comment above: the mechanism is not
-    ///   established, and which behavior is wanted is an open owner question.
-    ///   See the display matrix in `docs/QA_CHECKLIST.md`.
+    /// The height is re-clamped from `manualLaneY`, **not** from the panel's
+    /// current frame. That distinction is the whole fix for a defect observed
+    /// on 2026-08-10: unplugging the display a mascot was on returned it to the
+    /// bottom of the surviving display, discarding a dragged height that fit
+    /// there untouched. This handler used to call `settleAfterDrop()`, which
+    /// derives the height from `panel.frame.minY` — right for a drop, where the
+    /// frame *is* the user's intent, and wrong here, because AppKit has already
+    /// relocated the window off the removed display by the time this runs, so
+    /// the frame holds the system's intent instead. The remembered value was
+    /// sitting unread the whole time. A resolution change preserved the height
+    /// correctly, which is what identified relocation as the trigger: with no
+    /// display removed the two values are identical and the bug is invisible.
+    ///
+    /// The horizontal position is still taken from the frame, deliberately.
+    /// There is no remembered X to prefer — roaming rewrites it continuously —
+    /// so wherever the window ended up is as good an answer as any.
     @objc private func screenParametersChanged() {
-        guard manualLaneY != nil else {
+        guard let laneY = manualLaneY else {
             reposition()
             return
         }
-        settleAfterDrop()
+        let x = horizontalMovementBounds().map {
+            min(max(panel.frame.minX, $0.lowerBound), $0.upperBound)
+        } ?? panel.frame.minX
+        let y = verticalPlacementBounds().map {
+            min(max(laneY, $0.lowerBound), $0.upperBound)
+        } ?? laneY
+        manualLaneY = y
+        panel.setFrameOrigin(NSPoint(x: x, y: y))
     }
 
 }

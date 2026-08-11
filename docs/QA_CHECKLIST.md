@@ -184,11 +184,9 @@ distinguish a pass from nothing happening.
 owner walked the reopened rows from the installed build with both mascots
 summoned and one dragged to a manual height, and reported per row rather than as
 one verdict — which is the whole difference from 2026-08-02. **Every row has now
-been walked.** Eight pass, including the `@1x` row that was assumed to need
-hardware nobody had. **One fails:** unplugging a display does not preserve a
-dragged height, contrary to what this file, the ledger, and the source comments
-all say. That row is the only thing the matrix found that is not a
-documentation problem, and it is not yet diagnosed.
+been walked.** Nine pass, including the `@1x` row that was assumed to need
+hardware nobody had. The tenth — unplugging a display — found a real defect,
+now diagnosed and fixed, and awaits one hands-on rerun from a rebuilt install.
 
 - [x] Single Retina display, bottom Dock. Exercised continuously since the
   prototype and daily by the author; this one is genuinely earned.
@@ -214,30 +212,28 @@ documentation problem, and it is not yet diagnosed.
   It must not jump displays when keyboard focus moves to the other one — that
   was a real defect, fixed 2026-08-02 in `referenceScreen`, and moving focus
   back and forth is what would resurrect it.
-- [ ] **Unplugging the display the mascot is on. Walked twice 2026-08-10; the
-  documented behavior did not happen.** With the pet dragged near the top of the
-  1920x1080 external and the display then disconnected, it came back to the
-  built-in display **at the bottom**, not near the top. The dragged height was
-  not preserved.
-  - The owner's two displays have aligned top edges (built-in `0,0 1280x832`,
-    external `1280,-248 1920x1080`, both topping out at 832), so a height near
-    the external's top needed **no clamping at all** to fit the built-in. The
-    height was discarded rather than squeezed.
-  - Leading hypothesis, **not yet established**: AppKit relocates a window off a
-    disconnected display on its own, and `screenParametersChanged` then calls
-    `settleAfterDrop()`, which reads `panel.frame.minY` — by then the system's
-    chosen position, not the user's. The code would be adopting the relocation
-    and storing it as `manualLaneY`, so the height is lost before our handler
-    ever runs. This is inferred from reading `WindowCoordinator`, not observed.
-  - The behavior may well be *preferable* — a pet reappearing at the bottom is
-    easy to find. What is not acceptable is the documentation asserting a
-    re-clamp that does not occur. Settle the mechanism first, then let the owner
-    decide which behavior is wanted; do not "fix" it toward the docs by default.
-  - **Discriminating check, cheaper than another unplug:** drag a pet high on
-    the *built-in* display and change resolution or arrangement in System
-    Settings. That posts the same notification **without** removing a display,
-    so AppKit has no reason to relocate the window. Height surviving that but
-    not the unplug confirms the hypothesis.
+- [~] **Unplugging the display the mascot is on. Defect found, diagnosed, and
+  fixed 2026-08-10; the fix is unit-tested but not yet watched on screen.**
+  - **What was observed:** with the pet dragged near the top of the external
+    display and the display then disconnected, it returned to the built-in
+    display at the *bottom*. Clamping did not explain it — the owner's displays
+    have aligned top edges, so the height fit untouched.
+  - **The discriminating check settled it.** Changing resolution with a pet
+    dragged high on the built-in **preserved** the height. Same notification, no
+    display removed, no relocation — so the trigger was AppKit relocating the
+    window off the display that disappeared.
+  - **Cause:** `screenParametersChanged` called `settleAfterDrop()`, which
+    derives the height from `panel.frame.minY`. That is right for a drop, where
+    the frame is the user's intent, and wrong after a relocation, where it is
+    the system's. The remembered `manualLaneY` was never read.
+  - **Fix:** the handler re-clamps the stored `manualLaneY` instead. X still
+    comes from the frame, since roaming rewrites it constantly and there is no
+    remembered X to prefer. Regression test
+    `aDisplayChangeKeepsTheDraggedHeightRatherThanASystemRelocation`, confirmed
+    to fail against the old handler and pass against the new one.
+  - **Still to do:** rerun the unplug by hand from a rebuilt install. A unit
+    test that stands in for AppKit's relocation cannot prove AppKit does what
+    the stand-in does.
 - [x] **Full-screen Spaces and ordinary Spaces.** Owner-walked 2026-08-10: the
   pets stayed visible over full-screen apps rather than being hidden by them,
   and no focus was stolen. **Recorded as observed behavior, not as approval** —

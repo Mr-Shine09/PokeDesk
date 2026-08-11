@@ -165,6 +165,41 @@ import Testing
     #expect(coordinator.panel.frame.minY == droppedY)
 }
 
+/// A display change must not adopt a relocation macOS performed for us.
+///
+/// This reproduces the 2026-08-10 unplug defect without needing a second
+/// display: moving the panel to the bottom stands in for AppKit relocating a
+/// window off a display that has just been removed, and posting the
+/// notification is what the system does next. The old handler called
+/// `settleAfterDrop()`, which read the *moved* frame and stored it as the
+/// user's height, so the drag was lost. Note that the test only bites because
+/// the panel is moved first — a screen-parameter change with no relocation
+/// preserved the height even before the fix, which is exactly why the bug
+/// survived: on the owner's machine a resolution change looked correct and only
+/// an unplug did not.
+@MainActor
+@Test func aDisplayChangeKeepsTheDraggedHeightRatherThanASystemRelocation() {
+    let coordinator = WindowCoordinator(contentView: NSView())
+    defer { coordinator.setVisible(false) }
+
+    coordinator.reposition()
+    let laneY = coordinator.panel.frame.minY
+    let droppedY = laneY + 200
+    coordinator.panel.setFrameOrigin(NSPoint(x: coordinator.panel.frame.minX, y: droppedY))
+    coordinator.settleAfterDrop()
+    #expect(coordinator.panel.frame.minY == droppedY)
+
+    // Stand in for AppKit moving the window when its display disappears.
+    coordinator.panel.setFrameOrigin(NSPoint(x: coordinator.panel.frame.minX, y: laneY))
+    NotificationCenter.default.post(
+        name: NSApplication.didChangeScreenParametersNotification,
+        object: NSApplication.shared
+    )
+
+    #expect(coordinator.panel.frame.minY == droppedY)
+    #expect(coordinator.hasManualPlacement)
+}
+
 @MainActor
 @Test func repositioningIsTheWayBackToTheDefaultLane() {
     let coordinator = WindowCoordinator(contentView: NSView())
