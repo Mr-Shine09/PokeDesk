@@ -230,8 +230,8 @@ Stated plainly, because you are about to build this yourself:
   watched driving their own mascot on screen — Codex on 2026-08-10.
 - **The display matrix was walked on 2026-08-10** — Dock auto-hide, left/right
   Dock, two displays, full-screen Spaces, sleep/wake, lock/unlock, and
-  non-Retina rendering all work. Unplugging a display used to lose a mascot's
-  dragged height; that is fixed but has not yet been re-checked by hand.
+  non-Retina rendering all work, as does unplugging a display with a mascot on
+  it — which used to lose a dragged height and no longer does.
 - **Reduce Motion** is honored for the summon and dismiss transitions; broader
   coverage is still open.
 - **Ordinary (non-coding) Claude and ChatGPT chats are not detected.** Use

@@ -16,11 +16,11 @@ never produced by a real provider.
 
 **Also updated 2026-08-10.** The window/display matrix was reopened — all but
 two of its rows had been ticked by that same blanket verdict — and then walked
-row by row the same day. Eight rows pass on per-row evidence. **The unplug row
-fails:** a dragged height is lost when the display it was on is disconnected,
-which contradicts what this file and the source comments both claim. It is
-undiagnosed, and it is the only behavioral defect any of the 2026-08-10 walks
-produced.
+row by row the same day. **All eleven rows now pass on per-row evidence**, the
+last of them on 2026-08-11. **The unplug row found the
+only behavioral defect of the day** — a dragged height was lost when its display
+was disconnected — and it was diagnosed, fixed, and re-walked on screen. Every
+row in the matrix now carries per-row owner evidence.
 
 ## Automated baseline
 
@@ -183,10 +183,10 @@ distinguish a pass from nothing happening.
 **Walked the same day, 2026-08-10, and this time the ticks are earned.** The
 owner walked the reopened rows from the installed build with both mascots
 summoned and one dragged to a manual height, and reported per row rather than as
-one verdict — which is the whole difference from 2026-08-02. **Every row has now
-been walked.** Nine pass, including the `@1x` row that was assumed to need
+one verdict — which is the whole difference from 2026-08-02. **Every row has now been
+walked and every row passes**, including the `@1x` row that was assumed to need
 hardware nobody had. The tenth — unplugging a display — found a real defect,
-now diagnosed and fixed, and awaits one hands-on rerun from a rebuilt install.
+which was diagnosed, fixed, and re-walked on screen from a rebuilt install.
 
 - [x] Single Retina display, bottom Dock. Exercised continuously since the
   prototype and daily by the author; this one is genuinely earned.
@@ -212,28 +212,31 @@ now diagnosed and fixed, and awaits one hands-on rerun from a rebuilt install.
   It must not jump displays when keyboard focus moves to the other one — that
   was a real defect, fixed 2026-08-02 in `referenceScreen`, and moving focus
   back and forth is what would resurrect it.
-- [~] **Unplugging the display the mascot is on. Defect found, diagnosed, and
-  fixed 2026-08-10; the fix is unit-tested but not yet watched on screen.**
-  - **What was observed:** with the pet dragged near the top of the external
-    display and the display then disconnected, it returned to the built-in
-    display at the *bottom*. Clamping did not explain it — the owner's displays
-    have aligned top edges, so the height fit untouched.
-  - **The discriminating check settled it.** Changing resolution with a pet
-    dragged high on the built-in **preserved** the height. Same notification, no
-    display removed, no relocation — so the trigger was AppKit relocating the
-    window off the display that disappeared.
+- [x] **Unplugging the display the mascot is on. Defect found, diagnosed, fixed,
+  and re-walked on screen — 2026-08-10 into 2026-08-11.**
+  - **What was observed originally:** with the pet dragged near the top of the
+    external display and the display then disconnected, it returned to the
+    built-in display at the *bottom*. Clamping did not explain it — the owner's
+    displays have aligned top edges, so the height fit untouched.
+  - **The discriminating check settled the mechanism.** Changing resolution with
+    a pet dragged high on the built-in **preserved** the height: same
+    notification, no display removed, no relocation. Two hands-on results
+    differing in one variable are what isolated it.
   - **Cause:** `screenParametersChanged` called `settleAfterDrop()`, which
-    derives the height from `panel.frame.minY`. That is right for a drop, where
-    the frame is the user's intent, and wrong after a relocation, where it is
-    the system's. The remembered `manualLaneY` was never read.
-  - **Fix:** the handler re-clamps the stored `manualLaneY` instead. X still
-    comes from the frame, since roaming rewrites it constantly and there is no
-    remembered X to prefer. Regression test
+    derives the height from `panel.frame.minY`. Right for a drop, where the
+    frame is the user's intent; wrong after AppKit relocates the window off a
+    removed display, where it is the system's. The remembered `manualLaneY` was
+    never read.
+  - **Fix:** the handler re-clamps the stored `manualLaneY`. X still comes from
+    the frame, since roaming rewrites it and there is no remembered X to prefer.
+    Regression test
     `aDisplayChangeKeepsTheDraggedHeightRatherThanASystemRelocation`, confirmed
-    to fail against the old handler and pass against the new one.
-  - **Still to do:** rerun the unplug by hand from a rebuilt install. A unit
-    test that stands in for AppKit's relocation cannot prove AppKit does what
-    the stand-in does.
+    to fail against the old handler before being restored.
+  - **Re-walked from a rebuilt install and passes:** the pet came back at the
+    dragged height. The bundle was verified newer than the fix commit before the
+    result was believed, so this is not a repeat of the stale-install trap. The
+    unit test's stand-in for AppKit's relocation is now backed by an on-screen
+    observation rather than standing alone.
 - [x] **Full-screen Spaces and ordinary Spaces.** Owner-walked 2026-08-10: the
   pets stayed visible over full-screen apps rather than being hidden by them,
   and no focus was stolen. **Recorded as observed behavior, not as approval** —
