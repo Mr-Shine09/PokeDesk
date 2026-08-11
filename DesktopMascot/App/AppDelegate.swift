@@ -40,6 +40,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     func isRoaming(_ provider: EventProvider) -> Bool {
         roamingByProvider[provider] ?? true
     }
+    /// Whether a frontmost chat app drives its mascot's ideating pose.
+    @Published private(set) var chatAppsDriveIdeating = Preferences.chatAppsDriveIdeating
     /// The nightly sleep window, or `nil` when scheduled sleep is off.
     /// Restored from preferences, like roaming.
     @Published private(set) var sleepWindow = Preferences.sleepWindow
@@ -52,6 +54,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// source of the mascot's visible state — manual pause and ideating included,
     /// since those reach the reducer as overrides.
     let eventBridge = AgentEventBridge()
+    /// Reports whether a chat app is frontmost. Created at launch rather than
+    /// lazily, so the very first reduction already knows the answer.
+    private var chatAppObserver: ChatAppObserver?
+    private var chatObservation: AnyCancellable?
 
     /// The menu bar item, owned here rather than created by a SwiftUI
     /// `MenuBarExtra`.
@@ -112,6 +118,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // checkmarks while the pet keeps the built-in 23:00–06:00 — a setting
         // that appears to work until the app is relaunched.
         eventBridge.sleepWindow = sleepWindow
+        // Same rule the sleep window follows: an input to the reduction has to
+        // reach the bridge before `start()`, or it lives only in the menu's
+        // checkmark and the pet never acts on it.
+        let observer = ChatAppObserver(isEnabled: chatAppsDriveIdeating)
+        chatAppObserver = observer
+        chatObservation = observer.$presence.sink { [weak self] presence in
+            self?.eventBridge.chat = presence
+        }
         // Started before the mascot loads so a resource failure below still
         // leaves the event path diagnosable from the menu bar.
         eventBridge.start()
@@ -338,6 +352,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     func setMuted(_ muted: Bool) {
         isMuted = muted
         sounds.isMuted = muted
+    }
+
+    /// Turns the chat-app signal on or off. Clearing the presence is the
+    /// observer's job, so switching this off stops the pose immediately rather
+    /// than at the next app switch.
+    func setChatAppsDriveIdeating(_ enabled: Bool) {
+        chatAppsDriveIdeating = enabled
+        Preferences.chatAppsDriveIdeating = enabled
+        chatAppObserver?.setEnabled(enabled)
     }
 
     func setRoaming(_ roaming: Bool, for provider: EventProvider) {

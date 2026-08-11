@@ -34,6 +34,18 @@ final class AgentEventBridge: ObservableObject {
         }
     }
 
+    /// Which chat apps are frontmost, fed by `ChatAppObserver`.
+    ///
+    /// Refreshes immediately on change for the same reason the sleep window
+    /// does: a pet that starts thinking up to 15 seconds after you switch to
+    /// the chat app reads as the feature not working.
+    var chat: ChatPresence = .none {
+        didSet {
+            guard chat != oldValue else { return }
+            refresh()
+        }
+    }
+
     /// The nightly sleep window, or `nil` for no scheduled sleep at all.
     ///
     /// Refreshes on change rather than waiting for the next tick, so moving the
@@ -149,17 +161,17 @@ final class AgentEventBridge: ObservableObject {
     // MARK: - Private
 
     private func receive(_ envelope: EventEnvelope) {
-        pipeline.ingest(envelope, overrides: overrides, now: Date(), uptime: uptime)
+        pipeline.ingest(envelope, overrides: overrides, chat: chat, now: Date(), uptime: uptime)
         publish()
     }
 
     private func receiveRejectedFrame() {
-        pipeline.noteRejectedFrame(overrides: overrides, now: Date(), uptime: uptime)
+        pipeline.noteRejectedFrame(overrides: overrides, chat: chat, now: Date(), uptime: uptime)
         publish()
     }
 
     private func refresh() {
-        pipeline.refresh(overrides: overrides, now: Date(), uptime: uptime)
+        pipeline.refresh(overrides: overrides, chat: chat, now: Date(), uptime: uptime)
         publish()
     }
 

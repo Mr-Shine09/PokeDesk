@@ -53,10 +53,139 @@ private func registry(
 private func reduce(
     _ events: [(AgentEvent, EventProvider, String)],
     overrides: ManualOverrides = .none,
+    chat: ChatPresence = .none,
     now: Date = daytime,
     uptime: Uptime = boot
 ) -> MascotVisibleState {
-    reducer().reduce(registry: registry(events), overrides: overrides, now: now, uptime: uptime)
+    reducer().reduce(
+        registry: registry(events),
+        overrides: overrides,
+        chat: chat,
+        now: now,
+        uptime: uptime
+    )
+}
+
+private let claudeChat = ChatPresence(providers: [.claudeCode])
+
+@Test func aFrontmostChatAppMakesTheMascotThink() {
+    let state = reduce([], chat: claudeChat)
+
+    #expect(state.state == .ideating)
+    // Unlike manual ideating, this signal is attributable, so it names the
+    // mascot that should react.
+    #expect(state.providers == [.claudeCode])
+}
+
+/// The rung that separates this from manual ideating.
+///
+/// Manual ideating outranks `working` (2026-08-09) because it is a deliberate
+/// standing preference. A frontmost chat app is a guess, and a much weaker one:
+/// glancing at the Claude app while an agent grinds away must keep showing the
+/// real work.
+@Test func aWorkingSessionOutranksAFrontmostChatApp() {
+    let state = reduce([(.active, .claudeCode, "s-work")], chat: claudeChat)
+
+    #expect(state.state == .working)
+}
+
+@Test func manualIdeatingStillOutranksWorkingSoTheTwoRungsAreDistinct() {
+    let state = reduce(
+        [(.active, .claudeCode, "s-work")],
+        overrides: ManualOverrides(isIdeating: true)
+    )
+
+    #expect(state.state == .ideating)
+}
+
+/// The case the ladder alone did not cover.
+///
+/// The Claude desktop app hosts the chat *and* Claude Code under one bundle
+/// identifier, so a frontmost Claude.app between turns — session known, nothing
+/// running — must not read as chatting. Ranking chat below `working` handled a
+/// turn in flight and left this gap showing a Thinker pose at someone who was
+/// not chatting.
+@Test func aProviderWithAnyLiveSessionIgnoresTheChatSignal() {
+    // `.started` leaves the session present but idle: Claude Code open, quiet.
+    let state = reduce([(.started, .claudeCode, "s-quiet")], chat: claudeChat)
+
+    #expect(state.state == .idle)
+}
+
+/// Sessions expire on the ordinary timeout, so closing the agent hands the
+/// mascot back to the chat signal without any extra machinery.
+@Test func theChatSignalReturnsOnceTheSessionHasExpired() {
+    let storage = registry([(.started, .claudeCode, "s-gone")])
+    let expired = boot.advanced(by: 200)
+
+    let state = reducer().reduce(
+        registry: storage,
+        chat: claudeChat,
+        now: daytime,
+        uptime: expired
+    )
+
+    #expect(state.state == .ideating)
+}
+
+/// A finished turn keeps its fist pump even with the chat app in front.
+@Test func aSuccessReactionOutranksAFrontmostChatApp() {
+    let state = reduce(
+        [(.active, .claudeCode, "s-done"), (.completed, .claudeCode, "s-done")],
+        chat: claudeChat
+    )
+
+    #expect(state.state == .success)
+}
+
+/// Someone using a chat app at 02:00 is awake, and the documented rule is that
+/// ideating interrupts scheduled sleep.
+@Test func aFrontmostChatAppInterruptsScheduledSleep() {
+    let state = reduce([], chat: claudeChat, now: nighttime)
+
+
+    #expect(state.state == .ideating)
+}
+
+@Test func aWaitingSessionOutranksAFrontmostChatApp() {
+    let state = reduce([(.waiting, .claudeCode, "s-ask")], chat: claudeChat)
+
+    #expect(state.state == .waiting)
+}
+
+/// The Claude app must not make the Codex mascot think.
+@Test func aChatAppOnlyReachesItsOwnProvidersMascot() {
+    let reducer = reducer()
+    let sessions = registry([]).sessions(at: boot)
+
+    let claude = reducer.reduce(
+        sessions: sessions,
+        attributedTo: .claudeCode,
+        chat: claudeChat,
+        now: daytime,
+        uptime: boot
+    )
+    let codex = reducer.reduce(
+        sessions: sessions,
+        attributedTo: .codex,
+        chat: claudeChat,
+        now: daytime,
+        uptime: boot
+    )
+
+    #expect(claude.state == .ideating)
+    #expect(codex.state == .offline)
+}
+
+@Test func onlyTheTwoAllowlistedChatAppsAreRecognized() {
+    #expect(ChatApp.provider(forBundleIdentifier: "com.anthropic.claudefordesktop") == .claudeCode)
+    // ChatGPT's desktop app really does ship as `com.openai.codex`.
+    #expect(ChatApp.provider(forBundleIdentifier: "com.openai.codex") == .codex)
+    #expect(ChatApp.provider(forBundleIdentifier: "com.mrshine09.dockpet") == nil)
+    #expect(ChatApp.provider(forBundleIdentifier: "com.apple.Safari") == nil)
+    // A substring match would catch this; an allowlist does not.
+    #expect(ChatApp.provider(forBundleIdentifier: "com.example.claude-notes") == nil)
+    #expect(ChatApp.provider(forBundleIdentifier: nil) == nil)
 }
 
 // MARK: - Priority order

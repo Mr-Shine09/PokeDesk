@@ -261,6 +261,31 @@ which was diagnosed, fixed, and re-walked on screen from a rebuilt install.
   background launch (`open -g`) left ChatGPT/Codex frontmost, and the panel is
   non-activating by construction with a test covering it.
 
+## Chat-app ideating acceptance
+
+Added 2026-08-11 and **not yet observed on screen**. The first attempt was
+contaminated: the owner tested while talking to Claude Code in the same app, so
+its hooks kept a live session and the signal correctly stood down throughout.
+**A clean run needs no Claude Code activity for the session expiry window
+first** — that is the setup detail without which every row below produces a
+false negative.
+
+- [ ] With no Claude Code session alive, bringing the **Claude desktop app**
+  frontmost puts the orange mascot in the Thinker pose, and the navy one is
+  unaffected.
+- [ ] Switching to any non-allowlisted app returns it to strolling within about
+  two seconds.
+- [ ] With Claude Code **actively working**, a frontmost Claude app leaves the
+  orange mascot at its computer rather than thinking.
+- [ ] With Claude Code open but **idle between turns**, a frontmost Claude app
+  leaves the mascot strolling — the signal stands down for a provider with any
+  live session, not merely a busy one.
+- [ ] Once that session expires, the Thinker pose returns while the app is still
+  frontmost.
+- [ ] The **ChatGPT desktop app** drives the navy mascot and not the orange one.
+- [ ] Unchecking **Think When Chat App Is Open** drops the pose immediately.
+- [ ] The choice survives relaunch.
+
 ## Event system acceptance
 
 - [x] Valid events decode into allowlisted fields only.

@@ -62,7 +62,7 @@ The states the pet can show:
 | State | What you see |
 | --- | --- |
 | Working | Sits at a small computer and types |
-| Ideating | Thinker pose with a looping thought cloud |
+| Ideating | Thinker pose with a looping thought cloud. Set by hand from the menu, or automatically while the Claude or ChatGPT desktop app is frontmost |
 | Waiting | Stops, turns toward you, and raises a hand |
 | Success | Sparkling eyes and one quick fist pump |
 | Failure | A short confused, dizzy stumble |
@@ -74,7 +74,7 @@ When several sessions are active at once, they reduce deterministically in this
 priority order:
 
 ```text
-paused > failure > waiting > ideating > working > success > sleep > idle > offline
+paused > failure > waiting > manual ideating > working > success > chat ideating > sleep > idle > offline
 ```
 
 ## Requirements
@@ -180,6 +180,7 @@ Click the menu bar paw print:
 | **Summon / Dismiss ⟨mascot⟩** | One entry per provider. Each is independent |
 | **Pause** | Freezes animation for both mascots |
 | **Manual Ideating** | Forces the thinking pose — for ordinary chats that emit no hooks |
+| **Think When Chat App Is Open** | Puts a mascot in the thinking pose while its provider's desktop chat app is frontmost. On by default; see [Privacy](#privacy) for exactly what it looks at |
 | **Sounds** | Mutes all four cues (success, failure, summon, dismiss) |
 | **⟨mascot⟩ Stays in One Place** | One entry per mascot, next to its Summon. Checked, that pet stops strolling and stays exactly where it is, still animating in place — drag it somewhere first and it stays there, across relaunches. Unchecked (the default), it roams. The two mascots are independent |
 | **Reposition on Current Display** | Returns the pet to the default bottom lane |
@@ -218,8 +219,15 @@ merely so that it promises not to.
 - **Session IDs are hashed** inside the hook helper before they leave the
   process. Every payload key other than `hook_event_name` and `session_id` is
   dropped without being inspected.
-- **No screen reading**, no process inspection, no accessibility permissions, no
-  private APIs, and no injection into the macOS Dock.
+- **No screen reading**, no accessibility permissions, no private APIs, and no
+  injection into the macOS Dock.
+- **One thing is observed beyond hooks, and only if you leave it on.** With
+  **Think When Chat App Is Open** enabled, Dock Pet asks macOS for the *bundle
+  identifier of the frontmost application* and compares it against a two-entry
+  allowlist — the Claude and ChatGPT desktop apps. It never learns the name of
+  any other app, never reads a window title, a document, or a browser tab, and
+  keeps no history of what you switched to. Nothing is stored and nothing is
+  sent. Turn the menu item off and it stops asking.
 - **The socket is yours alone** — a Unix-domain socket under your own user's
   directory, not a TCP port.
 - **Nothing is written outside the app's own preferences.** Dock Pet does not
@@ -248,8 +256,17 @@ Stated plainly, because you are about to build this yourself:
   it — which used to lose a dragged height and no longer does.
 - **Reduce Motion** is honored for the summon and dismiss transitions; broader
   coverage is still open.
-- **Ordinary (non-coding) Claude and ChatGPT chats are not detected.** Use
-  **Manual Ideating**. Automatic detection is deferred until there is a signal
+- **Chat detection covers the desktop apps only, not browser tabs.** A frontmost
+  Claude or ChatGPT *app* puts its mascot in the thinking pose. `claude.ai` or
+  `chatgpt.com` in a browser does not, and deliberately never will: detecting it
+  means reading the active tab's URL, which is your browsing history. Use
+  **Manual Ideating** for those.
+- **A chat app cannot be told apart from an agent running inside it.** The
+  Claude desktop app hosts both the chat and Claude Code under one identifier,
+  so while Claude Code has a live session the chat signal stands down entirely
+  and the mascot follows the agent. It resumes once that session goes quiet.
+- **This feature is not yet confirmed on screen.** The behavior above is what
+  the code and its tests specify; it has not been watched working end to end. Automatic detection is deferred until there is a signal
   that does not require snooping.
 - **The pet does not avoid your cursor or UI controls** while roaming.
 

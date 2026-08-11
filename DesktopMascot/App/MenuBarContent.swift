@@ -69,6 +69,24 @@ struct MenuBarContent: View {
             Label("Manual Ideating", systemImage: appDelegate.isIdeating ? "checkmark" : "minus")
         }
 
+        // Sits with Manual Ideating because it answers the same question — is
+        // the user thinking — from a weaker signal. The label names what is
+        // watched (the app being in front), not a vague "chat detection", so
+        // the privacy cost is legible from the menu itself.
+        Button {
+            appDelegate.setChatAppsDriveIdeating(!appDelegate.chatAppsDriveIdeating)
+        } label: {
+            Label(
+                "Think When Chat App Is Open",
+                systemImage: appDelegate.chatAppsDriveIdeating ? "checkmark" : "minus"
+            )
+        }
+        .accessibilityLabel(
+            appDelegate.chatAppsDriveIdeating
+                ? "Stop the mascot thinking when the Claude or ChatGPT app is in front"
+                : "Let the mascot think when the Claude or ChatGPT app is in front"
+        )
+
         Button {
             appDelegate.setMuted(!appDelegate.isMuted)
         } label: {

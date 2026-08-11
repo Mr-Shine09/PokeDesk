@@ -82,8 +82,11 @@ public struct MascotVisibleState: Equatable, Sendable {
 /// Collapses every tracked session plus the manual overrides into one visible
 /// state, using the documented priority:
 ///
-/// `paused > failure-recent > waiting > ideating > working > success-recent >
-/// scheduled-sleep > idle/strolling > offline`
+/// `paused > failure-recent > waiting > manual-ideating > working >
+/// success-recent > chat-ideating > scheduled-sleep > idle/strolling > offline`
+///
+/// Chat-ideating additionally applies only to a provider with **no live
+/// session at all**; see the comment at its rung.
 ///
 /// Manual ideating moved above `working` on 2026-08-09 (owner decision). It is
 /// an explicit user action, and below `working` it was unreachable in practice:
@@ -91,6 +94,17 @@ public struct MascotVisibleState: Equatable, Sendable {
 /// exactly the moment someone was most likely to be watching the pet. It stays
 /// below `waiting` and `failure` on purpose — both of those need the user, and a
 /// standing preference must not hide something that is asking for attention.
+///
+/// **Chat-ideating is a second, weaker ideating rung, added 2026-08-11.** A
+/// frontmost chat app is evidence that the user is thinking, but far weaker
+/// evidence than the menu toggle: it cannot tell composing a prompt from
+/// re-reading last week's conversation. So it sits *below* `working`, where
+/// manual ideating deliberately does not — switching to the Claude app while an
+/// agent is grinding must keep showing the real work rather than a guess about
+/// the user. It sits below the success reaction so a completed turn still gets
+/// its fist pump, and above scheduled sleep because someone actively using a
+/// chat app at 02:00 is awake, and the documented rule is that ideating
+/// interrupts sleep.
 ///
 /// The reducer reads no clock of its own. Callers pass the wall clock (for the
 /// local sleep window) and the monotonic instant (for reaction and expiry
@@ -113,6 +127,7 @@ public struct MascotStateReducer: Sendable {
     public func reduce(
         sessions: [AgentSession],
         overrides: ManualOverrides = .none,
+        chat: ChatPresence = .none,
         now: Date,
         uptime: Uptime
     ) -> MascotVisibleState {
@@ -156,6 +171,34 @@ public struct MascotStateReducer: Sendable {
             return MascotVisibleState(state: .success, providers: Self.providers(of: succeeding))
         }
 
+        // Weaker than every signal above, including the success reaction: a
+        // frontmost chat app says the user is probably thinking, not that any
+        // agent reported anything. It reports the provider it came from, because
+        // unlike manual ideating it is attributable — the Claude app drives the
+        // Claude mascot.
+        //
+        // **A provider with any live session ignores this signal entirely**, not
+        // merely ranks it lower. The Claude desktop app hosts both the chat and
+        // Claude Code behind one bundle identifier, so being frontmost cannot
+        // distinguish "asking a question" from "watching an agent between
+        // turns" — and no signal inside this project's privacy line can, since
+        // telling them apart means reading window contents. When hooks are
+        // reporting sessions for a provider, that provider's agent is the
+        // authority and the guess stands down; the pet strolls or idles as it
+        // did before this feature existed. Sessions expire on the ordinary
+        // timeout, so quitting the agent restores the chat behavior by itself.
+        //
+        // Owner clarification, 2026-08-11. Ranking alone was not enough: it
+        // covered a *running* turn and left the quiet gaps between turns showing
+        // a Thinker pose at someone who was not chatting.
+        let chatting = chat.providers.subtracting(present.map(\.provider))
+        if !chatting.isEmpty {
+            return MascotVisibleState(
+                state: .ideating,
+                providers: chatting.sorted { $0.rawValue < $1.rawValue }
+            )
+        }
+
         // Any work, ideating, or waiting above already interrupted sleep. Reaching
         // here inside the window means the last turn's reaction has finished, so
         // the mascot goes back to sleep.
@@ -174,12 +217,14 @@ public struct MascotStateReducer: Sendable {
     public func reduce(
         registry: SessionRegistry,
         overrides: ManualOverrides = .none,
+        chat: ChatPresence = .none,
         now: Date,
         uptime: Uptime
     ) -> MascotVisibleState {
         reduce(
             sessions: registry.sessions(at: uptime),
             overrides: overrides,
+            chat: chat,
             now: now,
             uptime: uptime
         )
@@ -204,12 +249,17 @@ public struct MascotStateReducer: Sendable {
         sessions: [AgentSession],
         attributedTo provider: EventProvider,
         overrides: ManualOverrides = .none,
+        chat: ChatPresence = .none,
         now: Date,
         uptime: Uptime
     ) -> MascotVisibleState {
+        // The chat signal is narrowed the same way the sessions are: the Claude
+        // app must not make the Codex mascot think. Manual overrides stay
+        // app-wide, which is the documented split, not an oversight here.
         reduce(
             sessions: sessions.filter { $0.provider == provider },
             overrides: overrides,
+            chat: ChatPresence(providers: chat.providers.intersection([provider])),
             now: now,
             uptime: uptime
         )
@@ -220,6 +270,7 @@ public struct MascotStateReducer: Sendable {
         registry: SessionRegistry,
         attributedTo provider: EventProvider,
         overrides: ManualOverrides = .none,
+        chat: ChatPresence = .none,
         now: Date,
         uptime: Uptime
     ) -> MascotVisibleState {
@@ -227,6 +278,7 @@ public struct MascotStateReducer: Sendable {
             sessions: registry.sessions(at: uptime),
             attributedTo: provider,
             overrides: overrides,
+            chat: chat,
             now: now,
             uptime: uptime
         )

@@ -65,6 +65,7 @@ public struct EventPipeline: Sendable {
     public mutating func ingest(
         _ envelope: EventEnvelope,
         overrides: ManualOverrides = .none,
+        chat: ChatPresence = .none,
         now: Date,
         uptime: Uptime
     ) -> IngestOutcome {
@@ -78,7 +79,7 @@ public struct EventPipeline: Sendable {
         case .ignoredUnknownSession:
             diagnostics.unknownSessionEvents += 1
         }
-        recompute(overrides: overrides, now: now, uptime: uptime)
+        recompute(overrides: overrides, chat: chat, now: now, uptime: uptime)
         return outcome
     }
 
@@ -87,11 +88,12 @@ public struct EventPipeline: Sendable {
     /// crosses into the app.
     public mutating func noteRejectedFrame(
         overrides: ManualOverrides = .none,
+        chat: ChatPresence = .none,
         now: Date,
         uptime: Uptime
     ) {
         diagnostics.rejectedFrames += 1
-        recompute(overrides: overrides, now: now, uptime: uptime)
+        recompute(overrides: overrides, chat: chat, now: now, uptime: uptime)
     }
 
     /// Recomputes visible state as time passes, so heartbeat expiry, the stopped
@@ -99,18 +101,25 @@ public struct EventPipeline: Sendable {
     /// changes all take effect without needing a new event to arrive.
     public mutating func refresh(
         overrides: ManualOverrides = .none,
+        chat: ChatPresence = .none,
         now: Date,
         uptime: Uptime
     ) {
         registry.reconcile(at: uptime)
-        recompute(overrides: overrides, now: now, uptime: uptime)
+        recompute(overrides: overrides, chat: chat, now: now, uptime: uptime)
     }
 
-    private mutating func recompute(overrides: ManualOverrides, now: Date, uptime: Uptime) {
+    private mutating func recompute(
+        overrides: ManualOverrides,
+        chat: ChatPresence,
+        now: Date,
+        uptime: Uptime
+    ) {
         let sessions = registry.sessions(at: uptime)
         visibleState = reducer.reduce(
             sessions: sessions,
             overrides: overrides,
+            chat: chat,
             now: now,
             uptime: uptime
         )
@@ -121,6 +130,7 @@ public struct EventPipeline: Sendable {
                     sessions: sessions,
                     attributedTo: provider,
                     overrides: overrides,
+                    chat: chat,
                     now: now,
                     uptime: uptime
                 )

@@ -23,6 +23,7 @@ enum Preferences {
             "\(roaming).\(provider.rawValue)"
         }
         static let reactionSoundsMuted = "com.mrshine09.desktopmascot.reactionSoundsMuted"
+        static let chatAppsDriveIdeating = "com.mrshine09.desktopmascot.chatAppsDriveIdeating"
         static let sleepScheduleEnabled = "com.mrshine09.desktopmascot.sleepScheduleEnabled"
         static let sleepStartHour = "com.mrshine09.desktopmascot.sleepStartHour"
         static let sleepEndHour = "com.mrshine09.desktopmascot.sleepEndHour"
@@ -61,6 +62,19 @@ enum Preferences {
 
     static func setRoaming(_ roaming: Bool, for provider: EventProvider) {
         defaults.set(roaming, forKey: Key.roaming(for: provider))
+    }
+
+    /// Whether a frontmost Claude or ChatGPT desktop app puts its mascot into
+    /// the Thinker pose. Defaults to `true`, because it is the feature the owner
+    /// asked for; the menu switch exists so it can be turned off without
+    /// hunting through defaults.
+    static var chatAppsDriveIdeating: Bool {
+        get {
+            defaults.object(forKey: Key.chatAppsDriveIdeating) as? Bool ?? true
+        }
+        set {
+            defaults.set(newValue, forKey: Key.chatAppsDriveIdeating)
+        }
     }
 
     /// Whether every cue is silenced — reactions and transitions alike.

@@ -100,7 +100,7 @@ Allow only `started`, `active`, `waiting`, `completed`, `failed`, `stopped`, and
 Priority:
 
 ```text
-paused > failure-recent > waiting > ideating > working > success-recent > scheduled-sleep > idle/strolling > offline
+paused > failure-recent > waiting > manual-ideating > working > success-recent > chat-ideating > scheduled-sleep > idle/strolling > offline
 ```
 
 - Manual pause is authoritative.
