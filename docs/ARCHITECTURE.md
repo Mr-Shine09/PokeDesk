@@ -122,7 +122,7 @@ paused > failure-recent > waiting > ideating > working > success-recent > schedu
 - The smoke is a second sprite layer over the mascot (`poof`, atlas row 15) rather than a pose, so the character row and the effect row advance independently.
 - Cues exist for exactly four moments: the two agent reactions, and the two transitions the user triggers. One toggle silences all of them.
 - Dragging is always available, plays hanging, and is a placement gesture only — it does not change roaming.
-- Resume Roaming repositions into the current display's safe lane only when the user has not placed the mascot themselves.
+- Unticking Stay in One Place repositions into the current display's safe lane only when the user has not placed the mascot themselves.
 - The two reaction cues fire only while summoned and only when a state reaches the screen, not when it is reduced. The two transition cues need no visibility gate: the user asked for the transition and is watching it.
 - Screen, scale, Dock orientation, and wake changes trigger placement reconciliation.
 - Reduced Motion work must replace motion with stable/fade behavior, not merely speed up or shrink the same loop.

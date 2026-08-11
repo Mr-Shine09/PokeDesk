@@ -60,15 +60,21 @@ struct MenuBarContent: View {
 
         Divider()
 
+        // Named for the mode it switches *on*, checked when roaming is off.
+        // It read "Roam Along Bottom" until 2026-08-11, when the owner asked for
+        // a stay-in-place option that had existed all along: a menu item named
+        // after what unchecking it does is not findable by someone looking for
+        // the mode. The inversion is in the label only — `isRoaming` and its
+        // defaults key are unchanged, so no existing choice is reset.
         Button {
             appDelegate.setRoaming(!appDelegate.isRoaming)
         } label: {
-            Label("Roam Along Bottom", systemImage: appDelegate.isRoaming ? "checkmark" : "minus")
+            Label("Stay in One Place", systemImage: appDelegate.isRoaming ? "minus" : "checkmark")
         }
         .accessibilityLabel(
             appDelegate.isRoaming
-                ? "Stop the mascot roaming along the bottom of the screen"
-                : "Let the mascot roam along the bottom of the screen"
+                ? "Keep the mascot in one place instead of roaming"
+                : "Let the mascot roam along the bottom of the screen again"
         )
         Text("Click for options • Drag anytime")
         Button("Reposition on Current Display") {

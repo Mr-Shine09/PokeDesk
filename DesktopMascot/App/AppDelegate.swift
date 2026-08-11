@@ -498,7 +498,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private func showMascotMenu(for mascot: MascotInstance) {
         let menu = NSMenu()
         menu.addItem(withTitle: isPaused ? "Resume Animation" : "Pause Animation", action: #selector(togglePauseFromMascot), keyEquivalent: "")
-        menu.addItem(withTitle: isRoaming ? "Stop Roaming" : "Resume Roaming", action: #selector(toggleRoamingFromMascot), keyEquivalent: "")
+        // Phrased as the action taken, matching the menu bar's "Stay in One
+        // Place" mode name rather than the older roaming vocabulary.
+        menu.addItem(withTitle: isRoaming ? "Stay in One Place" : "Start Roaming Again", action: #selector(toggleRoamingFromMascot), keyEquivalent: "")
         menu.addItem(.separator())
         // Names the pet that was clicked, so with two on screen it is never
         // ambiguous which one is about to leave.

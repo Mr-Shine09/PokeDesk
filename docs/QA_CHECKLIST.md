@@ -73,7 +73,7 @@ only in the hoodie and the sleeping blanket.
 - [ ] Rightward movement shows `walk-right`; leftward movement shows `walk-left`.
 - [ ] Contact/passing gait frames are visibly animated, not sliding.
 - [ ] Offline rest appears and returns to walking.
-- [ ] Menu-bar Show/Hide, Pause/Resume, Ideating, Roaming, Reposition, and Quit work.
+- [ ] Menu-bar Show/Hide, Pause/Resume, Ideating, Stay in One Place, Reposition, and Quit work.
 - [ ] Clicking and right-clicking mascot open the local options menu without making the panel key/main.
 - [ ] Hide followed by reopening the app restores the panel.
 - [ ] Quit ends the process; a later launch starts a fresh visible instance.

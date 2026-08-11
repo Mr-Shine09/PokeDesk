@@ -173,7 +173,7 @@ Click the menu bar paw print:
 | **Pause** | Freezes animation for both mascots |
 | **Manual Ideating** | Forces the thinking pose — for ordinary chats that emit no hooks |
 | **Sounds** | Mutes all four cues (success, failure, summon, dismiss) |
-| **Roam Along Bottom** | Turns strolling on and off. Unchecked, the pet stays exactly where it is and keeps animating in place — drag it somewhere first and it stays there, across relaunches |
+| **Stay in One Place** | Checked, the pet stops strolling and stays exactly where it is, still animating in place — drag it somewhere first and it stays there, across relaunches. Unchecked (the default), it roams |
 | **Reposition on Current Display** | Returns the pet to the default bottom lane |
 | **Sleep Schedule** | Sets the hours the pet sleeps, or switches scheduled sleep off entirely |
 | **Preview State** | Forces any animation without needing a real agent. Good for a first look |
@@ -182,13 +182,13 @@ Click the menu bar paw print:
 
 You can also interact with the pet directly:
 
-- **Click or right-click** it for Pause, Roaming, Dismiss, and Quit.
+- **Click or right-click** it for Pause, Stay in One Place, Dismiss, and Quit.
 - **Drag** it anywhere, at any time. It grabs on with one hand while you drag.
   Dropping is placement only — it keeps roaming, at whatever height you let go
   at. Use **Reposition** to send it back to the bottom.
-- **To pin the pet in one spot**, drag it where you want it and uncheck **Roam
-  Along Bottom**. It stays put and keeps its idle animation, and still reacts
-  to your agent normally — working, waiting, and the rest are stationary poses
+- **To pin the pet in one spot**, drag it where you want it and tick **Stay in
+  One Place**. It stays put and keeps its idle animation, and still reacts to
+  your agent normally — working, waiting, and the rest are stationary poses
   anyway.
 
 Summoning and dismissing are animated: the pet steps out of a portal at the
