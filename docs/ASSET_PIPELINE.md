@@ -129,6 +129,50 @@ Regenerating changes files inside the asset catalog, so re-run `xcodegen
 generate` only if the slot list itself changed; the PNG contents are picked up
 without it.
 
+## Project page screenshot
+
+`README.md` describes a visible thing and has no picture of it. The capture is
+an **owner action**: `screencapture` from an agent session returns a blank frame
+because that process has no Screen Recording permission, and an image assembled
+from atlas cells would show sprites rather than the app, which is the one thing
+a project page screenshot exists to prove.
+
+Target file: `docs/images/readme-hero@2x.png`. The README gains its `![…]` link
+in the same commit that adds the file — do not commit the link ahead of the
+image, since the repository is public and a broken image is worse than none.
+
+Setup, in this order:
+
+1. Relaunch the installed build so the capture shows shipped behavior:
+   `open -g "$HOME/Applications/Dock Pet.app"`. If `main` has moved since the
+   bundle was built, run `tools/install_app.sh` **first** — it quits the app, so
+   it must not happen mid-capture (handoff items 32 and 17).
+2. Summon **both** mascots from the pawprint menu. Two pets in one frame is what
+   shows per-provider wardrobe, and it is the only claim on the page that a
+   single-pet capture cannot make.
+3. Turn **Manual Ideating off**. It reaches both mascots and outranks `working`,
+   so left on it overrides whatever the frame is meant to show.
+4. Confirm the schedule is outside the sleep window, or both pets are asleep
+   under blankets.
+5. Drive one mascot to a non-idle state — a real Claude Code turn puts the
+   orange one at its computer — and leave the other strolling. A frame of two
+   identical strolls does not distinguish the states the page lists.
+
+Capture with a region rather than a window: the panel is non-activating and
+borderless, so a window capture picks up a bare rectangle with no context.
+
+```bash
+screencapture -R "<x>,<y>,<w>,<h>" -t png docs/images/readme-hero@2x.png
+```
+
+Include the bottom strip of the desktop with both pets and enough width to read
+as a screen edge. Keep the menu bar pawprint out of this frame — it is a second
+subject and wants its own narrow strip if the page ever needs one.
+
+Accept the result only if the file is non-empty and visibly shows the pets; a
+capture taken without Screen Recording permission produces a plausible-looking
+PNG that is blank, and that has already fooled one session.
+
 ## Revision discipline
 
 Do not overwrite an owner-approved atlas behavior casually. A new row, geometry change, palette change, or anchor model requires:
