@@ -204,6 +204,20 @@ struct MenuBarContent: View {
             .disabled(EventHelperLocation.path == nil)
         }
 
+        // Temporary, and deliberately not a polished feature. It exists to
+        // answer whether the Claude app exposes a usable "generating" signal at
+        // all, before any lifecycle detection is built on the assumption that it
+        // does. Remove this submenu once that question is settled either way.
+        Menu("Chat Detection (Experimental)") {
+            Text(appDelegate.accessibilityStatus)
+            Button("Request Accessibility Access…") {
+                appDelegate.requestAccessibilityAccess()
+            }
+            Button("Write Chat App Report to Desktop") {
+                appDelegate.writeChatAccessibilityReport()
+            }
+        }
+
         Divider()
 
         Button("Quit Dock Pet") {

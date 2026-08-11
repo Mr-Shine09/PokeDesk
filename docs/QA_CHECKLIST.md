@@ -261,30 +261,49 @@ which was diagnosed, fixed, and re-walked on screen from a rebuilt install.
   background launch (`open -g`) left ChatGPT/Codex frontmost, and the panel is
   non-activating by construction with a test covering it.
 
-## Chat-app ideating acceptance
+## Chat lifecycle acceptance (experimental)
 
-Added 2026-08-11 and **not yet observed on screen**. The first attempt was
-contaminated: the owner tested while talking to Claude Code in the same app, so
-its hooks kept a live session and the signal correctly stood down throughout.
-**A clean run needs no Claude Code activity for the session expiry window
-first** — that is the setup detail without which every row below produces a
-false negative.
+**Nothing here has been observed. The feature is off by default and unproven.**
+It reads one accessibility attribute on the Claude window — the description that
+marks a message as streaming — which is a deliberate reversal of the project's
+"no accessibility permissions" promise (owner decision, 2026-08-11).
 
-- [ ] With no Claude Code session alive, bringing the **Claude desktop app**
-  frontmost puts the orange mascot in the Thinker pose, and the navy one is
-  unaffected.
-- [ ] Switching to any non-allowlisted app returns it to strolling within about
-  two seconds.
-- [ ] With Claude Code **actively working**, a frontmost Claude app leaves the
-  orange mascot at its computer rather than thinking.
-- [ ] With Claude Code open but **idle between turns**, a frontmost Claude app
-  leaves the mascot strolling — the signal stands down for a provider with any
-  live session, not merely a busy one.
-- [ ] Once that session expires, the Thinker pose returns while the app is still
-  frontmost.
-- [ ] The **ChatGPT desktop app** drives the navy mascot and not the orange one.
-- [ ] Unchecking **Think When Chat App Is Open** drops the pose immediately.
-- [ ] The choice survives relaunch.
+Two rounds of hands-on attempts produced no pose, for two different reasons, and
+both are worth knowing before a third:
+
+1. The owner tested while talking to Claude Code **in the app under test**. Nine
+   hooks including `PostToolUse` kept a `claude-code` session permanently fresh,
+   and the then-current rule suppressed the chat signal whenever any session was
+   live. Nothing could have appeared.
+2. That suppression rule was removed, since the streaming marker is a fact about
+   the chat window rather than an inference. The third attempt has not happened.
+
+**Read the `Chat Detection (Experimental)` menu line while a response streams**
+before reporting anything: it reports what the detector believes, which is what
+separates "the marker was renamed" from "the signal arrived and was outranked".
+
+- [ ] Accessibility granted, and the menu line reads `Claude chat: generating`
+  while a response streams. *(This row alone proves detection; every row below
+  is about what the mascot does with it.)*
+- [ ] Pressing Enter puts the Claude mascot in the Thinker pose within ~1 s.
+- [ ] The pose holds for the whole stream, not just the pause before the first
+  word.
+- [ ] The mascot fist-pumps when the response completes, then returns to
+  strolling.
+- [ ] Sitting in the Claude app **reading**, with nothing generating, produces no
+  pose at all. This is the correction that motivated the rewrite: frontmost
+  alone used to drive the pose and looked wrong.
+- [ ] A **working** Claude Code turn still outranks a generating chat response.
+- [ ] An **idle** Claude Code session does *not* block it.
+- [ ] The navy mascot is unaffected throughout.
+- [ ] Turning the menu item off drops the pose immediately; the choice survives
+  relaunch.
+- [ ] Re-granting Accessibility is needed after each reinstall (expected — the
+  grant is keyed to the signature, and these are ad-hoc signed).
+
+Not implemented, and not a failure if unseen: **`waiting`**. No marker for it has
+been captured, so a chat awaiting input looks the same as one that finished.
+**ChatGPT** is also unwired — the owner chose one provider at a time.
 
 ## Event system acceptance
 

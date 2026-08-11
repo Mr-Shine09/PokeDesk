@@ -56,7 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     let eventBridge = AgentEventBridge()
     /// Reports whether a chat app is frontmost. Created at launch rather than
     /// lazily, so the very first reduction already knows the answer.
-    private var chatAppObserver: ChatAppObserver?
+    private var chatActivityWatcher: ChatActivityWatcher?
     private var chatObservation: AnyCancellable?
 
     /// The menu bar item, owned here rather than created by a SwiftUI
@@ -106,6 +106,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// failed, in which case `diagnostics` carries the reason.
     private(set) var mascots: [MascotInstance] = []
     private var visibleStateObserver: AnyCancellable?
+    /// Result of the last experimental accessibility probe. Published so the
+    /// menu reflects it without an alert; temporary, like the probe itself.
+    @Published private(set) var lastProbeResult = ""
+
+    /// Deliberately reports what the **watcher believes**, not merely whether
+    /// the permission exists.
+    ///
+    /// The first version of this line said only "granted", which is exactly as
+    /// useful as silence when the pose fails to appear: it cannot distinguish a
+    /// marker that has been renamed by an app update, an observer that never
+    /// attached, and a signal that arrived and was outranked. A UI-string match
+    /// fails silently by nature, so the diagnostic has to be specific.
+    var accessibilityStatus: String {
+        guard ChatAccessibilityProbe.isTrusted else { return "Accessibility: not granted" }
+        if let diagnostic = chatActivityWatcher?.diagnostic { return diagnostic }
+        switch chatActivityWatcher?.presence.activities[.claudeCode] {
+        case .generating: return "Claude chat: generating"
+        case .completed: return "Claude chat: just finished"
+        case .open: return "Claude chat: open and quiet"
+        case nil: return "Claude chat: app not running"
+        }
+    }
+
+    func requestAccessibilityAccess() {
+        ChatAccessibilityProbe.requestAccess()
+    }
+
+    func writeChatAccessibilityReport() {
+        lastProbeResult = ChatAccessibilityProbe.writeReport()
+    }
 
     private func mascot(for provider: EventProvider) -> MascotInstance? {
         mascots.first { $0.provider == provider }
@@ -121,9 +151,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // Same rule the sleep window follows: an input to the reduction has to
         // reach the bridge before `start()`, or it lives only in the menu's
         // checkmark and the pet never acts on it.
-        let observer = ChatAppObserver(isEnabled: chatAppsDriveIdeating)
-        chatAppObserver = observer
-        chatObservation = observer.$presence.sink { [weak self] presence in
+        // `ChatActivityWatcher` replaced `ChatAppObserver` on 2026-08-11: a
+        // frontmost chat app turned out to be the wrong question, since it
+        // cannot see a response begin or end and the pose it produced ran
+        // continuously while the user was merely reading.
+        let watcher = ChatActivityWatcher(isEnabled: chatAppsDriveIdeating)
+        chatActivityWatcher = watcher
+        chatObservation = watcher.$presence.sink { [weak self] presence in
             self?.eventBridge.chat = presence
         }
         // Started before the mascot loads so a resource failure below still
@@ -360,7 +394,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     func setChatAppsDriveIdeating(_ enabled: Bool) {
         chatAppsDriveIdeating = enabled
         Preferences.chatAppsDriveIdeating = enabled
-        chatAppObserver?.setEnabled(enabled)
+        chatActivityWatcher?.setEnabled(enabled)
     }
 
     func setRoaming(_ roaming: Bool, for provider: EventProvider) {

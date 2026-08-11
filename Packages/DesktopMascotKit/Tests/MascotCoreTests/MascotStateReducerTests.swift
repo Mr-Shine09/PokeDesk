@@ -66,15 +66,64 @@ private func reduce(
     )
 }
 
-private let claudeChat = ChatPresence(providers: [.claudeCode])
+private func reduce(
+    _ events: [(AgentEvent, EventProvider, String)],
+    attributedTo provider: EventProvider,
+    overrides: ManualOverrides = .none,
+    chat: ChatPresence = .none,
+    now: Date = daytime,
+    uptime: Uptime = boot
+) -> MascotVisibleState {
+    reducer().reduce(
+        registry: registry(events),
+        attributedTo: provider,
+        overrides: overrides,
+        chat: chat,
+        now: now,
+        uptime: uptime
+    )
+}
 
-@Test func aFrontmostChatAppMakesTheMascotThink() {
+private let claudeChat = ChatPresence(activities: [.claudeCode: .generating])
+private let claudeChatOpen = ChatPresence(activities: [.claudeCode: .open])
+private let claudeChatDone = ChatPresence(activities: [.claudeCode: .completed])
+
+@Test func aGeneratingChatResponseMakesTheMascotThink() {
     let state = reduce([], chat: claudeChat)
 
     #expect(state.state == .ideating)
     // Unlike manual ideating, this signal is attributable, so it names the
     // mascot that should react.
     #expect(state.providers == [.claudeCode])
+}
+
+/// The correction that came out of watching the first version run.
+///
+/// Until 2026-08-11 a frontmost chat app alone drove the Thinker pose, and it
+/// looked wrong for the obvious reason: the pet thought continuously while a
+/// human was reading and typing. Being in front is context, not thought.
+@Test func aChatAppThatIsMerelyOpenChangesNothing() {
+    let state = reduce([], chat: claudeChatOpen)
+
+    #expect(state.state == .offline)
+}
+
+/// A finished chat response gets the same fist pump a finished agent turn does.
+@Test func aCompletedChatResponsePlaysTheSuccessReaction() {
+    let state = reduce([], chat: claudeChatDone)
+
+    #expect(state.state == .success)
+    #expect(state.providers == [.claudeCode])
+}
+
+/// Chat activity is attributed like everything else: the Claude app must not
+/// make the Codex mascot react.
+@Test func aChatResponseReachesOnlyItsOwnProvidersMascot() {
+    let claude = reduce([], attributedTo: .claudeCode, chat: claudeChat)
+    let codex = reduce([], attributedTo: .codex, chat: claudeChat)
+
+    #expect(claude.state == .ideating)
+    #expect(codex.state == .offline)
 }
 
 /// The rung that separates this from manual ideating.
@@ -98,18 +147,29 @@ private let claudeChat = ChatPresence(providers: [.claudeCode])
     #expect(state.state == .ideating)
 }
 
-/// The case the ladder alone did not cover.
+/// An idle Claude Code session must not block a chat response, and this rule
+/// replaced its own opposite on 2026-08-11.
 ///
-/// The Claude desktop app hosts the chat *and* Claude Code under one bundle
-/// identifier, so a frontmost Claude.app between turns — session known, nothing
-/// running — must not read as chatting. Ranking chat below `working` handled a
-/// turn in flight and left this gap showing a Thinker pose at someone who was
-/// not chatting.
-@Test func aProviderWithAnyLiveSessionIgnoresTheChatSignal() {
+/// While the signal was "a chat app is frontmost", any live session had to
+/// suppress it: one bundle identifier hosts both the chat and Claude Code, so
+/// frontmost could not tell asking a question from watching an agent between
+/// turns. That suppression made the feature unreachable in practice — anyone
+/// using Claude Code at all keeps a session alive, and the owner saw exactly
+/// nothing. The signal is now the chat window's own streaming marker, which is
+/// a fact rather than an inference, so ordering alone is enough.
+@Test func anIdleSessionDoesNotBlockAGeneratingChatResponse() {
     // `.started` leaves the session present but idle: Claude Code open, quiet.
     let state = reduce([(.started, .claudeCode, "s-quiet")], chat: claudeChat)
 
-    #expect(state.state == .idle)
+    #expect(state.state == .ideating)
+}
+
+/// The other half of the same rule: a *working* agent still wins, so a real turn
+/// is never hidden by a chat response in the same app.
+@Test func aWorkingSessionStillOutranksAGeneratingChatResponse() {
+    let state = reduce([(.active, .claudeCode, "s-work")], chat: claudeChat)
+
+    #expect(state.state == .working)
 }
 
 /// Sessions expire on the ordinary timeout, so closing the agent hands the

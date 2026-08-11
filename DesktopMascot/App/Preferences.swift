@@ -68,9 +68,17 @@ enum Preferences {
     /// the Thinker pose. Defaults to `true`, because it is the feature the owner
     /// asked for; the menu switch exists so it can be turned off without
     /// hunting through defaults.
+    /// Defaults to **off**, changed from on when the feature grew teeth.
+    ///
+    /// It was on by default while it read nothing but the frontmost app's
+    /// bundle identifier. It now needs Accessibility permission, and a feature
+    /// that wants a powerful system permission has to be asked for rather than
+    /// arrive switched on — particularly in an app whose selling point is that
+    /// it cannot learn anything about you. It is also unproven on screen, and
+    /// an unproven default is how a whole install looks broken.
     static var chatAppsDriveIdeating: Bool {
         get {
-            defaults.object(forKey: Key.chatAppsDriveIdeating) as? Bool ?? true
+            defaults.object(forKey: Key.chatAppsDriveIdeating) as? Bool ?? false
         }
         set {
             defaults.set(newValue, forKey: Key.chatAppsDriveIdeating)

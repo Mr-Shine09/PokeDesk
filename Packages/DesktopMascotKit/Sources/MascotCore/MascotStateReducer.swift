@@ -191,13 +191,37 @@ public struct MascotStateReducer: Sendable {
         // Owner clarification, 2026-08-11. Ranking alone was not enough: it
         // covered a *running* turn and left the quiet gaps between turns showing
         // a Thinker pose at someone who was not chatting.
-        let chatting = chat.providers.subtracting(present.map(\.provider))
-        if !chatting.isEmpty {
+        // **No blanket suppression by live session, deliberately, and this
+        // reversed once.** While the signal was "a chat app is frontmost", a
+        // provider with any session had to ignore it: the Claude desktop app
+        // hosts the chat and Claude Code behind one bundle identifier, so
+        // frontmost could not tell "asking a question" from "watching an agent
+        // between turns". Since 2026-08-11 the signal is the chat window's own
+        // streaming marker, which is a fact rather than an inference — there is
+        // nothing left to be ambiguous about, and suppressing it made the
+        // feature unreachable for anyone who uses Claude Code at all, which is
+        // everyone this app is for. Ordering alone now does the work: a
+        // *working* agent still outranks a generating chat, an idle session no
+        // longer blocks it.
+        let finishedChat = chat.providers(doing: .completed)
+        if !finishedChat.isEmpty {
             return MascotVisibleState(
-                state: .ideating,
-                providers: chatting.sorted { $0.rawValue < $1.rawValue }
+                state: .success,
+                providers: finishedChat.sorted { $0.rawValue < $1.rawValue }
             )
         }
+
+        let generatingChat = chat.providers(doing: .generating)
+        if !generatingChat.isEmpty {
+            return MascotVisibleState(
+                state: .ideating,
+                providers: generatingChat.sorted { $0.rawValue < $1.rawValue }
+            )
+        }
+
+        // `.open` intentionally falls through to whatever comes next — sleep,
+        // strolling, or offline. A chat app merely being in front is not an
+        // animation; see `ChatPresence.Activity`.
 
         // Any work, ideating, or waiting above already interrupted sleep. Reaching
         // here inside the window means the last turn's reaction has finished, so
@@ -259,7 +283,7 @@ public struct MascotStateReducer: Sendable {
         reduce(
             sessions: sessions.filter { $0.provider == provider },
             overrides: overrides,
-            chat: ChatPresence(providers: chat.providers.intersection([provider])),
+            chat: ChatPresence(activities: chat.activities.filter { $0.key == provider }),
             now: now,
             uptime: uptime
         )

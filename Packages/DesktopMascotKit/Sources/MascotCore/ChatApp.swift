@@ -2,12 +2,17 @@ import Foundation
 
 /// Which first-party chat apps are in front, if any.
 ///
-/// This is the one signal Dock Pet takes from outside a provider hook, and it
-/// is deliberately the weakest thing that could work: the **bundle identifier
-/// of the frontmost application**, compared against a fixed allowlist. No
-/// window titles, no accessibility tree, no screen contents, no browser tabs,
-/// nothing typed. The app learns "a chat app is in front" and nothing else, and
-/// like everything else here it is never stored and never leaves the machine.
+/// This is the one signal Dock Pet takes from outside a provider hook.
+///
+/// **It began as the frontmost application's bundle identifier and is no longer
+/// only that.** Frontmost alone cannot see a response begin or end, so it
+/// produced a Thinker pose that ran continuously while the user read and typed
+/// — the owner watched it and called it awkward, correctly. Since 2026-08-11
+/// the app also reads **one attribute on one accessibility element** of the
+/// Claude window to tell whether a response is being produced; see
+/// `ChatActivityWatcher` for exactly what is read and the founding promise that
+/// was reversed to allow it. Nothing about conversation content is read, kept,
+/// or sent either way.
 ///
 /// Browser tabs are out of scope on purpose, not for want of trying. Detecting
 /// `claude.ai` or `chatgpt.com` in Chrome means reading the active tab's URL,
@@ -19,14 +24,40 @@ import Foundation
 /// Claude or ChatGPT desktop app left the mascot strolling as though nothing
 /// were happening.
 public struct ChatPresence: Equatable, Sendable {
-    /// The providers whose chat app is currently frontmost. Empty is the
-    /// ordinary case.
-    public var providers: Set<EventProvider>
+    /// What a chat app is doing, as far as its accessibility tree admits.
+    ///
+    /// **`open` deliberately produces no animation.** Until 2026-08-11 a
+    /// frontmost chat app alone drove the Thinker pose, and the owner's verdict
+    /// on watching it was that it looked "awkward and unsync" — because it was:
+    /// the pet thought continuously while a human read, typed, and scrolled.
+    /// Being in front is context for the other two cases, not evidence of
+    /// thought.
+    public enum Activity: Equatable, Sendable {
+        /// The app is frontmost and quiet. No response is being produced.
+        case open
+        /// A response is being produced right now — the model is thinking, or
+        /// its answer is streaming out. One state, because the user asked for
+        /// one: the pose runs from the moment they press Enter until the last
+        /// word lands.
+        case generating
+        /// A response finished moments ago. Held briefly by the watcher so the
+        /// reducer can stay a pure function of its inputs with no timers of its
+        /// own, exactly as it does for hook-driven reactions.
+        case completed
+    }
+
+    /// What each provider's chat app is doing. Absent means "not running, not in
+    /// front, or nothing to say".
+    public var activities: [EventProvider: Activity]
 
     public static let none = ChatPresence()
 
-    public init(providers: Set<EventProvider> = []) {
-        self.providers = providers
+    public init(activities: [EventProvider: Activity] = [:]) {
+        self.activities = activities
+    }
+
+    public func providers(doing activity: Activity) -> Set<EventProvider> {
+        Set(activities.filter { $0.value == activity }.keys)
     }
 }
 
