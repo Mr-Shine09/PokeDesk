@@ -171,7 +171,7 @@ public struct MascotStateReducer: Sendable {
         // Codex app, so both arrive as the same hook events from the same
         // provider. `EventSurface` is what tells them apart, decided in the hook
         // helper from its own process ancestry.
-        let working = sessions.filter { $0.activity == .working && $0.surface != .desktopChat }
+        let working = sessions.filter { $0.activity == .working && !Self.isConversing($0) }
         if !working.isEmpty {
             return MascotVisibleState(state: .working, providers: Self.providers(of: working))
         }
@@ -227,7 +227,7 @@ public struct MascotStateReducer: Sendable {
         // rung is for, and sharing the rung is what makes a terminal Codex run
         // win when both are happening at once.
         let chattingInApp = Set(
-            sessions.filter { $0.activity == .working && $0.surface == .desktopChat }.map(\.provider)
+            sessions.filter { $0.activity == .working && Self.isConversing($0) }.map(\.provider)
         )
         let generatingChat = chat.providers(doing: .generating).union(chattingInApp)
         if !generatingChat.isEmpty {
@@ -324,6 +324,23 @@ public struct MascotStateReducer: Sendable {
             now: now,
             uptime: uptime
         )
+    }
+
+    /// Whether this session is a conversation rather than agent work.
+    ///
+    /// Both conditions are required, and each rules out a case the other cannot.
+    /// **The surface** rules out a terminal: a command-line turn is agent work
+    /// whether or not it has reached a tool yet, so a `codex` run must never
+    /// think just because its first tool call has not landed. **The tool
+    /// traffic** rules out an agent run inside the chat app: the ChatGPT app
+    /// hosts Codex and its chat behind one binary and one process tree, so the
+    /// surface alone cannot separate them and only what the turn *does* can.
+    ///
+    /// Owner correction, 2026-08-11: the first version of this used the surface
+    /// alone, which correctly made ChatGPT chat think and then wrongly made
+    /// Codex agent runs in the same app think along with it.
+    private static func isConversing(_ session: AgentSession) -> Bool {
+        session.surface == .desktopChat && !session.hasRunToolsThisTurn
     }
 
     private static func hasLiveReaction(

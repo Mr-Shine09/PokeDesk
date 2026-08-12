@@ -2181,7 +2181,13 @@ The close above stands as written (item 19); this is what happened after it. **T
 - **A surface is refreshed but never cleared**, because only some hooks in a turn may see the app in their ancestry; a later `nil` writing over it would flip the pose mid-turn. Covered by a test.
 - Suite **225 → 241**: the ancestry walk against an injected process tree (real shape, shell, lookalike bundle name, a vanished ancestor, an unknown parent, a cycle, and the depth cap), the reducer rungs, the refresh rule, and the unknown-value decode.
 - **Nothing here has been seen on screen.** The mechanism is proven only by unit test and by a process tree read on this machine.
-- **Exact next step:** one hands-on check — a plain chat turn in the ChatGPT app must now show the **Thinker pose** rather than the mascot at its computer, and a `codex` run in a terminal must still show the computer. Then the three Claude rows, and then the PR.
+- **Watched immediately, half right: ChatGPT chat now thinks, and Codex agent runs started thinking with it.** Surface alone was too coarse. The ChatGPT app hosts Codex *and* its chat behind one binary and one process tree, so ancestry cannot separate the two modes — it can only separate the app from a terminal.
+- **Tool traffic is the second half of the rule, and it needed no new data.** `PreToolUse`/`PostToolUse` already arrive as `.active` with `detail: .tool`, while a plain prompt arrives as a bare `.active`. An agent touches tools; a conversation does not. `AgentSession.hasRunToolsThisTurn` records it and `MascotStateReducer.isConversing` requires **both** conditions: a desktop-chat surface *and* no tool traffic this turn.
+- **Both halves are load-bearing and each covers what the other cannot.** Without the surface, a terminal `codex` run would think during the gap between the prompt and its first tool call. Without the tool check, an agent run in the app thinks — which is exactly what the owner saw. Three tests pin the pair.
+- **Turn-scoped rather than session-scoped**, because one conversation alternates between asking a question and asking for work; a sticky flag would leave the pet typing at a chat for the rest of the session. A bare `.active` is a new prompt, and that is where the flag clears.
+- **A useful negative finding while diagnosing:** there is no `codex` CLI on this machine at all — nothing on `PATH`, nothing in `~/.codex/bin`, and the only `codex` binary is inside `ChatGPT.app`. That is what identified "Codex" in the report as the app's agent mode rather than a terminal, and it is worth re-checking before reading any future report about "the terminal".
+- Suite **241 → 244**.
+- **Exact next step:** re-walk the three ChatGPT rows against the 19:40 build — a plain chat turn thinks, an agent run in the app types, and (still unexercised on this machine) a terminal `codex` run types. Then the three Claude rows, and then the PR.
 
 ## Next-session handoff
 

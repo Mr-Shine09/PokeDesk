@@ -347,6 +347,10 @@ its own process ancestry, with no accessibility involvement.
 
 - [ ] A plain conversational turn in the **ChatGPT app** shows the **Thinker
   pose**, not the mascot at its computer.
+- [ ] A **Codex agent run inside the ChatGPT app** — one that runs tools or asks
+  for approval — shows the mascot **at its computer**. Surface alone got this
+  wrong on the first attempt: the app hosts chat and agent behind one process
+  tree, so tool traffic is what separates them.
 - [ ] The same turn still ends with the **success reaction** and a return to
   strolling.
 - [ ] A `codex` run in a **terminal** still shows the mascot **at its computer**.
