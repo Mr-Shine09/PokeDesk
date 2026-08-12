@@ -48,6 +48,15 @@ final class ChatActivityWatcher: ObservableObject {
     /// is silence: the pet simply never thinks, and nothing says why.
     @Published private(set) var diagnostic: String?
 
+    /// How many observer callbacks have arrived per app since the watcher
+    /// attached. Diagnostic only — nothing reads it to decide a pose.
+    ///
+    /// It exists because a silent detector has two failure modes that print the
+    /// same words: the search ran and found nothing, or nothing ever asked it to
+    /// search. This number separates them at a glance, and its absence is what
+    /// made the first repair of the 2026-08-12 defect a guess.
+    @Published private(set) var callbackCount: [EventProvider: Int] = [:]
+
     /// The apps this watcher can drive a mascot from: those whose streaming
     /// marker has actually been captured. An app with no marker is probe-only
     /// and is skipped here rather than watched with a guess.
@@ -162,6 +171,11 @@ final class ChatActivityWatcher: ObservableObject {
                 guard let provider = watcher.observerProviders[ObjectIdentifier(observer)] else {
                     return
                 }
+                // Counted so the menu can say whether callbacks are arriving at
+                // all. Without it, "nothing was detected" and "nothing was
+                // looked at" are the same sentence — which is precisely what
+                // made the 2026-08-12 defect take two builds to understand.
+                watcher.callbackCount[provider, default: 0] += 1
                 watcher.scheduleSearch(for: provider)
             }
         }
@@ -175,14 +189,33 @@ final class ChatActivityWatcher: ObservableObject {
 
         let element = AXUIElementCreateApplication(app.processIdentifier)
         let context = Unmanaged.passUnretained(self).toOpaque()
-        // Layout changes cover streaming text; the created/destroyed pair covers
-        // the article element itself appearing and going away.
-        for notification in [
-            kAXLayoutChangedNotification,
-            kAXCreatedNotification,
-            kAXUIElementDestroyedNotification,
-        ] {
-            AXObserverAddNotification(created, element, notification as CFString, context)
+        // **Register on the windows, not only on the application element.**
+        //
+        // Registering on the application element alone was the 2026-08-12
+        // defect: detection fired for a conversation's *first* response and
+        // never again. The application element receives app-level events —
+        // a window appearing, focus moving — which is exactly what opening a
+        // new chat produces, and why the first question always worked. A second
+        // question in the same window produces only web-content layout changes,
+        // and Chromium posts those from the **web area inside the window**, so
+        // an observer watching only the app element never hears them.
+        //
+        // The earlier repair, re-registering when a response ended, did not help
+        // and the reason is worth keeping: toggling the feature off and on
+        // *did* restore the pose, which looked like proof that re-registering
+        // fixes delivery. It was not. `attach` ends with a direct
+        // `scheduleSearch`, and toggling happened to run that search while a
+        // stream was in flight. **Forcing one look is not the same as restoring
+        // the callbacks**, and mistaking the two cost a build.
+        addNotifications(created, to: element, context: context)
+        // A new window has to be wired up when it appears, or this regresses to
+        // the app-element-only behavior the moment the user opens a second
+        // Claude window.
+        AXObserverAddNotification(
+            created, element, kAXFocusedWindowChangedNotification as CFString, context
+        )
+        for window in Self.windows(of: element) {
+            addNotifications(created, to: window, context: context)
         }
         CFRunLoopAddSource(
             CFRunLoopGetCurrent(),
@@ -193,6 +226,35 @@ final class ChatActivityWatcher: ObservableObject {
         observerProviders[ObjectIdentifier(created)] = provider
         observedPIDs[provider] = app.processIdentifier
         scheduleSearch(for: provider)
+    }
+
+    /// Layout changes cover streaming text; the created/destroyed pair covers
+    /// the article element itself appearing and going away.
+    private func addNotifications(
+        _ observer: AXObserver,
+        to element: AXUIElement,
+        context: UnsafeMutableRawPointer
+    ) {
+        for notification in [
+            kAXLayoutChangedNotification,
+            kAXCreatedNotification,
+            kAXUIElementDestroyedNotification,
+        ] {
+            AXObserverAddNotification(observer, element, notification as CFString, context)
+        }
+    }
+
+    /// The app's windows, or empty when it has none yet. Only `AXWindows` is
+    /// read — no title, no content; see this type's documentation.
+    private nonisolated static func windows(of application: AXUIElement) -> [AXUIElement] {
+        var value: CFTypeRef?
+        guard
+            AXUIElementCopyAttributeValue(
+                application, kAXWindowsAttribute as CFString, &value
+            ) == .success,
+            let windows = value as? [AXUIElement]
+        else { return [] }
+        return windows
     }
 
     private func detach(_ provider: EventProvider) {
