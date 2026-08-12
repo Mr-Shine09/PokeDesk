@@ -300,8 +300,42 @@ final class ChatActivityWatcher: ObservableObject {
                 self.completionTask[provider] = nil
                 self.activities[provider] = .open
                 self.publish()
+                self.refreshObserver(for: provider)
             }
         }
+    }
+
+    /// Re-registers the observer once a response has ended.
+    ///
+    /// **Found 2026-08-12: detection fired for a conversation's first response
+    /// and never again.** Question 1 in a fresh chat posed and reported
+    /// `generating`; every later question in the same chat reported `open and
+    /// quiet` with no pose. The marker was *present* for those later questions —
+    /// a probe run mid-stream found `Currently streaming message` on the same
+    /// runs this watcher called quiet, and correctly found it absent in a
+    /// settled baseline — and it sat at the same depth every time, so the cap
+    /// was not truncating it. Toggling the feature off and on mid-stream
+    /// restored the pose immediately, and toggling is a detach followed by an
+    /// attach. **The tree was always findable; the callbacks had stopped
+    /// arriving.**
+    ///
+    /// Re-registering at the moment a stream ends is the narrowest repair that
+    /// matches that evidence: it is the exact boundary the failure appears at,
+    /// and it is one registration per response rather than a timer. **Do not
+    /// replace this with an idle poll.** A poll would hide the cause and restore
+    /// the continuous cost this observer exists to avoid — the design's argument
+    /// is that the work tracks the app's activity instead of the clock.
+    ///
+    /// This runs after the completion hold rather than when generation stops,
+    /// because `detach` cancels `completionTask`; re-attaching any earlier would
+    /// cut the hold short and take the success reaction with it.
+    private func refreshObserver(for provider: EventProvider) {
+        guard
+            isEnabled,
+            let descriptor = watched.first(where: { $0.provider == provider })
+        else { return }
+        detach(provider)
+        attach(descriptor)
     }
 
     /// Depth-first, stopping at the first match.
