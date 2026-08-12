@@ -72,6 +72,25 @@ final class ChatActivityWatcher: ObservableObject {
     /// far faster than this, and the pose does not need sub-second accuracy.
     private static let minimumSearchInterval: TimeInterval = 0.75
 
+    /// How often to look while the user is sitting in the chat app and nothing
+    /// is generating yet.
+    ///
+    /// **This is a deliberate reversal, made 2026-08-12 on measurement.** The
+    /// observer was meant to make polling unnecessary, on the premise that
+    /// layout changes "fire constantly while a response streams". A counter
+    /// added to the menu showed the truth: **roughly eight callbacks per
+    /// question, none of them during the streaming itself.** They arrive when
+    /// the prompt is submitted, a search runs before the answer element exists,
+    /// finds nothing, and nothing ever asks again — which is exactly the
+    /// reported symptom of only the first question in a chat working. The
+    /// premise was false, so the conclusion drawn from it had to go.
+    ///
+    /// The cost is bounded to the moments it is doing real work: it runs only
+    /// while the chat app is **frontmost**, the feature is on, and nothing is
+    /// generating. The moment a stream is detected the 1 Hz recheck timer takes
+    /// over and this stops; the moment you switch away, it stops.
+    private static let frontmostPollInterval: TimeInterval = 1.0
+
     /// How long `completed` is held so the success reaction has time to play.
     /// Matches the 3 s hook-driven success window so both look the same.
     private static let completionHold: TimeInterval = 3.0
@@ -95,6 +114,9 @@ final class ChatActivityWatcher: ObservableObject {
     private var pendingSearch: [EventProvider: Task<Void, Never>] = [:]
     private var completionTask: [EventProvider: Task<Void, Never>] = [:]
     private var recheckTimer: [EventProvider: Timer] = [:]
+    /// Live only while the chat app is frontmost and nothing is generating; see
+    /// `frontmostPollInterval`.
+    private var frontmostTimer: [EventProvider: Timer] = [:]
     private var generating: Set<EventProvider> = []
     private var activities: [EventProvider: ChatPresence.Activity] = [:]
     private var workspaceObservers: [any NSObjectProtocol] = []
@@ -150,6 +172,9 @@ final class ChatActivityWatcher: ObservableObject {
         for descriptor in watched {
             attach(descriptor)
         }
+        // Runs on every app activation, which is what makes the poll follow the
+        // frontmost app rather than needing its own notification.
+        updateFrontmostPolling()
     }
 
     private func attach(_ descriptor: ChatApp.Descriptor) {
@@ -257,7 +282,39 @@ final class ChatActivityWatcher: ObservableObject {
         return windows
     }
 
+    private func isFrontmost(_ descriptor: ChatApp.Descriptor) -> Bool {
+        NSWorkspace.shared.frontmostApplication?.bundleIdentifier == descriptor.bundleIdentifier
+    }
+
+    /// Starts or stops the frontmost poll for each watched app, from the current
+    /// state. Called wherever any input to that decision can change: attaching,
+    /// app activation, and every state transition in `search`.
+    private func updateFrontmostPolling() {
+        for descriptor in watched {
+            let provider = descriptor.provider
+            let shouldPoll = isEnabled
+                && observers[provider] != nil
+                && isFrontmost(descriptor)
+                && !generating.contains(provider)
+            if shouldPoll {
+                guard frontmostTimer[provider] == nil else { continue }
+                let timer = Timer(
+                    timeInterval: Self.frontmostPollInterval, repeats: true
+                ) { [weak self] _ in
+                    MainActor.assumeIsolated { self?.scheduleSearch(for: provider) }
+                }
+                RunLoop.main.add(timer, forMode: .common)
+                frontmostTimer[provider] = timer
+            } else {
+                frontmostTimer[provider]?.invalidate()
+                frontmostTimer[provider] = nil
+            }
+        }
+    }
+
     private func detach(_ provider: EventProvider) {
+        frontmostTimer[provider]?.invalidate()
+        frontmostTimer[provider] = nil
         if let observer = observers[provider] {
             CFRunLoopRemoveSource(
                 CFRunLoopGetCurrent(),
@@ -334,6 +391,9 @@ final class ChatActivityWatcher: ObservableObject {
             activities[provider] = .open
             publish()
         }
+        // `generating` may have flipped either way above, and it is one of the
+        // inputs to whether the frontmost poll should be running.
+        updateFrontmostPolling()
     }
 
     /// While a response streams the app emits layout changes constantly, but the
@@ -363,6 +423,7 @@ final class ChatActivityWatcher: ObservableObject {
                 self.activities[provider] = .open
                 self.publish()
                 self.refreshObserver(for: provider)
+                self.updateFrontmostPolling()
             }
         }
     }
@@ -381,12 +442,19 @@ final class ChatActivityWatcher: ObservableObject {
     /// attach. **The tree was always findable; the callbacks had stopped
     /// arriving.**
     ///
-    /// Re-registering at the moment a stream ends is the narrowest repair that
-    /// matches that evidence: it is the exact boundary the failure appears at,
-    /// and it is one registration per response rather than a timer. **Do not
-    /// replace this with an idle poll.** A poll would hide the cause and restore
-    /// the continuous cost this observer exists to avoid — the design's argument
-    /// is that the work tracks the app's activity instead of the clock.
+    /// **That reading was wrong, and the correction is the useful part.**
+    /// Toggling ran `attach`, which ends in a direct `scheduleSearch` — so it
+    /// forced *one look* while a stream happened to be in flight. Forcing a look
+    /// is not restoring callbacks, and re-registering here fixed nothing when it
+    /// was tested. What it does do is keep the window registrations fresh across
+    /// a conversation, so it is kept rather than reverted.
+    ///
+    /// The actual cause was measured afterwards with the callback counter:
+    /// **about eight callbacks per question and none during streaming.** See
+    /// `frontmostPollInterval`, which is what catches a stream starting. An
+    /// earlier version of this comment instructed the reader never to add a
+    /// poll; that instruction rested on the same false premise and has been
+    /// removed rather than left to mislead.
     ///
     /// This runs after the completion hold rather than when generation stops,
     /// because `detach` cancels `completionTask`; re-attaching any earlier would
