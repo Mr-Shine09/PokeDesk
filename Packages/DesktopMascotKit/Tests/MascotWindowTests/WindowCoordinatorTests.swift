@@ -268,3 +268,33 @@ private func mouseEvent(type: NSEvent.EventType, location: NSPoint, panel: NSPan
     coordinator.settleAfterDrop()
     #expect(coordinator.panel.frame.origin == settled.origin)
 }
+
+/// Rounding and clamping must agree about which display is in play.
+///
+/// The walk rounds its next x to whole device pixels, and it used to take that
+/// scale from `panel.screen?.backingScaleFactor ?? 2`. `panel.screen` is nil
+/// exactly when the panel lies clear of every display, which is when
+/// `referenceScreen` falls back to the remembered display — so the two could
+/// name different displays, and on a mixed Retina and non-Retina arrangement
+/// different scales. The assertion holds on one display too; it only has teeth
+/// with two of differing scale attached.
+@MainActor
+@Test func theRoundingScaleFollowsTheDisplayPlacementUses() {
+    let coordinator = WindowCoordinator(contentView: NSView())
+    defer { coordinator.setVisible(false) }
+
+    guard let horizontal = coordinator.horizontalMovementBounds() else { return }
+    let expected = (coordinator.panel.screen ?? NSScreen.main)?.backingScaleFactor
+
+    // Strand the panel so `panel.screen` is nil and the fallback path decides.
+    coordinator.panel.setFrameOrigin(NSPoint(x: horizontal.upperBound + 5_000, y: 50_000))
+    #expect(coordinator.panel.screen == nil, "the drop must actually strand the panel for this to test anything")
+
+    // The remembered display still answers, rather than an assumed Retina 2.
+    #expect(coordinator.placementBackingScaleFactor == expected)
+
+    // And after settling, it matches the display the panel actually landed on.
+    coordinator.settleAfterDrop()
+    let landed = NSScreen.screens.first { $0.frame.intersects(coordinator.panel.frame) }
+    #expect(coordinator.placementBackingScaleFactor == landed?.backingScaleFactor)
+}

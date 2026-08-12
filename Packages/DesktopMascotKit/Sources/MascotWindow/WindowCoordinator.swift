@@ -108,6 +108,20 @@ public final class WindowCoordinator: NSObject {
         return dx * dx + dy * dy
     }
 
+    /// The backing scale of the display placement is measured against, for
+    /// callers that round a position to whole device pixels.
+    ///
+    /// It resolves the *same* display the movement bounds do, which
+    /// `panel.screen?.backingScaleFactor` does not: `panel.screen` is nil for a
+    /// panel lying clear of every display, so a caller reading it directly
+    /// would round against an assumed Retina scale while `referenceScreen`
+    /// clamps against the remembered display. On a mixed Retina and non-Retina
+    /// arrangement those are different numbers, and the walk would round to
+    /// half-pixels on the display it is actually being clamped to.
+    public var placementBackingScaleFactor: CGFloat {
+        referenceScreen?.backingScaleFactor ?? 2
+    }
+
     public func horizontalMovementBounds() -> ClosedRange<CGFloat>? {
         guard let screen = referenceScreen else { return nil }
         let minimum = screen.visibleFrame.minX
