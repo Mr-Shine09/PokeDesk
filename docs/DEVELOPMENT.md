@@ -140,11 +140,42 @@ Builds Release, signs the nested helper and then the bundle, and installs to
 `~/Applications/Dock Pet.app`. That path survives reboots, unlike the DerivedData
 build, so provider hooks configured against it keep working.
 
-The script signs with a real identity when it can and falls back to ad-hoc
-otherwise. `codesign` cannot reach a private key from a non-interactive shell
-(`errSecInternalComponent`), so run the script from an interactive terminal if
-you want the Apple Development identity used. Ad-hoc is sufficient for a
-self-built local app; it is **not** sufficient for distribution.
+**Install ad-hoc on this machine. Do not let the script pick the keychain
+identity:**
+
+```bash
+CODESIGN_IDENTITY=- ./tools/install_app.sh
+```
+
+**The Apple Development certificates in this keychain are revoked**, discovered
+2026-08-12 the expensive way. macOS treats an app signed by a revoked
+certificate as **malware** — not as an unidentified developer — so it showed
+"Malware Blocked and Moved to Trash" and **deleted the installed app**. The
+signature itself was perfectly valid (`codesign --verify` passed, designated
+requirement satisfied); it is the certificate's revocation status that damns it.
+`spctl --assess` is the check that says so, and it reports
+`CSSMERR_TP_CERT_REVOKED`:
+
+```bash
+spctl --assess --type execute --verbose=4 ~/Applications/Dock\ Pet.app
+```
+
+**`security find-identity -v -p codesigning` lists these certificates as
+valid.** It does not check revocation, and trusting that listing is what caused
+the deletion. Do not treat "3 valid identities found" as evidence a certificate
+is usable.
+
+The script prefers a real identity and falls back to ad-hoc, and separately
+`codesign` cannot reach a private key from a non-interactive shell
+(`errSecInternalComponent`), so an agent session falls back automatically while
+an interactive terminal succeeds — **and succeeding is the failure here.** That
+is why the variable is set explicitly above rather than left to the fallback.
+
+Ad-hoc is sufficient for a self-built local app; it is **not** sufficient for
+distribution. Its one cost is that the Accessibility grant for chat detection is
+keyed to the signature and therefore has to be re-granted after every reinstall
+(see `docs/QA_CHECKLIST.md`). That is the correct trade — a re-grant is a
+nuisance, a revoked signature gets the app deleted.
 
 Notarization needs a `Developer ID Application` certificate, which this machine
 does not have. Distribution remains open work under issue #13.
