@@ -153,8 +153,8 @@ paused > failure > waiting > manual ideating > working > success > chat ideating
 ## Install
 
 ```bash
-git clone https://github.com/Mr-Shine09/pokedesk.git
-cd pokedesk
+git clone https://github.com/Mr-Shine09/PokeDesk.git
+cd PokeDesk
 ./tools/install_app.sh
 ```
 

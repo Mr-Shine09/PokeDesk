@@ -6,7 +6,7 @@
 - macOS 14.4 deployment target, raised from 14.0 on 2026-08-03 for `NSHostingMenu`
 - Python 3 with Pillow for art tools
 - XcodeGen when `project.yml` changes
-- Git access to the private `Mr-Shine09/desktop-mascot` repository when publishing is authorized
+- Git access to the private `Mr-Shine09/PokeDesk` repository when publishing is authorized
 
 No runtime network dependency is intended.
 

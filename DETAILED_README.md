@@ -104,8 +104,8 @@ PokeDesk has no third-party runtime dependencies and makes no network requests.
 ## Install
 
 ```bash
-git clone https://github.com/Mr-Shine09/pokedesk.git
-cd pokedesk
+git clone https://github.com/Mr-Shine09/PokeDesk.git
+cd PokeDesk
 ./tools/install_app.sh
 ```
 
