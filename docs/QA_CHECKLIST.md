@@ -307,7 +307,34 @@ Two earlier rounds produced no pose, for two different reasons, both worth keepi
 before reporting anything: it reports what the detector believes, which is what
 separates "the marker was renamed" from "the signal arrived and was outranked".
 
-- [x] **Detection works.** A streaming response put the Claude mascot in the
+- [ ] **OPEN DEFECT, found 2026-08-12: detection fires only for the first
+  response in a conversation.** Question 1 in a fresh chat poses correctly and
+  the menu reports `Claude chat: generating`. Every later question in the *same*
+  chat reports `Claude chat: open and quiet` and the mascot never poses. Walked
+  three questions plus a settled baseline, with a probe report captured
+  mid-stream for each.
+  **The marker is present and is not being found.** The probe found
+  `Currently streaming message` during questions 2 and 3 — the same runs the
+  watcher called quiet — and found it absent in the settled baseline, exactly as
+  it should be. `AXDocumentArticle` count grows two per exchange (2, 2, 4, 6), so
+  the tree is structured normally. **The depth cap is ruled out:** the marker sits
+  at identical indentation in all three streaming reports, so `maximumDepth` is
+  not truncating it.
+  **What is not yet known** is whether the search never ran or ran and failed.
+  Those are indistinguishable from the menu line, because a failed search leaves
+  `activities` at its existing `.open` and prints the same words as no search at
+  all. The suspicion is the former: after a response completes the recheck timer
+  is invalidated, leaving `AXObserver` callbacks as the only trigger, and the
+  notifications are registered on the *application* element rather than the web
+  area that Chromium posts layout changes from.
+  **The test that separates them** is to toggle the menu item off and on *while a
+  later response streams*: re-attaching ends in a direct `scheduleSearch`, so the
+  pose appearing means the tree was always findable and the watcher had stopped
+  looking. Do not write a fix before running it — the two causes need changes in
+  different functions, and an idle poll would paper over both while restoring the
+  continuous cost the design exists to avoid.
+- [x] **Detection works — for the first response of a conversation only; see the
+  open defect above.** A streaming response put the Claude mascot in the
   Thinker pose, observed and captured mid-stream 2026-08-11. The menu line was
   *not* read on this run — it was not needed, because the pose is downstream of
   the line and a pose cannot appear without the marker matching. Read the line
