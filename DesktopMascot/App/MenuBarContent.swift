@@ -219,8 +219,13 @@ struct MenuBarContent: View {
             Button("Request Accessibility Access…") {
                 appDelegate.requestAccessibilityAccess()
             }
-            Button("Write Chat App Report to Desktop") {
-                appDelegate.writeChatAccessibilityReport()
+            // One entry per app, because the marker has to be found separately
+            // in each: ChatGPT is a native app, Claude is Electron, and there is
+            // no reason their trees should resemble each other.
+            ForEach(ChatApp.all, id: \.bundleIdentifier) { target in
+                Button("Write \(target.displayName) Report to Desktop") {
+                    appDelegate.writeChatAccessibilityReport(for: target)
+                }
             }
         }
 

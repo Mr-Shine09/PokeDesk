@@ -48,16 +48,16 @@ final class ChatActivityWatcher: ObservableObject {
     /// is silence: the pet simply never thinks, and nothing says why.
     @Published private(set) var diagnostic: String?
 
-    /// The accessibility description Claude gives the message it is currently
-    /// producing.
+    /// The apps this watcher can drive a mascot from: those whose streaming
+    /// marker has actually been captured. An app with no marker is probe-only
+    /// and is skipped here rather than watched with a guess.
     ///
-    /// **This is an English UI string in an app that ships often, with no
-    /// stability guarantee of any kind.** When it changes, detection stops dead
-    /// and the pet goes quiet during chats — which is why `diagnostic` exists
-    /// and why the marker is a single named constant rather than a literal
-    /// buried in a walk. Verified against Claude on 2026-08-11.
-    /// `nonisolated` because the tree walk runs outside the actor.
-    nonisolated static let streamingMarker = "Currently streaming message"
+    /// **These markers are English UI strings in apps that ship often, with no
+    /// stability guarantee of any kind.** When one changes, detection stops dead
+    /// and that pet goes quiet during chats — which is why `diagnostic` exists,
+    /// and why a marker is a named constant on `ChatApp.Descriptor` rather than
+    /// a literal buried in a walk.
+    private var watched: [ChatApp.Descriptor] { ChatApp.watchable }
 
     /// Ceiling on how often the tree is walked. Streaming fires layout changes
     /// far faster than this, and the pose does not need sub-second accuracy.
@@ -72,15 +72,24 @@ final class ChatActivityWatcher: ObservableObject {
     /// tree just above the conversation and made a populated app look empty.
     nonisolated static let maximumDepth = 60
 
-    private var observer: AXObserver?
-    private var observedPID: pid_t?
+    /// Everything is keyed by provider, because two chat apps can be running and
+    /// generating at once and each drives its own mascot. A single shared
+    /// `isGenerating` would let ChatGPT finishing a response clear the pose
+    /// Claude was still producing.
+    private var observers: [EventProvider: AXObserver] = [:]
+    private var observedPIDs: [EventProvider: pid_t] = [:]
+    /// Which app each observer belongs to. An `AXObserver` callback reports the
+    /// observer, not the application, and passing a per-app context would mean
+    /// retaining a box per app; this lookup is cheaper and has no ownership.
+    private var observerProviders: [ObjectIdentifier: EventProvider] = [:]
+    private var lastSearch: [EventProvider: Date] = [:]
+    private var pendingSearch: [EventProvider: Task<Void, Never>] = [:]
+    private var completionTask: [EventProvider: Task<Void, Never>] = [:]
+    private var recheckTimer: [EventProvider: Timer] = [:]
+    private var generating: Set<EventProvider> = []
+    private var activities: [EventProvider: ChatPresence.Activity] = [:]
     private var workspaceObservers: [any NSObjectProtocol] = []
-    private var lastSearch: Date = .distantPast
-    private var pendingSearch: Task<Void, Never>?
-    private var completionTask: Task<Void, Never>?
-    private var recheckTimer: Timer?
     private var isEnabled: Bool
-    private var isGenerating = false
 
     init(isEnabled: Bool) {
         self.isEnabled = isEnabled
@@ -104,7 +113,8 @@ final class ChatActivityWatcher: ObservableObject {
         if enabled {
             attachIfPossible()
         } else {
-            detach()
+            detachAll()
+            activities = [:]
             presence = .none
             diagnostic = nil
         }
@@ -112,9 +122,9 @@ final class ChatActivityWatcher: ObservableObject {
 
     // MARK: - Attaching
 
-    private var claudeApp: NSRunningApplication? {
+    private func runningApp(for descriptor: ChatApp.Descriptor) -> NSRunningApplication? {
         NSWorkspace.shared.runningApplications.first {
-            $0.bundleIdentifier == "com.anthropic.claudefordesktop"
+            $0.bundleIdentifier == descriptor.bundleIdentifier
         }
     }
 
@@ -122,30 +132,44 @@ final class ChatActivityWatcher: ObservableObject {
         guard isEnabled else { return }
         guard AXIsProcessTrusted() else {
             diagnostic = "Accessibility access is not granted, so chat activity cannot be read."
-            detach()
-            presence = .none
+            detachAll()
+            activities = [:]
+            publish()
             return
         }
-        guard let app = claudeApp else {
-            diagnostic = nil
-            detach()
-            presence = .none
-            return
+        diagnostic = nil
+        for descriptor in watched {
+            attach(descriptor)
         }
-        guard observedPID != app.processIdentifier else { return }
+    }
 
-        detach()
+    private func attach(_ descriptor: ChatApp.Descriptor) {
+        let provider = descriptor.provider
+        guard let app = runningApp(for: descriptor) else {
+            detach(provider)
+            activities[provider] = nil
+            publish()
+            return
+        }
+        guard observedPIDs[provider] != app.processIdentifier else { return }
+
+        detach(provider)
         var created: AXObserver?
-        let callback: AXObserverCallback = { _, _, _, context in
+        let callback: AXObserverCallback = { observer, _, _, context in
             guard let context else { return }
             let watcher = Unmanaged<ChatActivityWatcher>.fromOpaque(context).takeUnretainedValue()
-            MainActor.assumeIsolated { watcher.scheduleSearch() }
+            MainActor.assumeIsolated {
+                guard let provider = watcher.observerProviders[ObjectIdentifier(observer)] else {
+                    return
+                }
+                watcher.scheduleSearch(for: provider)
+            }
         }
         guard
             AXObserverCreate(app.processIdentifier, callback, &created) == .success,
             let created
         else {
-            diagnostic = "Could not observe the Claude app for changes."
+            diagnostic = "Could not observe the \(descriptor.displayName) app for changes."
             return
         }
 
@@ -165,64 +189,88 @@ final class ChatActivityWatcher: ObservableObject {
             AXObserverGetRunLoopSource(created),
             .defaultMode
         )
-        observer = created
-        observedPID = app.processIdentifier
-        diagnostic = nil
-        scheduleSearch()
+        observers[provider] = created
+        observerProviders[ObjectIdentifier(created)] = provider
+        observedPIDs[provider] = app.processIdentifier
+        scheduleSearch(for: provider)
     }
 
-    private func detach() {
-        if let observer {
+    private func detach(_ provider: EventProvider) {
+        if let observer = observers[provider] {
             CFRunLoopRemoveSource(
                 CFRunLoopGetCurrent(),
                 AXObserverGetRunLoopSource(observer),
                 .defaultMode
             )
+            observerProviders[ObjectIdentifier(observer)] = nil
         }
-        observer = nil
-        observedPID = nil
-        recheckTimer?.invalidate()
-        recheckTimer = nil
-        pendingSearch?.cancel()
-        pendingSearch = nil
+        observers[provider] = nil
+        observedPIDs[provider] = nil
+        recheckTimer[provider]?.invalidate()
+        recheckTimer[provider] = nil
+        pendingSearch[provider]?.cancel()
+        pendingSearch[provider] = nil
+        completionTask[provider]?.cancel()
+        completionTask[provider] = nil
+        generating.remove(provider)
+    }
+
+    private func detachAll() {
+        // Snapshotted deliberately: `detach` mutates `observers`, and iterating
+        // a dictionary's keys while removing from it relies on copy-on-write
+        // subtleties that should not be load-bearing.
+        for provider in Array(observers.keys) { detach(provider) }
+    }
+
+    private func publish() {
+        presence = ChatPresence(activities: activities)
     }
 
     // MARK: - Searching
 
-    private func scheduleSearch() {
-        guard isEnabled, pendingSearch == nil else { return }
-        let elapsed = Date().timeIntervalSince(lastSearch)
+    private func scheduleSearch(for provider: EventProvider) {
+        guard isEnabled, pendingSearch[provider] == nil else { return }
+        let elapsed = Date().timeIntervalSince(lastSearch[provider] ?? .distantPast)
         let delay = max(0, Self.minimumSearchInterval - elapsed)
-        pendingSearch = Task { [weak self] in
+        pendingSearch[provider] = Task { [weak self] in
             if delay > 0 { try? await Task.sleep(for: .seconds(delay)) }
             guard !Task.isCancelled else { return }
             await MainActor.run {
-                self?.pendingSearch = nil
-                self?.search()
+                self?.pendingSearch[provider] = nil
+                self?.search(provider)
             }
         }
     }
 
-    private func search() {
-        guard isEnabled, let app = claudeApp else { return }
-        lastSearch = Date()
+    private func search(_ provider: EventProvider) {
+        guard
+            isEnabled,
+            let descriptor = watched.first(where: { $0.provider == provider }),
+            let marker = descriptor.streamingMarker,
+            let app = runningApp(for: descriptor)
+        else { return }
+        lastSearch[provider] = Date()
 
         let root = AXUIElementCreateApplication(app.processIdentifier)
-        let streaming = Self.containsStreamingMarker(root, depth: 0)
+        let streaming = Self.containsStreamingMarker(
+            root, marker: marker, subrole: descriptor.streamingSubrole, depth: 0
+        )
 
         if streaming {
-            completionTask?.cancel()
-            completionTask = nil
-            isGenerating = true
-            presence = ChatPresence(activities: [.claudeCode: .generating])
-            startRecheckTimer()
-        } else if isGenerating {
-            isGenerating = false
-            recheckTimer?.invalidate()
-            recheckTimer = nil
-            holdCompletion()
-        } else if presence.activities[.claudeCode] == nil {
-            presence = ChatPresence(activities: [.claudeCode: .open])
+            completionTask[provider]?.cancel()
+            completionTask[provider] = nil
+            generating.insert(provider)
+            activities[provider] = .generating
+            publish()
+            startRecheckTimer(for: provider)
+        } else if generating.contains(provider) {
+            generating.remove(provider)
+            recheckTimer[provider]?.invalidate()
+            recheckTimer[provider] = nil
+            holdCompletion(for: provider)
+        } else if activities[provider] == nil {
+            activities[provider] = .open
+            publish()
         }
     }
 
@@ -231,24 +279,27 @@ final class ChatActivityWatcher: ObservableObject {
     /// afterwards to prompt the look that would notice. Hence a slow timer, live
     /// only during generation, which is the one window where polling is honest
     /// work rather than idle cost.
-    private func startRecheckTimer() {
-        guard recheckTimer == nil else { return }
+    private func startRecheckTimer(for provider: EventProvider) {
+        guard recheckTimer[provider] == nil else { return }
         let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.scheduleSearch() }
+            MainActor.assumeIsolated { self?.scheduleSearch(for: provider) }
         }
         RunLoop.main.add(timer, forMode: .common)
-        recheckTimer = timer
+        recheckTimer[provider] = timer
     }
 
-    private func holdCompletion() {
-        presence = ChatPresence(activities: [.claudeCode: .completed])
-        completionTask?.cancel()
-        completionTask = Task { [weak self] in
+    private func holdCompletion(for provider: EventProvider) {
+        activities[provider] = .completed
+        publish()
+        completionTask[provider]?.cancel()
+        completionTask[provider] = Task { [weak self] in
             try? await Task.sleep(for: .seconds(Self.completionHold))
             guard !Task.isCancelled else { return }
             await MainActor.run {
-                self?.completionTask = nil
-                self?.presence = ChatPresence(activities: [.claudeCode: .open])
+                guard let self else { return }
+                self.completionTask[provider] = nil
+                self.activities[provider] = .open
+                self.publish()
             }
         }
     }
@@ -261,12 +312,14 @@ final class ChatActivityWatcher: ObservableObject {
     /// tightening but a different program.
     private nonisolated static func containsStreamingMarker(
         _ element: AXUIElement,
+        marker: String,
+        subrole: String?,
         depth: Int
     ) -> Bool {
         guard depth < maximumDepth else { return false }
 
-        if copyString(element, kAXSubroleAttribute) == "AXDocumentArticle",
-           copyString(element, kAXDescriptionAttribute) == streamingMarker {
+        if copyString(element, kAXDescriptionAttribute) == marker,
+           subrole == nil || copyString(element, kAXSubroleAttribute) == subrole {
             return true
         }
         // The menu bar cannot contain a streaming message and is large.
@@ -282,7 +335,8 @@ final class ChatActivityWatcher: ObservableObject {
             let children = childrenValue as? [AXUIElement]
         else { return false }
 
-        for child in children where containsStreamingMarker(child, depth: depth + 1) {
+        for child in children
+        where containsStreamingMarker(child, marker: marker, subrole: subrole, depth: depth + 1) {
             return true
         }
         return false

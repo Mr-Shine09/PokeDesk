@@ -248,6 +248,34 @@ private let claudeChatDone = ChatPresence(activities: [.claudeCode: .completed])
     #expect(ChatApp.provider(forBundleIdentifier: nil) == nil)
 }
 
+@Test func onlyAppsWithACapturedMarkerAreWatchable() {
+    // The distinction the `Descriptor` type exists to make: an app can be known
+    // and probed without being watched. ChatGPT is listed and permanently
+    // unwatched — the ChatGPT desktop app is the Codex app, so its turns already
+    // arrive as real hook events, which outrank and outclass a "probably
+    // thinking" guess. Capturing a marker for it would add a weaker second
+    // signal that the ladder would never show.
+    let claude = ChatApp.descriptor(forBundleIdentifier: "com.anthropic.claudefordesktop")
+    #expect(claude?.streamingMarker == "Currently streaming message")
+    #expect(claude?.streamingSubrole == "AXDocumentArticle")
+    #expect(claude?.isWatchable == true)
+
+    let chatGPT = ChatApp.descriptor(forBundleIdentifier: "com.openai.codex")
+    #expect(chatGPT?.provider == .codex)
+    #expect(chatGPT?.streamingMarker == nil)
+    #expect(chatGPT?.isWatchable == false)
+
+    #expect(ChatApp.watchable.map(\.provider) == [.claudeCode])
+}
+
+@Test func everyChatAppHasADistinctIdentifierAndProvider() {
+    // Two descriptors sharing a provider would give one mascot two sources of
+    // chat truth; two sharing an identifier would make the lookup order matter.
+    #expect(Set(ChatApp.all.map(\.bundleIdentifier)).count == ChatApp.all.count)
+    #expect(Set(ChatApp.all.map(\.provider)).count == ChatApp.all.count)
+    #expect(ChatApp.identifiers.count == ChatApp.all.count)
+}
+
 // MARK: - Priority order
 
 @Test func manualPauseOutranksEveryProviderSignal() {

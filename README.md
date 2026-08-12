@@ -270,8 +270,11 @@ Stated plainly, because you are about to build this yourself:
   2026-08-11 — a streaming response put the mascot in the Thinker pose, and the
   finished response drew the success reaction — but that is one run, and these
   limits still apply:
-  - **The Claude desktop app only.** ChatGPT is not wired up yet, and browser
-    tabs never will be — detecting `claude.ai` in a browser means reading the
+  - **The Claude desktop app only — and ChatGPT does not need it.** The ChatGPT
+    desktop app is the Codex app, so its turns already arrive as ordinary hook
+    events and drive the Codex mascot through the full working/success
+    lifecycle, with no accessibility permission involved. Browser tabs never
+    will be covered — detecting `claude.ai` in a browser means reading the
     active tab's URL, which is your browsing history.
   - **`waiting` is not implemented.** A chat that needs your input looks the
     same as one that finished.

@@ -13,28 +13,43 @@ import MascotCore
 /// Chromium builds its accessibility tree lazily — nothing exists to inspect
 /// until a client asks — so nobody could know without asking.
 ///
-/// **What it deliberately does not collect.** Roles, subroles, identifiers, and
-/// the labels of *controls* go into the report. The text of static elements
-/// never does: that is the conversation, and it is the exact thing this app has
-/// always refused to read. Text nodes are recorded as a role and a character
-/// count so the tree's shape stays legible without its contents. If this probe
-/// ever needs message text to work, the answer is that the feature is not
-/// possible within any boundary worth keeping.
+/// **What it deliberately does not collect, and the rule that changed.** The
+/// first version reported the *labels* of controls in full, on the theory that a
+/// label is interface structure while static text is content. Claude disproved
+/// it immediately: a summary of the owner's conversation lives in a button
+/// title, and it landed in a file on the Desktop. **`AXTitle` and `AXValue` are
+/// now reported as a character count for every role, not just text roles.**
+///
+/// `AXDescription` and `AXHelp` are still reported in full, because the marker
+/// this probe exists to find lives in one of them — but only up to
+/// `readableLimit` characters. A UI marker is a few words; a leaked message is
+/// not. Anything longer is reported as a length, so widening the search cannot
+/// quietly turn into reading the conversation.
+///
+/// If this probe ever needs message text to work, the answer is that the feature
+/// is not possible within any boundary worth keeping.
 @MainActor
 enum ChatAccessibilityProbe {
-    /// Roles whose `AXValue`/`AXTitle` is user content rather than UI structure.
-    private static let contentRoles: Set<String> = [
-        "AXStaticText", "AXTextArea", "AXTextField", "AXHeading", "AXParagraph",
-    ]
-
-    /// Attributes worth reporting for a control. `AXValue` is included because a
-    /// button's value is a state (pressed, expanded), not prose — and it is read
-    /// only for elements whose role is not in `contentRoles`.
-    private static let reportedAttributes = [
-        kAXRoleAttribute, kAXSubroleAttribute, kAXTitleAttribute,
-        kAXDescriptionAttribute, kAXHelpAttribute, kAXIdentifierAttribute,
-        kAXValueAttribute, kAXEnabledAttribute,
+    /// Attributes safe to print verbatim: structural, and short by nature.
+    private static let structuralAttributes = [
+        kAXSubroleAttribute, kAXIdentifierAttribute, kAXEnabledAttribute,
     ] as [CFString]
+
+    /// Attributes that may carry the marker and may carry prose. Printed when
+    /// short, reported as a length when not.
+    private static let boundedAttributes = [
+        kAXDescriptionAttribute, kAXHelpAttribute,
+    ] as [CFString]
+
+    /// Attributes never printed. A button title held a conversation summary in
+    /// the Claude app, so there is no role for which a title is known safe.
+    private static let redactedAttributes = [
+        kAXTitleAttribute, kAXValueAttribute,
+    ] as [CFString]
+
+    /// Longest string printed verbatim. `Currently streaming message` is 27
+    /// characters; a sentence of someone's chat is longer than this.
+    private static let readableLimit = 80
 
     static var isTrusted: Bool { AXIsProcessTrusted() }
 
@@ -49,27 +64,34 @@ enum ChatAccessibilityProbe {
         _ = AXIsProcessTrustedWithOptions(options)
     }
 
-    /// Walks the frontmost Claude window and writes a redacted report.
+    /// Walks one chat app's window and writes a redacted report.
+    ///
+    /// Takes the app rather than assuming Claude, because the same question has
+    /// to be asked of every provider before it can be wired: ChatGPT ships as a
+    /// different kind of application and there is no reason its tree should
+    /// resemble Electron's.
     ///
     /// Returns the path written, or a message explaining why nothing was.
-    static func writeReport() -> String {
+    static func writeReport(for target: ChatApp.Descriptor) -> String {
         guard isTrusted else {
             return "Accessibility access is not granted yet — use Request Accessibility Access first."
         }
         guard
             let app = NSWorkspace.shared.runningApplications.first(where: {
-                $0.bundleIdentifier == "com.anthropic.claudefordesktop"
+                $0.bundleIdentifier == target.bundleIdentifier
             })
         else {
-            return "The Claude desktop app is not running."
+            return "The \(target.displayName) desktop app is not running."
         }
 
         let element = AXUIElementCreateApplication(app.processIdentifier)
         var lines: [String] = [
             "Dock Pet chat accessibility probe",
             "Generated: \(ISO8601DateFormatter().string(from: Date()))",
-            "Target: com.anthropic.claudefordesktop (pid \(app.processIdentifier))",
-            "Control labels and roles are reported; static text is reported as a length only.",
+            "Target: \(target.bundleIdentifier) (pid \(app.processIdentifier))",
+            "AXDescription and AXHelp are printed when under \(readableLimit) characters.",
+            "AXTitle and AXValue are never printed — a button title held conversation",
+            "content once already. Everything else is a role and a character count.",
             "",
         ]
         describe(element, depth: 0, into: &lines)
@@ -111,20 +133,28 @@ enum ChatAccessibilityProbe {
         if role == "AXMenuBar" { return }
 
         let indent = String(repeating: "  ", count: depth)
+        var parts: [String] = []
 
-        if contentRoles.contains(role) {
-            let length = (string(of: element, kAXValueAttribute as CFString)
-                ?? string(of: element, kAXTitleAttribute as CFString) ?? "").count
-            lines.append("\(indent)\(role) <text redacted, \(length) chars>")
-        } else {
-            var parts: [String] = []
-            for attribute in reportedAttributes where attribute != kAXRoleAttribute as CFString {
-                if let value = string(of: element, attribute), !value.isEmpty {
-                    parts.append("\(attribute as String)=\(value)")
-                }
+        for attribute in structuralAttributes {
+            if let value = string(of: element, attribute), !value.isEmpty {
+                parts.append("\(attribute as String)=\(value)")
             }
-            lines.append("\(indent)\(role)\(parts.isEmpty ? "" : " " + parts.joined(separator: " "))")
         }
+        for attribute in boundedAttributes {
+            guard let value = string(of: element, attribute), !value.isEmpty else { continue }
+            if value.count <= readableLimit {
+                parts.append("\(attribute as String)=\(value)")
+            } else {
+                parts.append("\(attribute as String)=<redacted, \(value.count) chars>")
+            }
+        }
+        for attribute in redactedAttributes {
+            if let value = string(of: element, attribute), !value.isEmpty {
+                parts.append("\(attribute as String)=<redacted, \(value.count) chars>")
+            }
+        }
+
+        lines.append("\(indent)\(role)\(parts.isEmpty ? "" : " " + parts.joined(separator: " "))")
 
         var childrenValue: CFTypeRef?
         guard

@@ -336,7 +336,14 @@ separates "the marker was renamed" from "the signal arrived and was outranked".
 
 Not implemented, and not a failure if unseen: **`waiting`**. No marker for it has
 been captured, so a chat awaiting input looks the same as one that finished.
-**ChatGPT** is also unwired — the owner chose one provider at a time.
+
+**ChatGPT is unwired on purpose and needs no rows here.** The ChatGPT desktop app
+is the Codex app — that is why it ships as `com.openai.codex` — so its turns fire
+the installed Codex hooks and drive the navy mascot through the real
+working/success lifecycle. Observed 2026-08-11 on an agentic turn and on a plain
+conversational one, both with no accessibility involvement. An AX marker for it
+would be a weaker second signal that `working` outranks, so it would never appear
+on screen. **Do not open this as a gap.**
 
 ## Event system acceptance
 
