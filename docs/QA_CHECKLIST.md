@@ -313,7 +313,10 @@ separates "the marker was renamed" from "the signal arrived and was outranked".
   the line and a pose cannot appear without the marker matching. Read the line
   first on any run that **fails**; that is the case it disambiguates.
 - [ ] Pressing Enter puts the Claude mascot in the Thinker pose within ~1 s.
-  *(The pose was seen mid-stream; its latency from Enter was not timed.)*
+  *(The pose was seen mid-stream on 2026-08-11, and seen again 2026-08-12 from a
+  second install after re-granting Accessibility — but its latency from Enter has
+  still never been timed on either run. The pose appearing is not the claim this
+  row makes; leave it unticked until someone watches the clock.)*
 - [ ] The pose holds for the whole stream, not just the pause before the first
   word. *(One mid-stream frame is not the whole stream.)*
 - [x] **The mascot fist-pumps when the response completes, then returns to
@@ -331,8 +334,20 @@ separates "the marker was renamed" from "the signal arrived and was outranked".
 - [ ] The navy mascot is unaffected throughout.
 - [ ] Turning the menu item off drops the pose immediately; the choice survives
   relaunch.
-- [ ] Re-granting Accessibility is needed after each reinstall (expected — the
-  grant is keyed to the signature, and these are ad-hoc signed).
+- [x] **Re-granting Accessibility is needed after each reinstall — confirmed
+  2026-08-12, and it cost a failed test to learn twice.** The app was reinstalled
+  that morning with a fresh ad-hoc signature; detection then did nothing at all
+  and the orange mascot simply strolled through a streaming response. Re-granting
+  fixed it immediately, with no code change. **The symptom is silence, not an
+  error**, and it is indistinguishable at a glance from a renamed marker — so on
+  any failure, establish the install time and the grant time before touching
+  anything else. Two facts that made the diagnosis fast and are worth reusing:
+  `/Applications/Claude.app`'s mtime and version told us the marker could not
+  have moved since the last passing run, and a mascot that **strolls** saw
+  nothing at all, whereas one that **types** saw a real agent turn outranking the
+  chat. Note also that macOS may keep listing the app in the Accessibility pane
+  with its toggle still on while the signature underneath no longer matches;
+  removing the entry with **−** and re-adding it is what actually works.
 
 Not implemented, and not a failure if unseen: **`waiting`**. No marker for it has
 been captured, so a chat awaiting input looks the same as one that finished.
