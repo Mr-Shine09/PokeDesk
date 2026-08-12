@@ -69,6 +69,14 @@ public struct AgentSession: Equatable, Sendable {
     /// Monotonic arrival of the newest accepted event. Drives expiry.
     public var lastSeen: Uptime
     public var reaction: SessionReaction?
+    /// Where this session is being driven from, when its helper could tell.
+    ///
+    /// Set from the first event that creates the session and refreshed by later
+    /// ones, because a surface is a property of the session rather than of any
+    /// single event — and a hook that could not determine it must not erase what
+    /// an earlier one established. `nil` means unknown, which is the ordinary
+    /// case for every provider except Codex.
+    public var surface: EventSurface?
 
     public var provider: EventProvider { key.provider }
     public var sessionID: SessionID { key.sessionID }
@@ -157,6 +165,12 @@ public struct SessionRegistry: Equatable, Sendable {
 
         session.lastEventAt = envelope.occurredAt
         session.lastSeen = uptime
+        // Refreshed, never cleared. A later hook that could not work out its
+        // surface says nothing about the session's origin, and letting it write
+        // `nil` would flip a chat turn back to the terminal pose mid-turn.
+        if let surface = envelope.surface {
+            session.surface = surface
+        }
 
         switch envelope.event {
         case .started:
@@ -237,7 +251,8 @@ public struct SessionRegistry: Equatable, Sendable {
                 activity: .idle,
                 lastEventAt: envelope.occurredAt,
                 lastSeen: uptime,
-                reaction: nil
+                reaction: nil,
+                surface: envelope.surface
             )
         }
     }

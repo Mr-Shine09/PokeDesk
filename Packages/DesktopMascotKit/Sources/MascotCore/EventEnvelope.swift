@@ -31,6 +31,36 @@ public enum EventDetail: String, CaseIterable, Codable, Sendable {
     case cancelled
 }
 
+/// Where an agent turn is being driven from.
+///
+/// **This widens the envelope, which is a product decision and is recorded as
+/// one** (owner, 2026-08-11). It exists because one provider now covers two
+/// completely different experiences: the ChatGPT desktop app *is* the Codex app,
+/// so a conversational chat turn and a terminal agent run arrive as byte-identical
+/// hook events, and the owner wants them to look different — a chat should think,
+/// an agent run should sit at its computer.
+///
+/// **What this is not.** It is a two-value enum, decided inside the hook helper
+/// by looking at that process's own parent chain. No path, no command line, no
+/// process name, and no bundle identifier ever leaves the helper; the app learns
+/// only which of these two words applied. Unknown values decode to `nil` — like
+/// `EventDetail`, an unrecognized surface must not invalidate the `event` that
+/// actually drives state.
+public enum EventSurface: String, CaseIterable, Codable, Sendable {
+    /// Driven from a desktop app's chat interface — today, a turn in the ChatGPT
+    /// app, which is the Codex app wearing a conversation.
+    case desktopChat = "desktop-chat"
+    /// Everything else, and the default for anything unrecognized.
+    ///
+    /// **It names the ordinary case rather than asserting that a TTY exists.**
+    /// Claude Code hosted inside the Claude desktop app reports `commandLine`
+    /// too, and that is deliberate: it is agent work and must keep sitting at its
+    /// computer. Only an interface a person *converses* with belongs in the other
+    /// case, so defaulting here is what makes an unknown origin behave exactly as
+    /// Dock Pet did before surfaces existed.
+    case commandLine = "command-line"
+}
+
 /// An opaque per-session identifier.
 ///
 /// The allowed character set deliberately excludes path separators, spaces,
@@ -60,6 +90,9 @@ public struct SessionID: Hashable, Sendable, CustomStringConvertible {
 /// assistant text, transcript paths, code, tool arguments or output, file
 /// paths, working directories, repository names, usernames, or tokens.
 /// Adding such a field is a product decision, not an implementation detail.
+///
+/// `surface` was added on 2026-08-11 by exactly such a decision; see
+/// `EventSurface` for what it carries and what it deliberately does not.
 public struct EventEnvelope: Equatable, Sendable {
     public static let currentVersion = 1
 
@@ -69,6 +102,7 @@ public struct EventEnvelope: Equatable, Sendable {
     public let event: AgentEvent
     public let occurredAt: Date
     public let detail: EventDetail?
+    public let surface: EventSurface?
 
     public init(
         version: Int = EventEnvelope.currentVersion,
@@ -76,7 +110,8 @@ public struct EventEnvelope: Equatable, Sendable {
         sessionID: SessionID,
         event: AgentEvent,
         occurredAt: Date,
-        detail: EventDetail? = nil
+        detail: EventDetail? = nil,
+        surface: EventSurface? = nil
     ) {
         self.version = version
         self.provider = provider
@@ -84,5 +119,6 @@ public struct EventEnvelope: Equatable, Sendable {
         self.event = event
         self.occurredAt = occurredAt
         self.detail = detail
+        self.surface = surface
     }
 }

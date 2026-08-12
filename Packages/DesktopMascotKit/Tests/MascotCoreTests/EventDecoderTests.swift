@@ -86,11 +86,36 @@ private func payload(
     #expect(envelope.sessionID.rawValue == "opaque-local-id")
 }
 
+/// The envelope's field list, pinned so that widening the privacy boundary can
+/// only ever happen on purpose.
+///
+/// **`surface` was added on 2026-08-11 and this test is the reason the addition
+/// is legible.** It failed the moment the field appeared, which is exactly its
+/// job; updating it is the deliberate act that a silent widening would skip. The
+/// decision is recorded in `DesktopMascot.md` and the field carries two words —
+/// `desktop-chat` or `command-line` — decided from the helper's own process
+/// ancestry. Anything richer than an enum belongs nowhere near this type.
 @Test func envelopeExposesOnlyTheAllowlistedFields() throws {
     let envelope = try EventDecoder().decode(payload(), now: referenceNow)
     let fields = Mirror(reflecting: envelope).children.compactMap(\.label).sorted()
 
-    #expect(fields == ["detail", "event", "occurredAt", "provider", "sessionID", "version"])
+    #expect(
+        fields == [
+            "detail", "event", "occurredAt", "provider", "sessionID", "surface", "version",
+        ]
+    )
+}
+
+@Test func anUnknownSurfaceIsDiscardedRatherThanRejected() throws {
+    // Same rule as `detail`: a surface nobody recognizes must not invalidate the
+    // event that actually drives state. It decodes to nil, which is the safe
+    // default that keeps agent work typing.
+    let envelope = try EventDecoder().decode(
+        payload(extra: ", \"surface\": \"holographic-visor\""),
+        now: referenceNow
+    )
+    #expect(envelope.surface == nil)
+    #expect(envelope.event == .active)
 }
 
 @Test func errorsNeverCarryPayloadContent() {

@@ -161,7 +161,17 @@ public struct MascotStateReducer: Sendable {
             return MascotVisibleState(state: .ideating)
         }
 
-        let working = sessions.filter { $0.activity == .working }
+        // Sitting at a computer means an agent is doing work at a command line.
+        // A turn driven from a desktop app's chat interface is a conversation,
+        // and it drops to the chat-ideating rung below — owner rule, 2026-08-11:
+        // "ChatGPT's chat interface thinks like Claude chat; Codex and the
+        // terminal type."
+        //
+        // This distinction exists only because the ChatGPT desktop app *is* the
+        // Codex app, so both arrive as the same hook events from the same
+        // provider. `EventSurface` is what tells them apart, decided in the hook
+        // helper from its own process ancestry.
+        let working = sessions.filter { $0.activity == .working && $0.surface != .desktopChat }
         if !working.isEmpty {
             return MascotVisibleState(state: .working, providers: Self.providers(of: working))
         }
@@ -211,7 +221,15 @@ public struct MascotStateReducer: Sendable {
             )
         }
 
-        let generatingChat = chat.providers(doing: .generating)
+        // An agent turn driven from a desktop app's chat joins this rung rather
+        // than the working one above. It is a stronger signal than a read window
+        // — a hook actually fired — but it describes the same activity the chat
+        // rung is for, and sharing the rung is what makes a terminal Codex run
+        // win when both are happening at once.
+        let chattingInApp = Set(
+            sessions.filter { $0.activity == .working && $0.surface == .desktopChat }.map(\.provider)
+        )
+        let generatingChat = chat.providers(doing: .generating).union(chattingInApp)
         if !generatingChat.isEmpty {
             return MascotVisibleState(
                 state: .ideating,

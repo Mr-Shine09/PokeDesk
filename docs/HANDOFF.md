@@ -104,6 +104,15 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 paused > failure-recent > waiting > manual-ideating > working > success-recent > chat-ideating > scheduled-sleep > idle/strolling > offline
 ```
 
+**What feeds two of these rungs changed on 2026-08-11.** `working` means an agent
+turn driven from a command line; a turn driven from a desktop app's chat
+interface joins `chat-ideating` instead, so it thinks rather than typing. The
+distinction exists because the ChatGPT desktop app is the Codex app, which makes
+a chat turn and a terminal run identical at the event level — `EventSurface`,
+decided in the hook helper from its own process ancestry, is what separates them.
+An event with no surface counts as a command line, so nothing that predates the
+field changes behavior.
+
 - Scheduled inactive sleep defaults to 23:00–06:00 local time and is user-adjustable (or switchable off) from the menu bar since 2026-08-09; work interrupts it immediately.
 - No telemetry, accounts, network dependency, Dock injection, private API use, or prompt/transcript storage in 0.1.
 

@@ -103,6 +103,15 @@ Priority:
 paused > failure-recent > waiting > manual-ideating > working > success-recent > chat-ideating > scheduled-sleep > idle/strolling > offline
 ```
 
+**What feeds two of these rungs changed on 2026-08-11.** `working` means an agent
+turn driven from a command line; a turn driven from a desktop app's chat
+interface joins `chat-ideating` instead, so it thinks rather than typing. The
+distinction exists because the ChatGPT desktop app is the Codex app, which makes
+a chat turn and a terminal run identical at the event level — `EventSurface`,
+decided in the hook helper from its own process ancestry, is what separates them.
+An event with no surface counts as a command line, so nothing that predates the
+field changes behavior.
+
 - Manual pause is authoritative.
 - Waiting clears on active/completed/failed/stopped for that session.
 - Start with a 120-second heartbeat expiry.

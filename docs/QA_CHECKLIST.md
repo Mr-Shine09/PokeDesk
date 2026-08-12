@@ -337,13 +337,25 @@ separates "the marker was renamed" from "the signal arrived and was outranked".
 Not implemented, and not a failure if unseen: **`waiting`**. No marker for it has
 been captured, so a chat awaiting input looks the same as one that finished.
 
-**ChatGPT is unwired on purpose and needs no rows here.** The ChatGPT desktop app
-is the Codex app — that is why it ships as `com.openai.codex` — so its turns fire
-the installed Codex hooks and drive the navy mascot through the real
-working/success lifecycle. Observed 2026-08-11 on an agentic turn and on a plain
-conversational one, both with no accessibility involvement. An AX marker for it
-would be a weaker second signal that `working` outranks, so it would never appear
-on screen. **Do not open this as a gap.**
+**ChatGPT needs no accessibility marker, but it did need work.** The ChatGPT
+desktop app is the Codex app — that is why it ships as `com.openai.codex` — so
+its turns already fire the installed Codex hooks. What was wrong is that they
+looked like terminal agent work: the mascot sat at its computer during an
+ordinary chat. Owner rule, 2026-08-11: **the chat interface thinks, Codex and the
+terminal type.** `EventSurface` separates them, decided in the hook helper from
+its own process ancestry, with no accessibility involvement.
+
+- [ ] A plain conversational turn in the **ChatGPT app** shows the **Thinker
+  pose**, not the mascot at its computer.
+- [ ] The same turn still ends with the **success reaction** and a return to
+  strolling.
+- [ ] A `codex` run in a **terminal** still shows the mascot **at its computer**.
+  This is the regression that matters: the surface field must not reclassify
+  ordinary agent work.
+- [ ] A **Claude Code** turn still shows the mascot at its computer. Claude.app
+  hosts Claude Code, and it is deliberately not treated as a chat surface.
+- [ ] A terminal `codex` run happening at the same time as a ChatGPT chat turn
+  shows the mascot **at its computer** — the stronger claim wins.
 
 ## Event system acceptance
 

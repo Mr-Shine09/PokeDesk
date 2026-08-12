@@ -220,18 +220,24 @@ merely so that it promises not to.
 - **Session IDs are hashed** inside the hook helper before they leave the
   process. Every payload key other than `hook_event_name` and `session_id` is
   dropped without being inspected.
+- **The hook helper checks whether it was started by a desktop chat app**, and
+  this one is always on. It exists because the ChatGPT desktop app *is* the Codex
+  app, so a chat turn and a terminal agent run fire identical hooks — and they
+  should not look the same on screen. The helper reads its own chain of parent
+  processes, and the event it sends carries **one of two words**:
+  `desktop-chat` or `command-line`. No path, command line, process name, or PID
+  is ever sent, stored, or logged; nothing about processes that are not the
+  helper's own ancestors is examined; and no permission is involved.
 - **No private APIs**, and no injection into the macOS Dock.
 - **Chat detection is the one thing that looks beyond hooks, it is off unless
   you turn it on, and it needs a permission.** This is a deliberate exception to
   everything above, not an oversight — the honest description is worth reading
   before you enable it:
-  - It asks macOS for the **bundle identifier of the frontmost application**,
-    compared against a two-entry allowlist (the Claude and ChatGPT desktop
-    apps). No other app is ever named.
   - With **Accessibility** permission granted, it reads **one attribute on one
     element** of the Claude window — the accessibility description that says a
     message is currently streaming. That is how the pet knows a response
-    started and finished.
+    started and finished. Only the Claude app is read; ChatGPT needs no such
+    check, because its turns already arrive as ordinary hook events.
   - It never reads message text, your prompts, window titles, documents,
     browser tabs, or anything you type. Nothing is stored, logged, or sent.
   - **Accessibility permission is powerful**, and macOS is right to ask before
