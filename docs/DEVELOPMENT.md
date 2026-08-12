@@ -110,6 +110,11 @@ nothing to install but configuration. Print a ready-to-paste snippet:
 Merge the result into `~/.claude/settings.json` (or `~/.codex/hooks.json` for
 `--provider codex`). PokeDesk never writes those files itself.
 
+**Claude Code picked the hooks up in an already-running session** when this was
+captured on 2026-07-30 — no restart was needed, so an install can be tested
+immediately. Do not rely on it: Codex asks you to trust each new hook, and the
+README still tells users to restart, which is the advice that is always correct.
+
 Each hook invokes the helper with `--hook`, which reads the provider's payload on
 stdin and maps `hook_event_name` onto the event vocabulary. Only
 `hook_event_name` and `session_id` are read; every other key is dropped without
