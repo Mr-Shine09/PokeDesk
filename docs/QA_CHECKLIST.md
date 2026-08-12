@@ -345,21 +345,31 @@ ordinary chat. Owner rule, 2026-08-11: **the chat interface thinks, Codex and th
 terminal type.** `EventSurface` separates them, decided in the hook helper from
 its own process ancestry, with no accessibility involvement.
 
-- [ ] A plain conversational turn in the **ChatGPT app** shows the **Thinker
-  pose**, not the mascot at its computer.
-- [ ] A **Codex agent run inside the ChatGPT app** — one that runs tools or asks
-  for approval — shows the mascot **at its computer**. Surface alone got this
-  wrong on the first attempt: the app hosts chat and agent behind one process
-  tree, so tool traffic is what separates them.
-- [ ] The same turn still ends with the **success reaction** and a return to
+**Walked 2026-08-11 against the 19:40 build; the owner reported "it worked".**
+That was **one overall verdict, not per-row commentary** — the same shape as the
+2026-08-02 pass, which this file then over-claimed for eight days. The rows below
+are ticked on that verdict and should not be cited as individually narrated
+observations. The two rows that were reported separately, because they failed
+first and were fixed, are marked as such.
+
+- [x] A plain conversational turn in the **ChatGPT app** shows the **Thinker
+  pose**, not the mascot at its computer. *Reported separately: this one was the
+  first thing that worked, before the agent-run split existed.*
+- [x] A **Codex agent run inside the ChatGPT app** — one that runs tools or asks
+  for approval — shows the mascot **at its computer**. *Reported separately: it
+  failed on the first attempt, which is what produced the tool-traffic rule.*
+- [x] The same turn still ends with the **success reaction** and a return to
   strolling.
-- [ ] A `codex` run in a **terminal** still shows the mascot **at its computer**.
-  This is the regression that matters: the surface field must not reclassify
-  ordinary agent work.
-- [ ] A **Claude Code** turn still shows the mascot at its computer. Claude.app
+- [x] A **Claude Code** turn still shows the mascot at its computer. Claude.app
   hosts Claude Code, and it is deliberately not treated as a chat surface.
+- [ ] A `codex` run in a **terminal** still shows the mascot at its computer.
+  **Not testable on this machine: there is no `codex` CLI installed** — nothing
+  on `PATH`, nothing in `~/.codex/bin`, and the only `codex` binary lives inside
+  `ChatGPT.app`. Unit tests cover it and the default is the safe direction (no
+  surface means typing), but nobody has watched it. Leave unticked.
 - [ ] A terminal `codex` run happening at the same time as a ChatGPT chat turn
-  shows the mascot **at its computer** — the stronger claim wins.
+  shows the mascot **at its computer** — the stronger claim wins. Blocked by the
+  row above.
 
 ## Event system acceptance
 
