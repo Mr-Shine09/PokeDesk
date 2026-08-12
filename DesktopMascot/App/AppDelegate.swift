@@ -128,12 +128,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         if let diagnostic = chatActivityWatcher?.diagnostic { return diagnostic }
         return ChatApp.watchable
             .map { descriptor in
-                switch chatActivityWatcher?.presence.activities[descriptor.provider] {
-                case .generating: "\(descriptor.displayName) chat: generating"
-                case .completed: "\(descriptor.displayName) chat: just finished"
-                case .open: "\(descriptor.displayName) chat: open and quiet"
-                case nil: "\(descriptor.displayName) chat: app not running"
+                let events = chatActivityWatcher?.callbackCount[descriptor.provider] ?? 0
+                let state = switch chatActivityWatcher?.presence.activities[descriptor.provider] {
+                case .generating: "generating"
+                case .completed: "just finished"
+                case .open: "open and quiet"
+                case nil: "app not running"
                 }
+                // The event count is what tells a quiet detector apart from a
+                // deaf one: a state that never leaves "open and quiet" while
+                // this number climbs means the search is running and missing,
+                // and a number that stops climbing means the callbacks stopped.
+                return "\(descriptor.displayName) chat: \(state) · \(events) events"
             }
             .joined(separator: "\n")
     }

@@ -48,6 +48,15 @@ final class ChatActivityWatcher: ObservableObject {
     /// is silence: the pet simply never thinks, and nothing says why.
     @Published private(set) var diagnostic: String?
 
+    /// How many observer callbacks have arrived per app since the watcher
+    /// attached. Diagnostic only — nothing reads it to decide a pose.
+    ///
+    /// It exists because a silent detector has two failure modes that print the
+    /// same words: the search ran and found nothing, or nothing ever asked it to
+    /// search. This number separates them at a glance, and its absence is what
+    /// made the first repair of the 2026-08-12 defect a guess.
+    @Published private(set) var callbackCount: [EventProvider: Int] = [:]
+
     /// The apps this watcher can drive a mascot from: those whose streaming
     /// marker has actually been captured. An app with no marker is probe-only
     /// and is skipped here rather than watched with a guess.
@@ -62,6 +71,25 @@ final class ChatActivityWatcher: ObservableObject {
     /// Ceiling on how often the tree is walked. Streaming fires layout changes
     /// far faster than this, and the pose does not need sub-second accuracy.
     private static let minimumSearchInterval: TimeInterval = 0.75
+
+    /// How often to look while the user is sitting in the chat app and nothing
+    /// is generating yet.
+    ///
+    /// **This is a deliberate reversal, made 2026-08-12 on measurement.** The
+    /// observer was meant to make polling unnecessary, on the premise that
+    /// layout changes "fire constantly while a response streams". A counter
+    /// added to the menu showed the truth: **roughly eight callbacks per
+    /// question, none of them during the streaming itself.** They arrive when
+    /// the prompt is submitted, a search runs before the answer element exists,
+    /// finds nothing, and nothing ever asks again — which is exactly the
+    /// reported symptom of only the first question in a chat working. The
+    /// premise was false, so the conclusion drawn from it had to go.
+    ///
+    /// The cost is bounded to the moments it is doing real work: it runs only
+    /// while the chat app is **frontmost**, the feature is on, and nothing is
+    /// generating. The moment a stream is detected the 1 Hz recheck timer takes
+    /// over and this stops; the moment you switch away, it stops.
+    private static let frontmostPollInterval: TimeInterval = 1.0
 
     /// How long `completed` is held so the success reaction has time to play.
     /// Matches the 3 s hook-driven success window so both look the same.
@@ -86,6 +114,9 @@ final class ChatActivityWatcher: ObservableObject {
     private var pendingSearch: [EventProvider: Task<Void, Never>] = [:]
     private var completionTask: [EventProvider: Task<Void, Never>] = [:]
     private var recheckTimer: [EventProvider: Timer] = [:]
+    /// Live only while the chat app is frontmost and nothing is generating; see
+    /// `frontmostPollInterval`.
+    private var frontmostTimer: [EventProvider: Timer] = [:]
     private var generating: Set<EventProvider> = []
     private var activities: [EventProvider: ChatPresence.Activity] = [:]
     private var workspaceObservers: [any NSObjectProtocol] = []
@@ -141,6 +172,9 @@ final class ChatActivityWatcher: ObservableObject {
         for descriptor in watched {
             attach(descriptor)
         }
+        // Runs on every app activation, which is what makes the poll follow the
+        // frontmost app rather than needing its own notification.
+        updateFrontmostPolling()
     }
 
     private func attach(_ descriptor: ChatApp.Descriptor) {
@@ -162,6 +196,11 @@ final class ChatActivityWatcher: ObservableObject {
                 guard let provider = watcher.observerProviders[ObjectIdentifier(observer)] else {
                     return
                 }
+                // Counted so the menu can say whether callbacks are arriving at
+                // all. Without it, "nothing was detected" and "nothing was
+                // looked at" are the same sentence — which is precisely what
+                // made the 2026-08-12 defect take two builds to understand.
+                watcher.callbackCount[provider, default: 0] += 1
                 watcher.scheduleSearch(for: provider)
             }
         }
@@ -175,14 +214,33 @@ final class ChatActivityWatcher: ObservableObject {
 
         let element = AXUIElementCreateApplication(app.processIdentifier)
         let context = Unmanaged.passUnretained(self).toOpaque()
-        // Layout changes cover streaming text; the created/destroyed pair covers
-        // the article element itself appearing and going away.
-        for notification in [
-            kAXLayoutChangedNotification,
-            kAXCreatedNotification,
-            kAXUIElementDestroyedNotification,
-        ] {
-            AXObserverAddNotification(created, element, notification as CFString, context)
+        // **Register on the windows, not only on the application element.**
+        //
+        // Registering on the application element alone was the 2026-08-12
+        // defect: detection fired for a conversation's *first* response and
+        // never again. The application element receives app-level events —
+        // a window appearing, focus moving — which is exactly what opening a
+        // new chat produces, and why the first question always worked. A second
+        // question in the same window produces only web-content layout changes,
+        // and Chromium posts those from the **web area inside the window**, so
+        // an observer watching only the app element never hears them.
+        //
+        // The earlier repair, re-registering when a response ended, did not help
+        // and the reason is worth keeping: toggling the feature off and on
+        // *did* restore the pose, which looked like proof that re-registering
+        // fixes delivery. It was not. `attach` ends with a direct
+        // `scheduleSearch`, and toggling happened to run that search while a
+        // stream was in flight. **Forcing one look is not the same as restoring
+        // the callbacks**, and mistaking the two cost a build.
+        addNotifications(created, to: element, context: context)
+        // A new window has to be wired up when it appears, or this regresses to
+        // the app-element-only behavior the moment the user opens a second
+        // Claude window.
+        AXObserverAddNotification(
+            created, element, kAXFocusedWindowChangedNotification as CFString, context
+        )
+        for window in Self.windows(of: element) {
+            addNotifications(created, to: window, context: context)
         }
         CFRunLoopAddSource(
             CFRunLoopGetCurrent(),
@@ -195,7 +253,68 @@ final class ChatActivityWatcher: ObservableObject {
         scheduleSearch(for: provider)
     }
 
+    /// Layout changes cover streaming text; the created/destroyed pair covers
+    /// the article element itself appearing and going away.
+    private func addNotifications(
+        _ observer: AXObserver,
+        to element: AXUIElement,
+        context: UnsafeMutableRawPointer
+    ) {
+        for notification in [
+            kAXLayoutChangedNotification,
+            kAXCreatedNotification,
+            kAXUIElementDestroyedNotification,
+        ] {
+            AXObserverAddNotification(observer, element, notification as CFString, context)
+        }
+    }
+
+    /// The app's windows, or empty when it has none yet. Only `AXWindows` is
+    /// read — no title, no content; see this type's documentation.
+    private nonisolated static func windows(of application: AXUIElement) -> [AXUIElement] {
+        var value: CFTypeRef?
+        guard
+            AXUIElementCopyAttributeValue(
+                application, kAXWindowsAttribute as CFString, &value
+            ) == .success,
+            let windows = value as? [AXUIElement]
+        else { return [] }
+        return windows
+    }
+
+    private func isFrontmost(_ descriptor: ChatApp.Descriptor) -> Bool {
+        NSWorkspace.shared.frontmostApplication?.bundleIdentifier == descriptor.bundleIdentifier
+    }
+
+    /// Starts or stops the frontmost poll for each watched app, from the current
+    /// state. Called wherever any input to that decision can change: attaching,
+    /// app activation, and every state transition in `search`.
+    private func updateFrontmostPolling() {
+        for descriptor in watched {
+            let provider = descriptor.provider
+            let shouldPoll = isEnabled
+                && observers[provider] != nil
+                && isFrontmost(descriptor)
+                && !generating.contains(provider)
+            if shouldPoll {
+                guard frontmostTimer[provider] == nil else { continue }
+                let timer = Timer(
+                    timeInterval: Self.frontmostPollInterval, repeats: true
+                ) { [weak self] _ in
+                    MainActor.assumeIsolated { self?.scheduleSearch(for: provider) }
+                }
+                RunLoop.main.add(timer, forMode: .common)
+                frontmostTimer[provider] = timer
+            } else {
+                frontmostTimer[provider]?.invalidate()
+                frontmostTimer[provider] = nil
+            }
+        }
+    }
+
     private func detach(_ provider: EventProvider) {
+        frontmostTimer[provider]?.invalidate()
+        frontmostTimer[provider] = nil
         if let observer = observers[provider] {
             CFRunLoopRemoveSource(
                 CFRunLoopGetCurrent(),
@@ -272,6 +391,9 @@ final class ChatActivityWatcher: ObservableObject {
             activities[provider] = .open
             publish()
         }
+        // `generating` may have flipped either way above, and it is one of the
+        // inputs to whether the frontmost poll should be running.
+        updateFrontmostPolling()
     }
 
     /// While a response streams the app emits layout changes constantly, but the
@@ -300,8 +422,50 @@ final class ChatActivityWatcher: ObservableObject {
                 self.completionTask[provider] = nil
                 self.activities[provider] = .open
                 self.publish()
+                self.refreshObserver(for: provider)
+                self.updateFrontmostPolling()
             }
         }
+    }
+
+    /// Re-registers the observer once a response has ended.
+    ///
+    /// **Found 2026-08-12: detection fired for a conversation's first response
+    /// and never again.** Question 1 in a fresh chat posed and reported
+    /// `generating`; every later question in the same chat reported `open and
+    /// quiet` with no pose. The marker was *present* for those later questions —
+    /// a probe run mid-stream found `Currently streaming message` on the same
+    /// runs this watcher called quiet, and correctly found it absent in a
+    /// settled baseline — and it sat at the same depth every time, so the cap
+    /// was not truncating it. Toggling the feature off and on mid-stream
+    /// restored the pose immediately, and toggling is a detach followed by an
+    /// attach. **The tree was always findable; the callbacks had stopped
+    /// arriving.**
+    ///
+    /// **That reading was wrong, and the correction is the useful part.**
+    /// Toggling ran `attach`, which ends in a direct `scheduleSearch` — so it
+    /// forced *one look* while a stream happened to be in flight. Forcing a look
+    /// is not restoring callbacks, and re-registering here fixed nothing when it
+    /// was tested. What it does do is keep the window registrations fresh across
+    /// a conversation, so it is kept rather than reverted.
+    ///
+    /// The actual cause was measured afterwards with the callback counter:
+    /// **about eight callbacks per question and none during streaming.** See
+    /// `frontmostPollInterval`, which is what catches a stream starting. An
+    /// earlier version of this comment instructed the reader never to add a
+    /// poll; that instruction rested on the same false premise and has been
+    /// removed rather than left to mislead.
+    ///
+    /// This runs after the completion hold rather than when generation stops,
+    /// because `detach` cancels `completionTask`; re-attaching any earlier would
+    /// cut the hold short and take the success reaction with it.
+    private func refreshObserver(for provider: EventProvider) {
+        guard
+            isEnabled,
+            let descriptor = watched.first(where: { $0.provider == provider })
+        else { return }
+        detach(provider)
+        attach(descriptor)
     }
 
     /// Depth-first, stopping at the first match.

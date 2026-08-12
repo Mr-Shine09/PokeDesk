@@ -307,34 +307,40 @@ Two earlier rounds produced no pose, for two different reasons, both worth keepi
 before reporting anything: it reports what the detector believes, which is what
 separates "the marker was renamed" from "the signal arrived and was outranked".
 
-- [ ] **OPEN DEFECT, found 2026-08-12: detection fires only for the first
-  response in a conversation.** Question 1 in a fresh chat poses correctly and
-  the menu reports `Claude chat: generating`. Every later question in the *same*
-  chat reports `Claude chat: open and quiet` and the mascot never poses. Walked
-  three questions plus a settled baseline, with a probe report captured
-  mid-stream for each.
-  **The marker is present and is not being found.** The probe found
-  `Currently streaming message` during questions 2 and 3 — the same runs the
-  watcher called quiet — and found it absent in the settled baseline, exactly as
-  it should be. `AXDocumentArticle` count grows two per exchange (2, 2, 4, 6), so
-  the tree is structured normally. **The depth cap is ruled out:** the marker sits
-  at identical indentation in all three streaming reports, so `maximumDepth` is
-  not truncating it.
-  **What is not yet known** is whether the search never ran or ran and failed.
-  Those are indistinguishable from the menu line, because a failed search leaves
-  `activities` at its existing `.open` and prints the same words as no search at
-  all. The suspicion is the former: after a response completes the recheck timer
-  is invalidated, leaving `AXObserver` callbacks as the only trigger, and the
-  notifications are registered on the *application* element rather than the web
-  area that Chromium posts layout changes from.
-  **The test that separates them** is to toggle the menu item off and on *while a
-  later response streams*: re-attaching ends in a direct `scheduleSearch`, so the
-  pose appearing means the tree was always findable and the watcher had stopped
-  looking. Do not write a fix before running it — the two causes need changes in
-  different functions, and an idle poll would paper over both while restoring the
-  continuous cost the design exists to avoid.
-- [x] **Detection works — for the first response of a conversation only; see the
-  open defect above.** A streaming response put the Claude mascot in the
+- [x] **Every question in a conversation drives the pose — fixed and verified
+  2026-08-12, after a defect that took three attempts.** Three questions in one
+  chat all posed, all reported `Claude chat: generating`, and all fist-pumped.
+  **The defect:** only the *first* response of a conversation was detected. Later
+  questions in the same chat left the mascot strolling and the menu reading
+  `open and quiet`.
+  **What made it hard is worth keeping, because two wrong answers each looked
+  confirmed.** A probe run mid-stream proved the marker *was* present for the
+  later questions and absent in a settled baseline, so the tree was findable and
+  the depth cap was innocent. Toggling the feature off and on mid-stream restored
+  the pose instantly — which read as proof that re-registering the observer fixes
+  delivery. **It was not.** `attach` ends in a direct `scheduleSearch`, so
+  toggling merely forced *one look* while a stream happened to be in flight.
+  **Forcing a look is not restoring callbacks**, and conflating them cost a
+  build. Re-registering when a response ended changed nothing.
+  **The measurement that settled it** was a callback counter surfaced in the
+  menu: roughly **eight callbacks per question, none during streaming**. They
+  arrive when the prompt is submitted, a search runs before the answer element
+  exists, finds nothing, and nothing asks again. The design's premise — that
+  layout changes fire constantly while a response streams — was simply false for
+  this app, and everything built on it followed.
+  **The fix** registers notifications on the app's windows rather than only the
+  application element, and adds a 1 Hz search that runs *only* while the chat app
+  is frontmost and nothing is generating. That last part is a deliberate reversal
+  of a no-polling rule this file and the source both asserted; owner decision,
+  2026-08-12, taken on the measurement rather than the premise.
+  **Verified in the same run:** the ambient walk stays smooth while sitting in a
+  long conversation, and the callback count is static while another app is
+  frontmost — so the poll really does stop, and the cost really is bounded.
+  **The lesson, stated plainly:** a silent detector has two failure modes that
+  print the same words — the search ran and missed, or nothing asked it to
+  search. Until the counter existed there was no way to tell them apart, and both
+  repairs written before it were guesses that looked like deductions.
+- [x] **Detection works.** A streaming response put the Claude mascot in the
   Thinker pose, observed and captured mid-stream 2026-08-11. The menu line was
   *not* read on this run — it was not needed, because the pose is downstream of
   the line and a pose cannot appear without the marker matching. Read the line
