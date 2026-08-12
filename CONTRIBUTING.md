@@ -1,4 +1,4 @@
-# Contributing to Dock Pet
+# Contributing to PokeDesk
 
 Thanks for taking a look. This is a small, opinionated project, and a few of its
 constraints are not obvious from the code. Reading this first will save you from
@@ -17,7 +17,7 @@ Read these, in order:
    it in full. Several plausible-looking ideas are already in there with
    evidence for why they were abandoned.
 
-For anything larger than a bug fix, **open an issue first**. Dock Pet has a
+For anything larger than a bug fix, **open an issue first**. PokeDesk has a
 narrow product definition and a maintainer who has said no to a lot of
 reasonable-sounding features.
 
@@ -25,7 +25,7 @@ reasonable-sounding features.
 
 These are not style preferences. A pull request that breaks one will be closed.
 
-**Platform.** Dock Pet is a native macOS 14.4+ SwiftUI/AppKit accessory app. Not
+**Platform.** PokeDesk is a native macOS 14.4+ SwiftUI/AppKit accessory app. Not
 Electron, not a browser overlay. No Dock injection and no private APIs.
 
 **Privacy.** The app never reads or stores prompts, transcripts, source code,
@@ -60,7 +60,7 @@ ladder applied to a narrower list, on purpose.
 pause, and quit is mandatory. Quitting must never depend on an animation
 finishing.
 
-**Never edit the user's agent configuration.** Dock Pet prints a hook snippet
+**Never edit the user's agent configuration.** PokeDesk prints a hook snippet
 and the user pastes it. This is deliberate.
 
 **The Xcode project is generated.** `project.yml` is the source of truth. Change
@@ -73,8 +73,8 @@ it and run `xcodegen generate`; do not make a durable edit to
 Set up:
 
 ```bash
-git clone https://github.com/Mr-Shine09/desktop-mascot.git
-cd desktop-mascot
+git clone https://github.com/Mr-Shine09/pokedesk.git
+cd pokedesk
 ```
 
 Validate the art contract:
@@ -155,7 +155,7 @@ Use the issue templates. Include your macOS version, whether you built with
 `install_app.sh` or `xcodebuild`, which agent and provider you were using, and
 what the menu bar's `Event socket:` and `Reduced state:` lines said at the time.
 
-Do not paste prompt or transcript content into an issue. Dock Pet never sees it,
+Do not paste prompt or transcript content into an issue. PokeDesk never sees it,
 and neither should the issue tracker.
 
 ## Contributing art

@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Dock Pet is at 0.1 and is distributed as source only. Security fixes land on
+PokeDesk is at 0.1 and is distributed as source only. Security fixes land on
 `main`. There are no maintained release branches, and there is no auto-update
 mechanism — you get fixes by pulling and rebuilding.
 
@@ -11,7 +11,7 @@ mechanism — you get fixes by pulling and rebuilding.
 **Do not open a public issue for a security problem.**
 
 Use GitHub's private vulnerability reporting:
-<https://github.com/Mr-Shine09/desktop-mascot/security/advisories/new>
+<https://github.com/Mr-Shine09/pokedesk/security/advisories/new>
 
 Please include:
 
@@ -25,7 +25,7 @@ disclosing publicly.
 
 ## Scope
 
-Dock Pet's attack surface is small by design, but these areas are worth
+PokeDesk's attack surface is small by design, but these areas are worth
 scrutiny and reports about them are welcome:
 
 - **The local event socket.** A Unix-domain socket under the current user's
@@ -40,7 +40,7 @@ scrutiny and reports about them are welcome:
   break the user's actual work.
 - **Privacy boundary violations.** Any path by which prompt text, transcripts,
   source code, tool arguments, tool output, repository paths, or screen content
-  could reach Dock Pet's process, its preferences, its logs, or the socket. The
+  could reach PokeDesk's process, its preferences, its logs, or the socket. The
   session identifier must be hashed before it leaves the hook helper. A leak
   here is a security bug, not a feature request.
 - **Code signing and bundle integrity.** Anything in `tools/install_app.sh` that
@@ -54,21 +54,21 @@ scrutiny and reports about them are welcome:
   Program certificate.
 - **An attacker who already has local code execution as your user** can write
   to your agent's hook configuration, your socket, and your Applications folder
-  regardless of Dock Pet. Dock Pet does not defend against that, and no macOS
+  regardless of PokeDesk. PokeDesk does not defend against that, and no macOS
   accessory app can.
 - **Idle CPU usage.** Known and tracked, but a performance issue rather than a
   denial of service.
 - **Hooks not firing** because the configured path is stale. That is a
   missing-install problem; the README covers it.
 
-## What Dock Pet does not do
+## What PokeDesk does not do
 
-Useful context when assessing a report. Dock Pet makes no network requests, uses
+Useful context when assessing a report. PokeDesk makes no network requests, uses
 no private APIs, requests no accessibility or screen recording permissions,
 installs no login item or launch agent, runs no XPC service, and never writes to
 any file outside its own preferences domain. The bundled `dockpet-event` helper
 is a plain executable that runs only when your agent invokes it, sends one
 event, and exits.
 
-If you observe Dock Pet doing any of those things, that itself is the report —
+If you observe PokeDesk doing any of those things, that itself is the report —
 please send it.

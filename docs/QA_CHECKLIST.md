@@ -67,7 +67,7 @@ only in the hoodie and the sleeping blanket.
 
 ## Core app smoke test
 
-- [ ] Background launch shows mascot without activating Dock Pet.
+- [ ] Background launch shows mascot without activating PokeDesk.
 - [ ] Mascot is sharp, transparent, and `96x112` points.
 - [ ] Feet/baseline visually align with the bottom Dock boundary without blocking Dock icons.
 - [ ] Rightward movement shows `walk-right`; leftward movement shows `walk-left`.
