@@ -45,7 +45,7 @@ SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/mac-dock-pet-swiftpm-cache \
 swift test
 ```
 
-Expected handoff baseline: 176 Swift Testing tests pass as of 2026-07-31. A higher count is fine; a lower count requires investigation.
+Expected handoff baseline: 187 Swift Testing tests pass as of 2026-08-01. A higher count is fine; a lower count requires investigation.
 
 If the suite fails only some of the time, check the clock before the code. One
 fixture family reduces against the sleep window (23:00–06:00 local), and a

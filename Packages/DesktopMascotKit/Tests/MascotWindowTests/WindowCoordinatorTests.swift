@@ -131,23 +131,91 @@ import Testing
     #expect(coordinator.hasManualPlacement)
 }
 
+/// The invariant a settle must leave behind, whatever the display arrangement:
+/// the mascot sits inside the bounds of the display it settled against, and
+/// that display can actually show it.
+///
+/// This is deliberately checked against bounds read *after* the settle. The
+/// earlier version of this test compared against bounds sampled before the
+/// panel was moved, which only holds on a single display: with a second one
+/// attached, a panel shoved past the primary's edge lands over — or nearest to
+/// — the other display, and the bounds that apply are that display's. That made
+/// the assertion depend on which display held the key window, because
+/// `NSScreen.main` was picking the display. See `ScreenPlacementTests` for the
+/// arrangement-independent coverage of which display gets chosen.
 @MainActor
-@Test func aDropPastAnEdgeIsClampedBackIntoView() {
+private func expectSettledIntoView(_ coordinator: WindowCoordinator) throws {
+    let horizontal = try #require(coordinator.horizontalMovementBounds())
+    let vertical = try #require(coordinator.verticalPlacementBounds())
+
+    #expect(horizontal.contains(coordinator.panel.frame.minX))
+    #expect(vertical.contains(coordinator.panel.frame.minY))
+    // Otherwise a pet dropped off the edge would roam somewhere it cannot be
+    // seen or grabbed back.
+    #expect(NSScreen.screens.contains { $0.frame.intersects(coordinator.panel.frame) })
+}
+
+@MainActor
+@Test func aDropPastAnEdgeIsClampedBackIntoView() throws {
     let coordinator = WindowCoordinator(contentView: NSView())
     defer { coordinator.setVisible(false) }
 
-    guard
-        let horizontal = coordinator.horizontalMovementBounds(),
-        let vertical = coordinator.verticalPlacementBounds()
-    else { return }
+    let desktop = NSScreen.screens.reduce(CGRect.null) { $0.union($1.frame) }
+    guard !desktop.isNull else { return }
 
-    coordinator.panel.setFrameOrigin(NSPoint(x: horizontal.upperBound + 500, y: vertical.upperBound + 500))
+    // Past every corner of the whole desktop, so no display can contain it
+    // however the displays are arranged.
+    for stranded in [
+        NSPoint(x: desktop.maxX + 500, y: desktop.maxY + 500),
+        NSPoint(x: desktop.minX - 500, y: desktop.minY - 500),
+        NSPoint(x: desktop.maxX + 500, y: desktop.minY - 500),
+        NSPoint(x: desktop.minX - 500, y: desktop.maxY + 500)
+    ] {
+        coordinator.panel.setFrameOrigin(stranded)
+        coordinator.settleAfterDrop()
+
+        #expect(coordinator.panel.frame.origin != stranded)
+        try expectSettledIntoView(coordinator)
+    }
+}
+
+@MainActor
+@Test func aDropPastEachAttachedDisplaysEdgeIsClampedBackIntoView() throws {
+    let coordinator = WindowCoordinator(contentView: NSView())
+    defer { coordinator.setVisible(false) }
+
+    // Exercises the second display when one is attached, which is the case the
+    // clamp was getting wrong. On a single display it repeats the case above.
+    for screen in NSScreen.screens {
+        for stranded in [
+            NSPoint(x: screen.frame.maxX + 40, y: screen.frame.maxY + 40),
+            NSPoint(x: screen.frame.minX - 140, y: screen.frame.minY - 140)
+        ] {
+            coordinator.panel.setFrameOrigin(stranded)
+            coordinator.settleAfterDrop()
+
+            try expectSettledIntoView(coordinator)
+        }
+    }
+}
+
+@MainActor
+@Test func aSettledPlacementDoesNotDriftWhenSettledAgain() throws {
+    let coordinator = WindowCoordinator(contentView: NSView())
+    defer { coordinator.setVisible(false) }
+
+    // `screenParametersChanged` re-settles a dropped mascot on every display
+    // change and every wake, so a settle that moved an already-settled panel
+    // would walk it across the screen over a working day.
+    coordinator.panel.setFrameOrigin(NSPoint(x: 9_000, y: 9_000))
+    coordinator.settleAfterDrop()
+    let settled = coordinator.panel.frame.origin
+
+    coordinator.settleAfterDrop()
     coordinator.settleAfterDrop()
 
-    // Otherwise a pet dropped off the edge would roam somewhere it cannot be
-    // seen or grabbed back.
-    #expect(coordinator.panel.frame.minX == horizontal.upperBound)
-    #expect(coordinator.panel.frame.minY == vertical.upperBound)
+    #expect(coordinator.panel.frame.origin == settled)
+    try expectSettledIntoView(coordinator)
 }
 
 @MainActor

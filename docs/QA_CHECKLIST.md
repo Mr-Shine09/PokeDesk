@@ -9,7 +9,8 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 - [ ] Complete atlas validates.
 - [ ] Every changed frame row validates.
 - [ ] Full QA sheets and motion previews are regenerated after atlas changes.
-- [ ] Swift package tests pass (current baseline: 31; original handoff baseline: 10).
+- [ ] Swift package tests pass (current baseline: 187; original handoff baseline: 10). This line still read `31` — the 2026-07-29 count — on 2026-08-01.
+- [ ] Placement chooses the same display for the same panel frame and arrangement, whichever display has keyboard focus (`ScreenPlacementTests`).
 - [ ] Unsigned Debug Xcode build succeeds.
 - [ ] Built atlas hash matches workspace atlas.
 - [ ] Built JSON contract byte-matches workspace contract.
@@ -58,6 +59,9 @@ Use this as an evidence checklist, not as a claim that every item currently pass
 - [ ] Right Dock.
 - [ ] Multiple displays with different scales.
 - [ ] Move between displays and change primary display.
+- [ ] Drag the mascot onto a second display and drop it there: it stays on that display, roams within it, and does not jump back to the primary.
+- [ ] Drop the mascot past the outer edge of a second display: it is clamped into *that* display, not moved to the one the keyboard is focused on.
+- [ ] Unplug the display the mascot is roaming on: it reappears on a remaining display rather than staying off-screen.
 - [ ] Full-screen Spaces and ordinary Spaces.
 - [ ] Display sleep/wake and laptop sleep/wake.
 - [ ] Screen lock/unlock.

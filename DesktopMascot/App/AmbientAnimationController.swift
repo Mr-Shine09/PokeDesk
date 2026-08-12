@@ -259,7 +259,7 @@ final class AmbientAnimationController {
             lastWalkingDirection = reversed
             visibleDirection = reversed
         }
-        let backingScale = windowCoordinator.panel.screen?.backingScaleFactor ?? 2
+        let backingScale = windowCoordinator.placementBackingScaleFactor
         nextX = (nextX * backingScale).rounded() / backingScale
         windowCoordinator.setHorizontalPosition(nextX)
         return visibleDirection

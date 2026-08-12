@@ -34,6 +34,8 @@ The session registry and reducer are not implemented.
 
 `WindowCoordinator.swift` owns panel visibility, positioning, horizontal roaming bounds, backing-pixel-aligned movement, and screen/wake reconciliation. It also owns the one exception to bottom-anchored placement: `settleAfterDrop()` adopts the height the user dropped the mascot at, `hasManualPlacement` reports whether that happened, and `reposition()` is what discards it. A display change re-clamps a dropped height into the new bounds instead of resetting it.
 
+`ScreenPlacement.swift` decides *which* display all of that is measured against, from the panel's frame and the display arrangement alone: the display the panel covers most of, or — when it covers none, which is exactly the off-edge drop `settleAfterDrop()` exists to repair — the nearest one, with ties going to the lowest index. `NSScreen.main` is not consulted anywhere in `MascotWindow`; it names the display holding the key window, so it made placement follow keyboard focus (fixed 2026-08-01). Bounds, clamping, and backing-scale rounding all resolve the same display, so a walk cannot be rounded against one display and clamped against another. The rules are pure `CGRect` arithmetic and are tested against synthetic arrangements rather than the hardware attached to the machine running the suite.
+
 ## Runtime ownership
 
 ```text
@@ -120,5 +122,6 @@ paused > failure-recent > waiting > working > ideating > success-recent > schedu
 - Resume Roaming repositions into the current display's safe lane only when the user has not placed the mascot themselves.
 - Only `success` and `failure` produce sound, only while summoned, and the cue fires when a state reaches the screen rather than when it is reduced.
 - Screen, scale, Dock orientation, and wake changes trigger placement reconciliation.
+- Placement is a function of the panel's frame and the display arrangement, never of which display has keyboard focus. The same drop on the same arrangement lands in the same place every time, and the mascot is never moved to a display it was not already on or nearest to.
 - Reduced Motion work must replace motion with stable/fade behavior, not merely speed up or shrink the same loop.
 

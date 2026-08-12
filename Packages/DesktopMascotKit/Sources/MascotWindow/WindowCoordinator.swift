@@ -41,11 +41,41 @@ public final class WindowCoordinator: NSObject {
         }
     }
 
+    /// The display the panel is placed against, chosen from the panel's own
+    /// frame rather than from `NSScreen.main`.
+    ///
+    /// `NSScreen.main` follows keyboard focus, so with two displays attached it
+    /// made every bound below depend on which window the user had last clicked
+    /// — see `ScreenPlacement` for the failure it caused. `NSWindow.screen`
+    /// answers correctly whenever the panel overlaps a display (including while
+    /// ordered out), but returns `nil` for a panel dropped past an outer edge,
+    /// which is exactly the case `settleAfterDrop` exists to repair.
+    /// `ScreenPlacement` answers both cases from geometry alone.
+    private func placementScreen() -> NSScreen? {
+        let screens = NSScreen.screens
+        guard let index = ScreenPlacement.screenIndex(forPanelFrame: panel.frame, in: screens.map(\.frame)) else {
+            return nil
+        }
+        return screens[index]
+    }
+
     public func horizontalMovementBounds() -> ClosedRange<CGFloat>? {
-        guard let screen = panel.screen ?? NSScreen.main else { return nil }
+        placementScreen().map(horizontalBounds(on:))
+    }
+
+    private func horizontalBounds(on screen: NSScreen) -> ClosedRange<CGFloat> {
         let minimum = screen.visibleFrame.minX
         let maximum = max(minimum, screen.visibleFrame.maxX - contentSize.width)
         return minimum ... maximum
+    }
+
+    /// The backing scale of the display the panel is placed against, for
+    /// callers that round a position to whole device pixels. It resolves the
+    /// same display the movement bounds do, so a walk cannot round against one
+    /// display while being clamped against another. Falls back to Retina when
+    /// there is no display to ask.
+    public var placementBackingScaleFactor: CGFloat {
+        placementScreen()?.backingScaleFactor ?? 2
     }
 
     public func setHorizontalPosition(_ x: CGFloat) {
@@ -60,7 +90,10 @@ public final class WindowCoordinator: NSObject {
     public var hasManualPlacement: Bool { manualLaneY != nil }
 
     public func verticalPlacementBounds() -> ClosedRange<CGFloat>? {
-        guard let screen = panel.screen ?? NSScreen.main else { return nil }
+        placementScreen().map(verticalBounds(on:))
+    }
+
+    private func verticalBounds(on screen: NSScreen) -> ClosedRange<CGFloat> {
         let minimum = screen.frame.minY - MascotPanel.defaultDockVisualInset
         let maximum = max(minimum, screen.visibleFrame.maxY - contentSize.height)
         return minimum ... maximum
@@ -77,14 +110,19 @@ public final class WindowCoordinator: NSObject {
     /// Reposition menu action; it is no longer the only legal height.
     ///
     /// Both axes are clamped to the screen, because a pet dropped past an edge
-    /// would otherwise roam somewhere it cannot be seen or grabbed back.
+    /// would otherwise roam somewhere it cannot be seen or grabbed back. One
+    /// screen decides both axes — resolving per axis could clamp X against one
+    /// display and Y against another, which is a position on neither.
     public func settleAfterDrop() {
-        let x = horizontalMovementBounds().map {
-            min(max(panel.frame.minX, $0.lowerBound), $0.upperBound)
-        } ?? panel.frame.minX
-        let y = verticalPlacementBounds().map {
-            min(max(panel.frame.minY, $0.lowerBound), $0.upperBound)
-        } ?? panel.frame.minY
+        guard let screen = placementScreen() else {
+            // No displays at all: keep the drop rather than inventing bounds.
+            manualLaneY = panel.frame.minY
+            return
+        }
+        let horizontal = horizontalBounds(on: screen)
+        let vertical = verticalBounds(on: screen)
+        let x = min(max(panel.frame.minX, horizontal.lowerBound), horizontal.upperBound)
+        let y = min(max(panel.frame.minY, vertical.lowerBound), vertical.upperBound)
         manualLaneY = y
         panel.setFrameOrigin(NSPoint(x: x, y: y))
     }
@@ -93,8 +131,12 @@ public final class WindowCoordinator: NSObject {
     /// height. This is what the Reposition menu action is for: once the pet can
     /// roam at any height, the user needs one deliberate way to get it back.
     public func reposition(on screen: NSScreen? = nil) {
-        let screen = screen ?? panel.screen ?? NSScreen.main
-        guard let screen else { return }
+        // An explicit screen wins; otherwise the panel's own display decides,
+        // never the focused one. Before, a mascot dismissed on one display and
+        // summoned back could reappear on whichever display the user had since
+        // clicked into — a teleport across unrelated displays that nothing had
+        // asked for.
+        guard let screen = screen ?? placementScreen() else { return }
         manualLaneY = nil
         let origin = DockGeometry.panelOrigin(
             screenFrame: screen.frame,
