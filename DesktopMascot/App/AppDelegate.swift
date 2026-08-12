@@ -40,7 +40,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     func isRoaming(_ provider: EventProvider) -> Bool {
         roamingByProvider[provider] ?? true
     }
-    /// Whether a frontmost chat app drives its mascot's ideating pose.
+    /// Whether a Claude chat producing a response drives its mascot's ideating
+    /// pose. Named for the frontmost-app signal it used to gate; see
+    /// `Preferences.chatAppsDriveIdeating`.
     @Published private(set) var chatAppsDriveIdeating = Preferences.chatAppsDriveIdeating
     /// The nightly sleep window, or `nil` when scheduled sleep is off.
     /// Restored from preferences, like roaming.

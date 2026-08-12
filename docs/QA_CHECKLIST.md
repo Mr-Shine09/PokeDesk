@@ -263,33 +263,66 @@ which was diagnosed, fixed, and re-walked on screen from a rebuilt install.
 
 ## Chat lifecycle acceptance (experimental)
 
-**Nothing here has been observed. The feature is off by default and unproven.**
-It reads one accessibility attribute on the Claude window — the description that
-marks a message as streaming — which is a deliberate reversal of the project's
-"no accessibility permissions" promise (owner decision, 2026-08-11).
+**The feature works. Observed on screen 2026-08-11 on the third attempt**, and it
+remains off by default. It reads one accessibility attribute on the Claude window
+— the description that marks a message as streaming — which is a deliberate
+reversal of the project's "no accessibility permissions" promise (owner decision,
+2026-08-11).
 
-Two rounds of hands-on attempts produced no pose, for two different reasons, and
-both are worth knowing before a third:
+What was observed: with the menu item ticked and Accessibility granted, a
+streaming response in the Claude desktop app put the orange mascot into the
+seated Thinker pose, captured mid-stream by the owner. `ChatAppObserver` no longer
+exists and Manual Ideating was untouched, so the chat signal is the only thing
+that could have produced that pose. The transcript's file-creation step was the
+Claude app's own tool, not Claude Code, so no hook refreshed a session and
+nothing outranked or suppressed the signal.
+
+The completion half was watched in the same run: the response landed, the mascot
+played the success reaction once, and it went back to strolling. **Detection and
+both ends of the lifecycle are proven. The rows still open are the negative and
+interaction cases** — that reading a quiet chat produces nothing, that a working
+agent outranks it, that the navy mascot is unaffected, and that the toggle drops
+the pose. None of those were exercised by this run and none should be inferred
+from it.
+
+**A naming caution from this very run:** the success reaction was first reported
+as "the success, lightbulb motion". The light bulb is `failure` (row 6); success
+is stars and a fist pump (row 5). It was resolved by asking which of the two was
+actually on screen rather than by trusting the reducer, which cannot reach
+`.failure` from a chat and would have supplied a confident right answer for the
+wrong reason. Same shape as ledger item 31 — check a described animation against
+`art/animation/ATLAS.md`.
+
+Two earlier rounds produced no pose, for two different reasons, both worth keeping:
 
 1. The owner tested while talking to Claude Code **in the app under test**. Nine
    hooks including `PostToolUse` kept a `claude-code` session permanently fresh,
    and the then-current rule suppressed the chat signal whenever any session was
    live. Nothing could have appeared.
 2. That suppression rule was removed, since the streaming marker is a fact about
-   the chat window rather than an inference. The third attempt has not happened.
+   the chat window rather than an inference. That change is what made the third
+   attempt succeed.
 
 **Read the `Chat Detection (Experimental)` menu line while a response streams**
 before reporting anything: it reports what the detector believes, which is what
 separates "the marker was renamed" from "the signal arrived and was outranked".
 
-- [ ] Accessibility granted, and the menu line reads `Claude chat: generating`
-  while a response streams. *(This row alone proves detection; every row below
-  is about what the mascot does with it.)*
+- [x] **Detection works.** A streaming response put the Claude mascot in the
+  Thinker pose, observed and captured mid-stream 2026-08-11. The menu line was
+  *not* read on this run — it was not needed, because the pose is downstream of
+  the line and a pose cannot appear without the marker matching. Read the line
+  first on any run that **fails**; that is the case it disambiguates.
 - [ ] Pressing Enter puts the Claude mascot in the Thinker pose within ~1 s.
+  *(The pose was seen mid-stream; its latency from Enter was not timed.)*
 - [ ] The pose holds for the whole stream, not just the pause before the first
-  word.
-- [ ] The mascot fist-pumps when the response completes, then returns to
-  strolling.
+  word. *(One mid-stream frame is not the whole stream.)*
+- [x] **The mascot fist-pumps when the response completes, then returns to
+  strolling.** Observed 2026-08-11: stars and one fist pump, played once, then
+  back to the stroll. This is the row that decided whether the rewrite fixed the
+  complaint against the frontmost version, which ran the pose continuously while
+  the owner read and typed. It also exercises the 1 Hz re-check — nothing follows
+  the last layout change of a stream, so without it the marker's disappearance
+  would never be noticed and the pet would think forever.
 - [ ] Sitting in the Claude app **reading**, with nothing generating, produces no
   pose at all. This is the correction that motivated the rewrite: frontmost
   alone used to drive the pose and looked wrong.

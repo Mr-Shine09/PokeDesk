@@ -180,7 +180,7 @@ Click the menu bar paw print:
 | **Summon / Dismiss ⟨mascot⟩** | One entry per provider. Each is independent |
 | **Pause** | Freezes animation for both mascots |
 | **Manual Ideating** | Forces the thinking pose — for ordinary chats that emit no hooks |
-| **Think When Chat App Is Open** | Makes the Claude mascot think while the Claude desktop app is producing a response, and fist-pump when it lands. Needs Accessibility permission; see [Privacy](#privacy) for exactly what it reads |
+| **Think While Claude Is Answering** | Makes the Claude mascot think while the Claude desktop app is producing a response, and fist-pump when it lands. Needs Accessibility permission; see [Privacy](#privacy) for exactly what it reads |
 | **Chat Detection (Experimental)** | Grants the permission, reports what the detector currently sees, and writes a diagnostic report. Temporary, while the feature is being proven |
 | **Sounds** | Mutes all four cues (success, failure, summon, dismiss) |
 | **⟨mascot⟩ Stays in One Place** | One entry per mascot, next to its Summon. Checked, that pet stops strolling and stays exactly where it is, still animating in place — drag it somewhere first and it stays there, across relaunches. Unchecked (the default), it roams. The two mascots are independent |
@@ -266,9 +266,10 @@ Stated plainly, because you are about to build this yourself:
   it — which used to lose a dragged height and no longer does.
 - **Reduce Motion** is honored for the summon and dismiss transitions; broader
   coverage is still open.
-- **Chat detection is unfinished and unproven.** It is in the app, off by
-  default, and has **never been seen working end to end**. Everything below is
-  what the code specifies, not what anyone has watched:
+- **Chat detection is new, and off by default.** It was watched working on
+  2026-08-11 — a streaming response put the mascot in the Thinker pose, and the
+  finished response drew the success reaction — but that is one run, and these
+  limits still apply:
   - **The Claude desktop app only.** ChatGPT is not wired up yet, and browser
     tabs never will be — detecting `claude.ai` in a browser means reading the
     active tab's URL, which is your browsing history.

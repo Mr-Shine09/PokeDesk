@@ -70,21 +70,27 @@ struct MenuBarContent: View {
         }
 
         // Sits with Manual Ideating because it answers the same question — is
-        // the user thinking — from a weaker signal. The label names what is
-        // watched (the app being in front), not a vague "chat detection", so
-        // the privacy cost is legible from the menu itself.
+        // the user thinking — from a weaker signal. The label names the moment
+        // it reacts to, not a vague "chat detection".
+        //
+        // It read "Think When Chat App Is Open" until the observed run on
+        // 2026-08-11, which was accurate for `ChatAppObserver` (frontmost app)
+        // and wrong for `ChatActivityWatcher`, which replaced it and reacts to
+        // a response being produced. It also promised ChatGPT, which is unwired.
+        // The symbol and the defaults key still say `chatApps` on purpose — see
+        // `Preferences.chatAppsDriveIdeating`.
         Button {
             appDelegate.setChatAppsDriveIdeating(!appDelegate.chatAppsDriveIdeating)
         } label: {
             Label(
-                "Think When Chat App Is Open",
+                "Think While Claude Is Answering",
                 systemImage: appDelegate.chatAppsDriveIdeating ? "checkmark" : "minus"
             )
         }
         .accessibilityLabel(
             appDelegate.chatAppsDriveIdeating
-                ? "Stop the mascot thinking when the Claude or ChatGPT app is in front"
-                : "Let the mascot think when the Claude or ChatGPT app is in front"
+                ? "Stop the mascot thinking while the Claude app is answering"
+                : "Let the mascot think while the Claude app is answering"
         )
 
         Button {
