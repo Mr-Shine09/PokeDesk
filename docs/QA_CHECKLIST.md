@@ -317,8 +317,9 @@ separates "the marker was renamed" from "the signal arrived and was outranked".
   second install after re-granting Accessibility — but its latency from Enter has
   still never been timed on either run. The pose appearing is not the claim this
   row makes; leave it unticked until someone watches the clock.)*
-- [ ] The pose holds for the whole stream, not just the pause before the first
-  word. *(One mid-stream frame is not the whole stream.)*
+- [x] **The pose holds for the whole stream**, not just the pause before the
+  first word. Owner-observed 2026-08-12. Until then the evidence was a single
+  mid-stream frame, which could not distinguish a held pose from a flicker.
 - [x] **The mascot fist-pumps when the response completes, then returns to
   strolling.** Observed 2026-08-11: stars and one fist pump, played once, then
   back to the stroll. This is the row that decided whether the rewrite fixed the
@@ -326,14 +327,24 @@ separates "the marker was renamed" from "the signal arrived and was outranked".
   the owner read and typed. It also exercises the 1 Hz re-check — nothing follows
   the last layout change of a stream, so without it the marker's disappearance
   would never be noticed and the pet would think forever.
-- [ ] Sitting in the Claude app **reading**, with nothing generating, produces no
-  pose at all. This is the correction that motivated the rewrite: frontmost
-  alone used to drive the pose and looked wrong.
-- [ ] A **working** Claude Code turn still outranks a generating chat response.
-- [ ] An **idle** Claude Code session does *not* block it.
-- [ ] The navy mascot is unaffected throughout.
-- [ ] Turning the menu item off drops the pose immediately; the choice survives
-  relaunch.
+- [x] **Sitting in the Claude app reading, with nothing generating, produces no
+  pose at all.** Owner-observed 2026-08-12. This is the row the whole rewrite
+  existed for: the frontmost-app version ran the pose continuously while the
+  owner read and typed, and this is the evidence that the accessibility signal
+  does not repeat that mistake.
+- [x] **A working Claude Code turn still outranks a generating chat response.**
+  Owner-observed 2026-08-12 — the mascot stays at its computer rather than
+  switching to the Thinker pose.
+- [x] **An idle Claude Code session does not block it.** Owner-observed
+  2026-08-12. This pair matters together: the suppression rule that was removed
+  on 2026-08-11 would have failed this row while passing the one above, and
+  passing only one of the two is how the feature became unreachable for anyone
+  running Claude Code.
+- [x] **The navy mascot is unaffected throughout.** Owner-observed 2026-08-12.
+- [~] Turning the menu item off drops the pose immediately; **the choice survives
+  relaunch** *(owner-observed 2026-08-12)*. The persistence half is done. The
+  immediate-drop half — untick it **while a response is streaming** and watch the
+  pose disappear at once — has not been reported and is still open.
 - [x] **Re-granting Accessibility is needed after each reinstall — confirmed
   2026-08-12, and it cost a failed test to learn twice.** The app was reinstalled
   that morning with a fresh ad-hoc signature; detection then did nothing at all
