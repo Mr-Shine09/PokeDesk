@@ -23,6 +23,9 @@ public struct EventEncoder: Sendable {
         if let detail = envelope.detail {
             fields.append("\"detail\": \"\(detail.rawValue)\"")
         }
+        if let surface = envelope.surface {
+            fields.append("\"surface\": \"\(surface.rawValue)\"")
+        }
         return Data("{\(fields.joined(separator: ", "))}".utf8)
     }
 

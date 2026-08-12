@@ -44,4 +44,4 @@ Several files under `art/` are deterministic outputs of the scripts in `tools/`
 code; their *output* depicting the mascot is covered by this file.
 
 To request permission for anything above, open an issue on
-<https://github.com/Mr-Shine09/desktop-mascot>.
+<https://github.com/Mr-Shine09/PokeDesk>.

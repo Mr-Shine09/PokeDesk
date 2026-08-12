@@ -67,7 +67,7 @@ only in the hoodie and the sleeping blanket.
 
 ## Core app smoke test
 
-- [ ] Background launch shows mascot without activating Dock Pet.
+- [ ] Background launch shows mascot without activating PokeDesk.
 - [ ] Mascot is sharp, transparent, and `96x112` points.
 - [ ] Feet/baseline visually align with the bottom Dock boundary without blocking Dock icons.
 - [ ] Rightward movement shows `walk-right`; leftward movement shows `walk-left`.
@@ -263,33 +263,66 @@ which was diagnosed, fixed, and re-walked on screen from a rebuilt install.
 
 ## Chat lifecycle acceptance (experimental)
 
-**Nothing here has been observed. The feature is off by default and unproven.**
-It reads one accessibility attribute on the Claude window — the description that
-marks a message as streaming — which is a deliberate reversal of the project's
-"no accessibility permissions" promise (owner decision, 2026-08-11).
+**The feature works. Observed on screen 2026-08-11 on the third attempt**, and it
+remains off by default. It reads one accessibility attribute on the Claude window
+— the description that marks a message as streaming — which is a deliberate
+reversal of the project's "no accessibility permissions" promise (owner decision,
+2026-08-11).
 
-Two rounds of hands-on attempts produced no pose, for two different reasons, and
-both are worth knowing before a third:
+What was observed: with the menu item ticked and Accessibility granted, a
+streaming response in the Claude desktop app put the orange mascot into the
+seated Thinker pose, captured mid-stream by the owner. `ChatAppObserver` no longer
+exists and Manual Ideating was untouched, so the chat signal is the only thing
+that could have produced that pose. The transcript's file-creation step was the
+Claude app's own tool, not Claude Code, so no hook refreshed a session and
+nothing outranked or suppressed the signal.
+
+The completion half was watched in the same run: the response landed, the mascot
+played the success reaction once, and it went back to strolling. **Detection and
+both ends of the lifecycle are proven. The rows still open are the negative and
+interaction cases** — that reading a quiet chat produces nothing, that a working
+agent outranks it, that the navy mascot is unaffected, and that the toggle drops
+the pose. None of those were exercised by this run and none should be inferred
+from it.
+
+**A naming caution from this very run:** the success reaction was first reported
+as "the success, lightbulb motion". The light bulb is `failure` (row 6); success
+is stars and a fist pump (row 5). It was resolved by asking which of the two was
+actually on screen rather than by trusting the reducer, which cannot reach
+`.failure` from a chat and would have supplied a confident right answer for the
+wrong reason. Same shape as ledger item 31 — check a described animation against
+`art/animation/ATLAS.md`.
+
+Two earlier rounds produced no pose, for two different reasons, both worth keeping:
 
 1. The owner tested while talking to Claude Code **in the app under test**. Nine
    hooks including `PostToolUse` kept a `claude-code` session permanently fresh,
    and the then-current rule suppressed the chat signal whenever any session was
    live. Nothing could have appeared.
 2. That suppression rule was removed, since the streaming marker is a fact about
-   the chat window rather than an inference. The third attempt has not happened.
+   the chat window rather than an inference. That change is what made the third
+   attempt succeed.
 
 **Read the `Chat Detection (Experimental)` menu line while a response streams**
 before reporting anything: it reports what the detector believes, which is what
 separates "the marker was renamed" from "the signal arrived and was outranked".
 
-- [ ] Accessibility granted, and the menu line reads `Claude chat: generating`
-  while a response streams. *(This row alone proves detection; every row below
-  is about what the mascot does with it.)*
+- [x] **Detection works.** A streaming response put the Claude mascot in the
+  Thinker pose, observed and captured mid-stream 2026-08-11. The menu line was
+  *not* read on this run — it was not needed, because the pose is downstream of
+  the line and a pose cannot appear without the marker matching. Read the line
+  first on any run that **fails**; that is the case it disambiguates.
 - [ ] Pressing Enter puts the Claude mascot in the Thinker pose within ~1 s.
+  *(The pose was seen mid-stream; its latency from Enter was not timed.)*
 - [ ] The pose holds for the whole stream, not just the pause before the first
-  word.
-- [ ] The mascot fist-pumps when the response completes, then returns to
-  strolling.
+  word. *(One mid-stream frame is not the whole stream.)*
+- [x] **The mascot fist-pumps when the response completes, then returns to
+  strolling.** Observed 2026-08-11: stars and one fist pump, played once, then
+  back to the stroll. This is the row that decided whether the rewrite fixed the
+  complaint against the frontmost version, which ran the pose continuously while
+  the owner read and typed. It also exercises the 1 Hz re-check — nothing follows
+  the last layout change of a stream, so without it the marker's disappearance
+  would never be noticed and the pet would think forever.
 - [ ] Sitting in the Claude app **reading**, with nothing generating, produces no
   pose at all. This is the correction that motivated the rewrite: frontmost
   alone used to drive the pose and looked wrong.
@@ -303,7 +336,40 @@ separates "the marker was renamed" from "the signal arrived and was outranked".
 
 Not implemented, and not a failure if unseen: **`waiting`**. No marker for it has
 been captured, so a chat awaiting input looks the same as one that finished.
-**ChatGPT** is also unwired — the owner chose one provider at a time.
+
+**ChatGPT needs no accessibility marker, but it did need work.** The ChatGPT
+desktop app is the Codex app — that is why it ships as `com.openai.codex` — so
+its turns already fire the installed Codex hooks. What was wrong is that they
+looked like terminal agent work: the mascot sat at its computer during an
+ordinary chat. Owner rule, 2026-08-11: **the chat interface thinks, Codex and the
+terminal type.** `EventSurface` separates them, decided in the hook helper from
+its own process ancestry, with no accessibility involvement.
+
+**Walked 2026-08-11 against the 19:40 build; the owner reported "it worked".**
+That was **one overall verdict, not per-row commentary** — the same shape as the
+2026-08-02 pass, which this file then over-claimed for eight days. The rows below
+are ticked on that verdict and should not be cited as individually narrated
+observations. The two rows that were reported separately, because they failed
+first and were fixed, are marked as such.
+
+- [x] A plain conversational turn in the **ChatGPT app** shows the **Thinker
+  pose**, not the mascot at its computer. *Reported separately: this one was the
+  first thing that worked, before the agent-run split existed.*
+- [x] A **Codex agent run inside the ChatGPT app** — one that runs tools or asks
+  for approval — shows the mascot **at its computer**. *Reported separately: it
+  failed on the first attempt, which is what produced the tool-traffic rule.*
+- [x] The same turn still ends with the **success reaction** and a return to
+  strolling.
+- [x] A **Claude Code** turn still shows the mascot at its computer. Claude.app
+  hosts Claude Code, and it is deliberately not treated as a chat surface.
+- [ ] A `codex` run in a **terminal** still shows the mascot at its computer.
+  **Not testable on this machine: there is no `codex` CLI installed** — nothing
+  on `PATH`, nothing in `~/.codex/bin`, and the only `codex` binary lives inside
+  `ChatGPT.app`. Unit tests cover it and the default is the safe direction (no
+  surface means typing), but nobody has watched it. Leave unticked.
+- [ ] A terminal `codex` run happening at the same time as a ChatGPT chat turn
+  shows the mascot **at its computer** — the stronger claim wins. Blocked by the
+  row above.
 
 ## Event system acceptance
 

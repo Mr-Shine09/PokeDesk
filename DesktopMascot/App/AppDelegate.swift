@@ -40,7 +40,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     func isRoaming(_ provider: EventProvider) -> Bool {
         roamingByProvider[provider] ?? true
     }
-    /// Whether a frontmost chat app drives its mascot's ideating pose.
+    /// Whether a Claude chat producing a response drives its mascot's ideating
+    /// pose. Named for the frontmost-app signal it used to gate; see
+    /// `Preferences.chatAppsDriveIdeating`.
     @Published private(set) var chatAppsDriveIdeating = Preferences.chatAppsDriveIdeating
     /// The nightly sleep window, or `nil` when scheduled sleep is off.
     /// Restored from preferences, like roaming.
@@ -118,23 +120,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// marker that has been renamed by an app update, an observer that never
     /// attached, and a signal that arrived and was outranked. A UI-string match
     /// fails silently by nature, so the diagnostic has to be specific.
+    /// One line per watchable app, so a second provider cannot hide behind the
+    /// first. An app with no captured marker is not listed: it is not being
+    /// watched, and a status line for it would imply otherwise.
     var accessibilityStatus: String {
         guard ChatAccessibilityProbe.isTrusted else { return "Accessibility: not granted" }
         if let diagnostic = chatActivityWatcher?.diagnostic { return diagnostic }
-        switch chatActivityWatcher?.presence.activities[.claudeCode] {
-        case .generating: return "Claude chat: generating"
-        case .completed: return "Claude chat: just finished"
-        case .open: return "Claude chat: open and quiet"
-        case nil: return "Claude chat: app not running"
-        }
+        return ChatApp.watchable
+            .map { descriptor in
+                switch chatActivityWatcher?.presence.activities[descriptor.provider] {
+                case .generating: "\(descriptor.displayName) chat: generating"
+                case .completed: "\(descriptor.displayName) chat: just finished"
+                case .open: "\(descriptor.displayName) chat: open and quiet"
+                case nil: "\(descriptor.displayName) chat: app not running"
+                }
+            }
+            .joined(separator: "\n")
     }
 
     func requestAccessibilityAccess() {
         ChatAccessibilityProbe.requestAccess()
     }
 
-    func writeChatAccessibilityReport() {
-        lastProbeResult = ChatAccessibilityProbe.writeReport()
+    func writeChatAccessibilityReport(for target: ChatApp.Descriptor) {
+        lastProbeResult = ChatAccessibilityProbe.writeReport(for: target)
     }
 
     private func mascot(for provider: EventProvider) -> MascotInstance? {

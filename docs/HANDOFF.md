@@ -1,10 +1,10 @@
-# Dock Pet engineering handoff
+# PokeDesk engineering handoff
 
 Prepared for Mr. C (Claude Code) on 2026-07-29.
 
 ## Mission
 
-Dock Pet is a native macOS menu-bar accessory that displays a pixel-art owner mascot near the Dock. It should communicate coding-agent lifecycle state at a glance while remaining local, private, non-activating, inexpensive when idle, and immediately dismissible.
+PokeDesk is a native macOS menu-bar accessory that displays a pixel-art owner mascot near the Dock. It should communicate coding-agent lifecycle state at a glance while remaining local, private, non-activating, inexpensive when idle, and immediately dismissible.
 
 The long-term state flow is:
 
@@ -40,6 +40,7 @@ Every stage is implemented and verified against a real Claude Code session. On 2
 - The app runs the local event path as of 2026-07-30: it binds the owner-only socket at launch, ingests delivered events through `SessionRegistry` and `MascotStateReducer` via `EventPipeline`, drives animation from the result, shows listener status and reduced state in the menu bar, and unlinks the socket on quit.
 - Both provider adapters exist as `dockpet-event --hook --provider <name>`, and `--print-hooks` emits provider-correct settings. Claude Code is installed and observed live. On 2026-08-02 the Codex generator was repaired to put its flags in the single `command` string, `~/.codex/hooks.json` was installed, all seven definitions were trusted, and a fresh real Codex turn completed with the hooks Active and no hook failure. A direct helper/socket smoke test independently passed; only the navy mascot's on-screen response remains unobserved.
 - The app installs durably to `~/Applications/Dock Pet.app` via `tools/install_app.sh`, ad-hoc signed with the nested helper signed first. It is not notarized and cannot be given to anyone else.
+- **Chat activity drives the mascots as of 2026-08-11, by two different routes, both watched working.** The Claude desktop app is read through one accessibility attribute (`ChatActivityWatcher`), off by default behind **Think While Claude Is Answering**. The ChatGPT desktop app needs no such reading: it *is* the Codex app, so its turns already arrive as hook events — but a chat turn and an agent run were indistinguishable, so the envelope gained a two-word `EventSurface`, decided in the hook helper from its own process ancestry. A chat turn thinks; a Codex agent run and anything from a terminal types. The rule needs both the surface and the absence of tool traffic; see ledger item 39.
 
 ## Repository warning
 
@@ -104,6 +105,15 @@ Preserve every current modification/untracked file. Do not reset, clean, checkou
 paused > failure-recent > waiting > manual-ideating > working > success-recent > chat-ideating > scheduled-sleep > idle/strolling > offline
 ```
 
+**What feeds two of these rungs changed on 2026-08-11.** `working` means an agent
+turn driven from a command line; a turn driven from a desktop app's chat
+interface joins `chat-ideating` instead, so it thinks rather than typing. The
+distinction exists because the ChatGPT desktop app is the Codex app, which makes
+a chat turn and a terminal run identical at the event level — `EventSurface`,
+decided in the hook helper from its own process ancestry, is what separates them.
+An event with no surface counts as a command line, so nothing that predates the
+field changes behavior.
+
 - Scheduled inactive sleep defaults to 23:00–06:00 local time and is user-adjustable (or switchable off) from the menu bar since 2026-08-09; work interrupts it immediately.
 - No telemetry, accounts, network dependency, Dock injection, private API use, or prompt/transcript storage in 0.1.
 
@@ -131,7 +141,7 @@ Acceptance criteria are in the Phase 3 section of `DesktopMascot.md`.
 - ~~Dock auto-hide, multiple displays, full-screen Spaces, non-Retina, sleep/wake, and screen-lock behavior need broader hands-on coverage.~~ **Walked 2026-08-10 to 2026-08-11; all eleven display-matrix rows now pass on per-row evidence.** Left/right Dock placement remains out of scope: `DockGeometry` anchors to the screen's bottom edge regardless of Dock position, so those rows check the deferral holds. **The walk found one real defect:** a user-dropped height was discarded, not re-clamped, when the display it was on was unplugged — AppKit relocates the window first and `settleAfterDrop()` read the relocated frame instead of the remembered `manualLaneY`. Fixed, unit-tested, and re-observed on screen. **Mascots floating over full-screen apps is approved behavior (owner, 2026-08-11), not a bug.**
 - The dismiss transition, the quit farewell, and the two transition cues are owner-approved as of 2026-08-01, and the four edge cases were walked on 2026-08-10 and all pass. The app icon was confirmed in Finder from the installed `~/Applications` build on 2026-08-01. **A caution the walk produced:** those four were already ticked in `docs/QA_CHECKLIST.md` from the 2026-08-02 blanket verdict, contradicting the ledger, and had not actually been exercised. They passed, so nothing was wrong — but a tick records an observation, not a belief about the code, and this one outran its evidence for eight days.
 - **The installed app does not follow `main`.** `~/Applications/Dock Pet.app` changes only when someone runs `tools/install_app.sh`. On 2026-08-10 it was found four days stale, predating all three of the 2026-08-09 behavior changes the ledger was asking the owner to observe — those observations were impossible, not merely skipped. Check the bundle binary's mtime against the commit that introduced whatever is being observed before trusting or requesting a hands-on check. All three were reinstalled and then observed the same day, and all three pass. The bundle was reinstalled again on 2026-08-11 and the mtime check has now paid for itself three times. To check for a **menu title**, note that a Debug build puts app code in `Contents/MacOS/<name>.debug.dylib` rather than the main executable, so `strings` on the executable finds nothing and looks like a failed build; a Release build (what `install_app.sh` produces) keeps it in the executable.
-- **Writing a hands-on check is its own skill, and three ways to write a useless one showed up in a single afternoon (2026-08-10).** The busy work must not touch the app — the first ideating check used "rebuild and reinstall", and `install_app.sh` quits Dock Pet before replacing the bundle, so the pet vanished mid-observation. The animation named in the check must be the right one — the ledger said to look for a lightbulb when checking ideating, which is the `failure` marker. And the conditions must actually produce the state — a `waiting` check needs **Manual** permission mode and a file that exists, because Auto mode may never prompt and a missing file gets reported rather than asked about. Each of these turns "nothing happened" into "it passed."
+- **Writing a hands-on check is its own skill, and three ways to write a useless one showed up in a single afternoon (2026-08-10).** The busy work must not touch the app — the first ideating check used "rebuild and reinstall", and `install_app.sh` quits PokeDesk before replacing the bundle, so the pet vanished mid-observation. The animation named in the check must be the right one — the ledger said to look for a lightbulb when checking ideating, which is the `failure` marker. And the conditions must actually produce the state — a `waiting` check needs **Manual** permission mode and a file that exists, because Auto mode may never prompt and a missing file gets reported rather than asked about. Each of these turns "nothing happened" into "it passed."
 - **A shared `-derivedDataPath` silently swaps which branch you are testing.** On 2026-08-01 a background session in `.claude/worktrees/` rebuilt the Debug bundle from `main` while the owner was testing a feature branch, and four features appeared to be missing. They were — from the bundle that got launched. Give every worktree its own path and check `Contents/Resources/` before trusting a test. See `docs/DEVELOPMENT.md`.
 - ~~`WindowCoordinator` resolves screen bounds through `panel.screen ?? NSScreen.main`, which follows keyboard focus.~~ Fixed 2026-08-02. `NSWindow.screen` is nil for a panel dropped clear of every display, and the old fallback then resolved to whichever display had keyboard focus, so the same drop settled in different places between runs. `referenceScreen` now prefers the display the panel was last genuinely on, then the nearest display, then `NSScreen.main`. The rest of the display matrix — auto-hide, Spaces, sleep/wake, non-Retina — is still untested by hand.
 - Pointer/control avoidance is not implemented for roaming.

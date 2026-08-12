@@ -6,7 +6,7 @@
 - macOS 14.4 deployment target, raised from 14.0 on 2026-08-03 for `NSHostingMenu`
 - Python 3 with Pillow for art tools
 - XcodeGen when `project.yml` changes
-- Git access to the private `Mr-Shine09/desktop-mascot` repository when publishing is authorized
+- Git access to the private `Mr-Shine09/PokeDesk` repository when publishing is authorized
 
 No runtime network dependency is intended.
 
@@ -64,7 +64,7 @@ passes all day and fails all evening. Pin the instant and verify its UTC hour.
 
 ## Exercise the event helper
 
-`dockpet-event` sends one lifecycle event to a running Dock Pet over the current
+`dockpet-event` sends one lifecycle event to a running PokeDesk over the current
 user's private socket. Since 2026-07-30 it is built as a native tool target and
 copied into the app bundle, so the copy a hook should invoke is the one inside
 the installed bundle:
@@ -86,9 +86,9 @@ For quick iteration the package copy still works and is identical in behavior:
 swift run dockpet-event --provider claude-code --event active --session demo --verbose
 ```
 
-The running app listens as of 2026-07-30, so with Dock Pet launched the event is
+The running app listens as of 2026-07-30, so with PokeDesk launched the event is
 delivered and the menu bar's `Event socket:` line advances. The helper still
-exits 0 when nothing is listening, so a provider hook is never failed by Dock Pet
+exits 0 when nothing is listening, so a provider hook is never failed by PokeDesk
 being closed. `--verbose` sends one line to stderr; without it the helper is
 silent. Usage errors exit 64.
 
@@ -108,7 +108,7 @@ nothing to install but configuration. Print a ready-to-paste snippet:
 ```
 
 Merge the result into `~/.claude/settings.json` (or `~/.codex/hooks.json` for
-`--provider codex`). Dock Pet never writes those files itself.
+`--provider codex`). PokeDesk never writes those files itself.
 
 Each hook invokes the helper with `--hook`, which reads the provider's payload on
 stdin and maps `hook_event_name` onto the event vocabulary. Only
@@ -122,7 +122,7 @@ echo '{"hook_event_name":"Stop","session_id":"demo"}' | dockpet-event --hook --p
 ```
 
 The helper exits 0 for every outcome except a usage error: unmapped hook,
-unparsable payload, Dock Pet closed, or stdin held open past its 2-second
+unparsable payload, PokeDesk closed, or stdin held open past its 2-second
 deadline. A hook must never fail or stall the user's real agent session.
 
 ## Install durably
@@ -212,7 +212,7 @@ The unsigned app is written to:
 /private/tmp/DesktopMascotDerivedData/Build/Products/Debug/Dock Pet.app
 ```
 
-Launch in the background so Dock Pet does not intentionally activate over the current app:
+Launch in the background so PokeDesk does not intentionally activate over the current app:
 
 ```bash
 open -g '/private/tmp/DesktopMascotDerivedData/Build/Products/Debug/Dock Pet.app'
@@ -234,7 +234,7 @@ time must be later than the binary's build time:
 
 ```bash
 ps -o pid,lstart -p $(pgrep -f "Dock Pet.app/Contents/MacOS" | head -1)
-ls -la '/private/tmp/DesktopMascotDerivedData/Build/Products/Debug/Dock Pet.app/Contents/MacOS/Dock Pet'
+ls -la '/private/tmp/DesktopMascotDerivedData/Build/Products/Debug/Dock Pet.app/Contents/MacOS/PokeDesk'
 ```
 
 ## Verify bundled resources

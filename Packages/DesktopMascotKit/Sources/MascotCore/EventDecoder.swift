@@ -50,6 +50,7 @@ public struct EventDecoder: Sendable {
         let event: String
         let occurredAt: String
         let detail: String?
+        let surface: String?
 
         enum CodingKeys: String, CodingKey {
             case version
@@ -58,6 +59,7 @@ public struct EventDecoder: Sendable {
             case event
             case occurredAt = "occurred_at"
             case detail
+            case surface
         }
     }
 
@@ -104,7 +106,8 @@ public struct EventDecoder: Sendable {
             sessionID: sessionID,
             event: event,
             occurredAt: occurredAt,
-            detail: payload.detail.flatMap(EventDetail.init(rawValue:))
+            detail: payload.detail.flatMap(EventDetail.init(rawValue:)),
+            surface: payload.surface.flatMap(EventSurface.init(rawValue:))
         )
     }
 

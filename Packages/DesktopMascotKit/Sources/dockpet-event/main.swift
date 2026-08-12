@@ -48,11 +48,15 @@ do {
             note("hook payload not usable")
             break
         }
+        // Worked out here, in the process the hook actually spawned, because the
+        // app receives nothing that could tell it apart later — see
+        // `EventSurfaceDetector`. Only two words ever leave this process.
         guard
             let envelope = HelperCommand.envelope(
                 forHook: extracted,
                 provider: provider,
-                now: Date()
+                now: Date(),
+                surface: EventSurfaceDetector.current()
             )
         else {
             note("hook has no mapped event")

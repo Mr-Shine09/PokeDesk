@@ -64,18 +64,22 @@ enum Preferences {
         defaults.set(roaming, forKey: Key.roaming(for: provider))
     }
 
-    /// Whether a frontmost Claude or ChatGPT desktop app puts its mascot into
-    /// the Thinker pose. Defaults to `true`, because it is the feature the owner
-    /// asked for; the menu switch exists so it can be turned off without
-    /// hunting through defaults.
-    /// Defaults to **off**, changed from on when the feature grew teeth.
+    /// Whether a Claude desktop chat that is *producing a response* puts its
+    /// mascot into the Thinker pose. Defaults to **off**.
+    ///
+    /// The name is older than the behavior. This switch once meant "a chat app
+    /// is frontmost", which is why it and its defaults key both still say
+    /// `chatApps`; since 2026-08-11 it gates `ChatActivityWatcher`, which reads
+    /// the Claude window for a streaming message. **The key string must not be
+    /// renamed to match** — every existing choice would silently reset, the trap
+    /// `reactionSoundsMuted` and `…roaming` also carry. The user-visible label
+    /// was corrected instead.
     ///
     /// It was on by default while it read nothing but the frontmost app's
     /// bundle identifier. It now needs Accessibility permission, and a feature
     /// that wants a powerful system permission has to be asked for rather than
     /// arrive switched on — particularly in an app whose selling point is that
-    /// it cannot learn anything about you. It is also unproven on screen, and
-    /// an unproven default is how a whole install looks broken.
+    /// it cannot learn anything about you.
     static var chatAppsDriveIdeating: Bool {
         get {
             defaults.object(forKey: Key.chatAppsDriveIdeating) as? Bool ?? false

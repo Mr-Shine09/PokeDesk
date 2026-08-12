@@ -8,9 +8,9 @@ body:
         Dock Pet has a deliberately narrow product definition, and a number of
         reasonable-sounding ideas have already been considered and declined with
         reasons recorded. Please skim
-        [`DesktopMascot.md`](https://github.com/Mr-Shine09/desktop-mascot/blob/main/DesktopMascot.md)
+        [`DesktopMascot.md`](https://github.com/Mr-Shine09/PokeDesk/blob/main/DesktopMascot.md)
         and the invariants in
-        [`CONTRIBUTING.md`](https://github.com/Mr-Shine09/desktop-mascot/blob/main/CONTRIBUTING.md)
+        [`CONTRIBUTING.md`](https://github.com/Mr-Shine09/PokeDesk/blob/main/CONTRIBUTING.md)
         before writing this up.
 
   - type: textarea

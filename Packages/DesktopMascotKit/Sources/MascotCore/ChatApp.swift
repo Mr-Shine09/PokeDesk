@@ -67,6 +67,45 @@ public struct ChatPresence: Equatable, Sendable {
 /// identifier" would match this project's own builds, unrelated software, and
 /// anything a user renames, and an allowlist is auditable by reading it.
 public enum ChatApp {
+    /// One chat application, its mascot, and the accessibility string that marks
+    /// a response as being produced.
+    ///
+    /// **`streamingMarker` is `nil` until someone has actually seen the marker in
+    /// that app's accessibility tree.** A `nil` marker means the app can be
+    /// probed but is not watched: no guess, no plausible-looking constant that
+    /// silently matches nothing. This is the type-level version of the rule the
+    /// project learned the expensive way — the Claude marker was *discovered* by
+    /// a probe, not predicted, and Chromium's lazily built tree meant nobody
+    /// could have known it existed without asking.
+    public struct Descriptor: Equatable, Sendable {
+        public let bundleIdentifier: String
+        public let displayName: String
+        public let provider: EventProvider
+        public let streamingMarker: String?
+        /// An optional second condition on the element carrying the marker.
+        /// Claude's marker sits on an `AXDocumentArticle`, and requiring both
+        /// keeps the match specific; an app whose marker needs no such
+        /// qualifier leaves this `nil`.
+        public let streamingSubrole: String?
+
+        public init(
+            bundleIdentifier: String,
+            displayName: String,
+            provider: EventProvider,
+            streamingMarker: String?,
+            streamingSubrole: String? = nil
+        ) {
+            self.bundleIdentifier = bundleIdentifier
+            self.displayName = displayName
+            self.provider = provider
+            self.streamingMarker = streamingMarker
+            self.streamingSubrole = streamingSubrole
+        }
+
+        /// Whether this app can drive a mascot, as opposed to only being probed.
+        public var isWatchable: Bool { streamingMarker != nil }
+    }
+
     /// ChatGPT's desktop app really does ship as `com.openai.codex`, verified on
     /// the owner's machine 2026-08-11. It looks like a mistake and is not one —
     /// do not "correct" it to `com.openai.chatgpt`, which matches nothing.
@@ -74,15 +113,51 @@ public enum ChatApp {
     /// The mapping follows the wardrobe rule: the Claude app drives the Claude
     /// mascot, which wears orange, and the ChatGPT app drives the Codex mascot,
     /// which wears navy.
-    public static let identifiers: [String: EventProvider] = [
-        "com.anthropic.claudefordesktop": .claudeCode,
-        "com.openai.codex": .codex,
+    public static let all: [Descriptor] = [
+        Descriptor(
+            bundleIdentifier: "com.anthropic.claudefordesktop",
+            displayName: "Claude",
+            provider: .claudeCode,
+            // Found by probe and verified on screen 2026-08-11: an element with
+            // subrole `AXDocumentArticle` carries this description while its
+            // message streams, and reads `Message N of N` once it lands.
+            streamingMarker: "Currently streaming message",
+            streamingSubrole: "AXDocumentArticle"
+        ),
+        Descriptor(
+            bundleIdentifier: "com.openai.codex",
+            displayName: "ChatGPT",
+            provider: .codex,
+            // **Deliberately never watched, and this is not a gap.** The
+            // identifier is not a mislabel: the ChatGPT desktop app *is* the
+            // Codex app, so its turns fire the installed Codex hooks — observed
+            // 2026-08-11 driving the navy mascot to its computer on an agentic
+            // turn and on a plain conversational one alike. Hooks report the
+            // real lifecycle (working, success, and failure); an accessibility
+            // marker could only ever report "probably thinking", and `working`
+            // outranks chat-ideating, so the pose would never even be seen.
+            //
+            // It stays listed so the probe can target it and so this reasoning
+            // has somewhere to live. Do not "finish" it by capturing a marker.
+            streamingMarker: nil
+        ),
     ]
+
+    public static var identifiers: [String: EventProvider] {
+        Dictionary(uniqueKeysWithValues: all.map { ($0.bundleIdentifier, $0.provider) })
+    }
+
+    /// The apps that can currently drive a mascot.
+    public static var watchable: [Descriptor] { all.filter(\.isWatchable) }
+
+    public static func descriptor(forBundleIdentifier identifier: String?) -> Descriptor? {
+        guard let identifier else { return nil }
+        return all.first { $0.bundleIdentifier == identifier }
+    }
 
     /// The mascot that should react to this application, or `nil` for the
     /// overwhelming majority of apps, which are none of Dock Pet's business.
     public static func provider(forBundleIdentifier identifier: String?) -> EventProvider? {
-        guard let identifier else { return nil }
-        return identifiers[identifier]
+        descriptor(forBundleIdentifier: identifier)?.provider
     }
 }

@@ -1,12 +1,12 @@
 blank_issues_enabled: true
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/Mr-Shine09/desktop-mascot/security/advisories/new
+    url: https://github.com/Mr-Shine09/PokeDesk/security/advisories/new
     about: >
       Report privately, not as a public issue. See SECURITY.md for what is in
       scope.
   - name: Build or setup trouble
-    url: https://github.com/Mr-Shine09/desktop-mascot/blob/main/README.md#troubleshooting
+    url: https://github.com/Mr-Shine09/PokeDesk/blob/main/README.md#troubleshooting
     about: >
       The README's troubleshooting section covers the common ones — a missing
       menu bar icon, hooks that never fire, and code changes that appear to do

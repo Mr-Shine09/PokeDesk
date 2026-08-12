@@ -1,22 +1,40 @@
-# PokeDesk
+# PokeDesk — detailed documentation
+
+This is the long-form version of [`README.md`](README.md), kept for readers who
+want the full detail: the complete privacy explanation, every known rough edge
+including the development-facing ones, and the reasoning behind each design
+decision. Start with the [README](README.md) if you just want to install it.
+
+---
 
 A tiny pixel-art mascot that lives at the bottom of your Mac's screen and shows,
-at a glance, what your coding agent is doing. It never activates over your work,
-never appears until you summon it, and never reads a single character of your
-prompts, code, or terminal output.
+at a glance, what your coding agent is doing.
+
+When Claude Code or Codex starts working, the pet sits down at a little computer
+and types. When a turn finishes, it does a fist pump. When something fails, it
+gets dizzy. The rest of the time it strolls back and forth along the bottom of
+your screen, and on a schedule you set it curls up and sleeps.
+
+PokeDesk is a native macOS menu-bar accessory app. It never activates over your
+work, never appears until you summon it, and never reads a single character of
+your prompts, code, or terminal output.
+
+> **Version 1.0, source-only.** PokeDesk is feature-complete and used daily by
+> its author, but there is no signed, notarized download. You build it yourself
+> from this repository — see [Install](#install). Known rough edges are listed
+> under [Current limitations](#current-limitations).
 
 ---
 
 ## Table of contents
 
-- [Version 1.0](#version-10)
-- [Privacy](#privacy)
-- [Power and CPU](#power-and-cpu)
-- [Requirements](#requirements)
 - [What it looks like](#what-it-looks-like)
+- [Requirements](#requirements)
 - [Install](#install)
 - [Connect it to your agent](#connect-it-to-your-agent)
 - [Using it](#using-it)
+- [Privacy](#privacy)
+- [Current limitations](#current-limitations)
 - [Troubleshooting](#troubleshooting)
 - [Uninstall](#uninstall)
 - [Repository layout](#repository-layout)
@@ -24,87 +42,6 @@ prompts, code, or terminal output.
 - [License](#license)
 
 ---
-
-## Version 1.0
-
-This is the first public release. It is feature-complete and used daily by its
-author. Here is what it does not do yet, stated plainly before you install it:
-
-- **macOS only.** macOS 14.4 or later. There is no Windows or Linux build, and
-  none is planned — this is a native AppKit app, not a cross-platform one.
-- **One character.** You get the default mascot. You cannot swap the sprite or
-  bring your own art. **Customization is the headline feature for v2.**
-- **Two agents.** Claude Code and Codex (the ChatGPT desktop app). Cursor,
-  Gemini CLI, Aider, and Copilot are not wired up — each needs its own hooks.
-  Browser chats are not supported and will not be: detecting them means reading
-  your active tab's URL, which is your browsing history.
-- **You build it yourself.** There is no signed, notarized download, because
-  notarization requires a paid Apple Developer account. See [Install](#install).
-- **No launch at login.** Add it to Login Items yourself if you want it back
-  after a restart.
-- **It costs a little power.** Around 2.2% idle CPU with one pet on screen. See
-  [Power and CPU](#power-and-cpu) for the full picture.
-- **It does not dodge your interface.** While roaming, the pet walks in front of
-  whatever is behind it. It does not avoid your cursor, buttons, or windows.
-- **Chat detection is experimental and off by default.** Claude desktop app
-  only, it needs Accessibility permission, and it keys on a single English UI
-  string — if that string is renamed by an app update, the pet quietly stops
-  reacting.
-
-Deeper detail on all of this, plus the development history and QA status, is in
-[`DETAILED_README.md`](DETAILED_README.md).
-
-## Privacy
-
-PokeDesk is built so that it *cannot* learn anything interesting about you, not
-merely so that it promises not to.
-
-- **No network access.** No accounts, no servers, no telemetry, no update check.
-- **No content, ever.** Hooks carry a lifecycle event name and nothing else.
-  Prompts, transcripts, source code, file paths, tool arguments, tool output,
-  and repository names are never read and never stored.
-- **Session IDs are hashed** inside the hook helper before they leave the
-  process, and every other payload key is dropped without being inspected.
-- **No private APIs**, and nothing is injected into the macOS Dock.
-- **The socket is yours alone** — a Unix-domain socket under your own user's
-  directory, not a network port. Nothing is written outside the app's own
-  preferences, and your agent's config files are never modified.
-- **One opt-in exception: chat detection.** It is off unless you turn it on.
-  With Accessibility permission it reads one attribute on one element of the
-  Claude window — whether a message is currently streaming — and nothing else.
-  No message text, prompts, window titles, or browser tabs. The full,
-  unabridged explanation is in [`DETAILED_README.md`](DETAILED_README.md).
-
-## Power and CPU
-
-> 🔋 **~2.2% idle CPU** with one pet on screen — roughly what `launchd` costs on
-> the same machine. Dismiss the pet and it drops to about **0.4%**.
->
-> ⚡️ The animation loop runs at **12 Hz** and **stops completely** whenever the
-> pet is hidden behind a window, so a covered pet costs nothing to animate.
-
-## Requirements
-
-**To run it**
-
-- **macOS 14.4 or later.** A hard floor — the menu bar uses `NSHostingMenu`,
-  which does not exist before 14.4.
-- **Apple Silicon or Intel.** Both work.
-- **Claude Code, the Codex CLI, or both**, if you want the pet to react to
-  anything. Without them it simply strolls.
-- **Nothing else.** No third-party runtime dependencies and no network access.
-
-**To build it** — required, since there is no download
-
-- **Xcode 16 or later**, with a Swift 6 toolchain. Install it from the App Store
-  and run it once so the command line tools are registered.
-
-**Only if you are changing the artwork**
-
-- **Python 3** with [Pillow](https://pillow.readthedocs.io/) — `pip3 install Pillow`
-- **[XcodeGen](https://github.com/yonaskolb/XcodeGen)** — `brew install xcodegen`.
-  Needed only if you edit `project.yml`; the generated Xcode project is
-  committed, so a plain build does not need it.
 
 ## What it looks like
 
@@ -118,30 +55,27 @@ on strolling. Each pet only ever reacts to its own provider.
 
 There is one mascot per provider, and each has its own wardrobe:
 
-| Provider | Wardrobe | Mascot |
-| --- | --- | --- |
-| Claude Code | Orange and white top | <img src="docs/images/mascot_claude.png" alt="The Claude mascot in an orange and white top" height="130"> |
-| Codex | Navy and white top | <img src="docs/images/mascot_codex.png" alt="The Codex mascot in a navy and white top" height="130"> |
+| Provider | Wardrobe |
+| --- | --- |
+| Claude Code | Orange and white top |
+| Codex | Navy and white top |
 
 Each mascot reacts only to its own provider's sessions, so you can run both at
 once and tell them apart. Neither appears on its own — you summon each one from
 the menu bar.
 
-The states the pet can show, and when you see them:
+The states the pet can show:
 
-| State | When | Mascot |
-| --- | --- | --- |
-| Working | Claude Code or Codex is running a turn — you sent a prompt, or the agent is using tools | <img src="docs/images/state-working.png" alt="The mascot sitting at a small computer, typing" height="130"> |
-| Ideating | You set it by hand from the menu, or the Claude desktop app is composing a reply | <img src="docs/images/state-ideating.png" alt="The mascot in a thinker pose under a thought cloud" height="130"> |
-| Waiting | The turn cannot continue without you — a permission request or a question | <img src="docs/images/state-waiting.png" alt="The mascot standing and raising a hand under a clock" height="130"> |
-| Success | A turn finished. This says the turn ended, not that everything inside it worked | <img src="docs/images/state-success.png" alt="The mascot doing a fist pump with sparkles overhead" height="130"> |
-| Failure | A turn ended in an error — the only turn-level failure either provider reports | <img src="docs/images/state-failure.png" alt="The mascot stumbling dizzily under a broken light bulb" height="130"> |
-| Chilling / offline | No agent is running. The pet strolls the bottom of your screen and dozes between walks | <img src="docs/images/state-offline.png" alt="The mascot walking along the bottom of the screen" height="130"> |
-| Sleeping | The clock is inside your sleep window — 23:00–06:00 by default, adjustable from the menu | <img src="docs/images/state-sleeping.png" alt="The mascot asleep under a blanket" height="130"> |
-| Paused | You chose Pause from the menu | <img src="docs/images/state-paused.png" alt="The mascot standing still" height="130"> |
-
-The state pictures show the Codex mascot; the Claude one does all of the same
-things, in orange.
+| State | What you see |
+| --- | --- |
+| Working | Sits at a small computer and types |
+| Ideating | Thinker pose with a looping thought cloud. Set by hand from the menu, or automatically while the Claude or ChatGPT desktop app is frontmost |
+| Waiting | Stops, turns toward you, and raises a hand |
+| Success | Sparkling eyes and one quick fist pump |
+| Failure | A short confused, dizzy stumble |
+| Chilling / offline | Strolls along the bottom of the screen |
+| Sleeping | Sleeps under a blanket during the scheduled sleep window, 23:00–06:00 by default and adjustable from the menu |
+| Paused | Stands still |
 
 When several sessions are active at once, they reduce deterministically in this
 priority order:
@@ -149,6 +83,23 @@ priority order:
 ```text
 paused > failure > waiting > manual ideating > working > success > chat ideating > sleep > idle > offline
 ```
+
+## Requirements
+
+- **macOS 14.4 or later.** This is a hard floor; the menu bar uses
+  `NSHostingMenu`, which does not exist before 14.4.
+- **Xcode 16 or later**, with a Swift 6 toolchain. Install it from the App Store
+  and run it once so the command line tools are registered.
+- Apple Silicon or Intel. Both work.
+
+Only needed if you plan to change the artwork or regenerate assets:
+
+- **Python 3** with [Pillow](https://pillow.readthedocs.io/) — `pip3 install Pillow`
+- **[XcodeGen](https://github.com/yonaskolb/XcodeGen)** — `brew install xcodegen`.
+  Required only if you edit `project.yml`; the generated Xcode project is
+  committed, so a plain build does not need it.
+
+PokeDesk has no third-party runtime dependencies and makes no network requests.
 
 ## Install
 
@@ -161,12 +112,6 @@ cd PokeDesk
 The script builds a Release configuration, signs it, and installs it to
 `~/Applications/Dock Pet.app`. That path is durable across reboots, which
 matters because the agent hooks you configure below point at an absolute path.
-
-> **On the name:** the app was called Dock Pet until recently. The built app,
-> the helper binary (`dockpet-event`), and the bundle identifier still use the
-> old name on purpose — renaming them would break every hook people have already
-> installed. Everywhere you see `Dock Pet.app` or `dockpet-event` below, that is
-> current and correct.
 
 **On signing:** the script uses a real Developer certificate if it finds one in
 your keychain and falls back to ad-hoc signing otherwise. Ad-hoc is fine — the
@@ -250,7 +195,7 @@ Click the menu bar paw print:
 | **Sleep Schedule** | Sets the hours the pet sleeps, or switches scheduled sleep off entirely |
 | **Preview State** | Forces any animation without needing a real agent. Good for a first look |
 | **Agent Hook Setup** | Copies the config snippet described above |
-| **Quit Dock Pet** | Plays the farewell, then quits. The item still carries the old name — see the note under [Install](#install) |
+| **Quit Dock Pet** | Plays the farewell, then quits |
 
 You can also interact with the pet directly:
 
@@ -269,6 +214,90 @@ Summoning and dismissing are animated: the pet steps out of a portal at the
 Dock, and on dismiss it forms a two-handed seal and vanishes in a puff of smoke.
 If you have **Reduce Motion** enabled in System Settings, both become simple
 fades instead.
+
+## Privacy
+
+PokeDesk is built so that it *cannot* learn anything interesting about you, not
+merely so that it promises not to.
+
+- **No network access.** No accounts, no servers, no telemetry, no update check.
+- **No content, ever.** Hooks send only a lifecycle event name. Prompts,
+  transcripts, source code, file paths, tool arguments, tool output, and
+  repository names are never read and never stored.
+- **Session IDs are hashed** inside the hook helper before they leave the
+  process. Every payload key other than `hook_event_name` and `session_id` is
+  dropped without being inspected.
+- **The hook helper checks whether it was started by a desktop chat app**, and
+  this one is always on. It exists because the ChatGPT desktop app *is* the Codex
+  app, so a chat turn and a terminal agent run fire identical hooks — and they
+  should not look the same on screen. The helper reads its own chain of parent
+  processes, and the event it sends carries **one of two words**:
+  `desktop-chat` or `command-line`. No path, command line, process name, or PID
+  is ever sent, stored, or logged; nothing about processes that are not the
+  helper's own ancestors is examined; and no permission is involved.
+- **No private APIs**, and no injection into the macOS Dock.
+- **Chat detection is the one thing that looks beyond hooks, it is off unless
+  you turn it on, and it needs a permission.** This is a deliberate exception to
+  everything above, not an oversight — the honest description is worth reading
+  before you enable it:
+  - With **Accessibility** permission granted, it reads **one attribute on one
+    element** of the Claude window — the accessibility description that says a
+    message is currently streaming. That is how the pet knows a response
+    started and finished. Only the Claude app is read; ChatGPT needs no such
+    check, because its turns already arrive as ordinary hook events.
+  - It never reads message text, your prompts, window titles, documents,
+    browser tabs, or anything you type. Nothing is stored, logged, or sent.
+  - **Accessibility permission is powerful**, and macOS is right to ask before
+    granting it. PokeDesk uses it for the single check above; if you would
+    rather not grant it, leave the feature off and use **Manual Ideating**,
+    which is what the app did before this existed.
+- **The socket is yours alone** — a Unix-domain socket under your own user's
+  directory, not a TCP port.
+- **Nothing is written outside the app's own preferences.** PokeDesk does not
+  modify your agent's configuration files.
+
+## Current limitations
+
+Stated plainly, because you are about to build this yourself:
+
+- **Idle CPU is around 2.2%** with one mascot on screen — about the same energy
+  cost as `launchd` or `bluetoothd` on the same machine. The animation loop runs
+  at 12 Hz and stops entirely when the pet is hidden behind a window. It is a
+  continuously animated sprite, so it is not free; if that bothers you, dismiss
+  the pet and the cost drops to roughly 0.4%. Two mascots on screen at once have
+  never been measured.
+- **No notarized download.** Build from source; see above.
+- **No launch at login.** Add it manually if you want it.
+- **The `failed` state has never been observed from a real provider run** — it
+  works, and it is covered by tests and by **Preview State**, but no one has
+  watched a genuine agent session produce it. `waiting` was first seen from a
+  real Claude Code session on 2026-08-09, and both providers have now been
+  watched driving their own mascot on screen — Codex on 2026-08-10.
+- **The display matrix was walked on 2026-08-10** — Dock auto-hide, left/right
+  Dock, two displays, full-screen Spaces, sleep/wake, lock/unlock, and
+  non-Retina rendering all work, as does unplugging a display with a mascot on
+  it — which used to lose a dragged height and no longer does.
+- **Reduce Motion** is honored for the summon and dismiss transitions; broader
+  coverage is still open.
+- **Chat detection is new, and off by default.** It was watched working on
+  2026-08-11 — a streaming response put the mascot in the Thinker pose, and the
+  finished response drew the success reaction — but that is one run, and these
+  limits still apply:
+  - **The Claude desktop app only — and ChatGPT does not need it.** The ChatGPT
+    desktop app is the Codex app, so its turns already arrive as ordinary hook
+    events and drive the Codex mascot through the full working/success
+    lifecycle, with no accessibility permission involved. Browser tabs never
+    will be covered — detecting `claude.ai` in a browser means reading the
+    active tab's URL, which is your browsing history.
+  - **`waiting` is not implemented.** A chat that needs your input looks the
+    same as one that finished.
+  - **It hangs on one English UI string.** Detection matches Claude's
+    accessibility label for a streaming message. If an app update renames it,
+    the pet simply stops reacting, with nothing to say why — check the
+    **Chat Detection (Experimental)** menu, which reports what the detector
+    currently sees. Automatic detection is deferred until there is a signal
+  that does not require snooping.
+- **The pet does not avoid your cursor or UI controls** while roaming.
 
 ## Troubleshooting
 
@@ -337,7 +366,6 @@ DesktopMascot.md             The authoritative project ledger and history
 
 Deeper reading:
 
-- [`DETAILED_README.md`](DETAILED_README.md) — the long-form version of this file
 - [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) — build, test, run, and workflow
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — components and state flow
 - [`docs/ASSET_PIPELINE.md`](docs/ASSET_PIPELINE.md) — how the sprite atlas is made

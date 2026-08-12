@@ -92,10 +92,13 @@ public enum HelperCommand {
     ///
     /// `nil` means the hook has no honest equivalent in the vocabulary and
     /// nothing should be sent — not that anything went wrong.
+    /// `surface` is injected so tests can exercise both origins without a real
+    /// process tree; production passes `EventSurfaceDetector.current()`.
     public static func envelope(
         forHook payload: HookPayload,
         provider: EventProvider,
-        now: Date
+        now: Date,
+        surface: EventSurface? = nil
     ) -> EventEnvelope? {
         guard let reaction = HookEventMapping.reaction(for: payload.hookEventName, provider: provider) else {
             return nil
@@ -105,7 +108,8 @@ public enum HelperCommand {
             sessionID: opaqueSessionID(from: payload.sessionID),
             event: reaction.event,
             occurredAt: now,
-            detail: reaction.detail
+            detail: reaction.detail,
+            surface: surface
         )
     }
 

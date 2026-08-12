@@ -69,6 +69,26 @@ public struct AgentSession: Equatable, Sendable {
     /// Monotonic arrival of the newest accepted event. Drives expiry.
     public var lastSeen: Uptime
     public var reaction: SessionReaction?
+    /// Where this session is being driven from, when its helper could tell.
+    ///
+    /// Set from the first event that creates the session and refreshed by later
+    /// ones, because a surface is a property of the session rather than of any
+    /// single event — and a hook that could not determine it must not erase what
+    /// an earlier one established. `nil` means unknown, which is the ordinary
+    /// case for every provider except Codex.
+    public var surface: EventSurface?
+    /// Whether the *current* turn has run a tool.
+    ///
+    /// This is what separates an agent run from a conversation inside a single
+    /// desktop app. The ChatGPT app hosts both, from one binary and one bundle,
+    /// so their hook events are identical except for this: an agent touches
+    /// tools and a chat does not.
+    ///
+    /// **Turn-scoped, not session-scoped.** It clears when a new prompt starts a
+    /// turn, because one conversation legitimately alternates between asking a
+    /// question and asking for work, and a sticky flag would leave the pet
+    /// typing at a chat for the rest of the session.
+    public var hasRunToolsThisTurn: Bool = false
 
     public var provider: EventProvider { key.provider }
     public var sessionID: SessionID { key.sessionID }
@@ -157,6 +177,12 @@ public struct SessionRegistry: Equatable, Sendable {
 
         session.lastEventAt = envelope.occurredAt
         session.lastSeen = uptime
+        // Refreshed, never cleared. A later hook that could not work out its
+        // surface says nothing about the session's origin, and letting it write
+        // `nil` would flip a chat turn back to the terminal pose mid-turn.
+        if let surface = envelope.surface {
+            session.surface = surface
+        }
 
         switch envelope.event {
         case .started:
@@ -165,6 +191,9 @@ public struct SessionRegistry: Equatable, Sendable {
         case .active:
             session.activity = .working
             session.reaction = nil
+            // `.tool` marks tool traffic; a bare `active` is a prompt starting a
+            // new turn, which is where the flag resets.
+            session.hasRunToolsThisTurn = envelope.detail == .tool
         case .waiting:
             session.activity = .waiting
             session.reaction = nil
@@ -237,7 +266,8 @@ public struct SessionRegistry: Equatable, Sendable {
                 activity: .idle,
                 lastEventAt: envelope.occurredAt,
                 lastSeen: uptime,
-                reaction: nil
+                reaction: nil,
+                surface: envelope.surface
             )
         }
     }

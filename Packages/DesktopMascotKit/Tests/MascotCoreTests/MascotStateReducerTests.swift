@@ -84,6 +84,41 @@ private func reduce(
     )
 }
 
+/// A registry holding one session whose events carry an explicit surface.
+private func surfacedRegistry(
+    _ events: [(AgentEvent, EventProvider, String, EventSurface?, EventDetail?)],
+    at uptime: Uptime = boot
+) -> SessionRegistry {
+    var registry = SessionRegistry()
+    for (index, entry) in events.enumerated() {
+        registry.ingest(
+            EventEnvelope(
+                provider: entry.1,
+                sessionID: SessionID(entry.2)!,
+                event: entry.0,
+                occurredAt: daytime.addingTimeInterval(TimeInterval(index)),
+                detail: entry.4,
+                surface: entry.3
+            ),
+            at: uptime
+        )
+    }
+    return registry
+}
+
+private func reduceSurfaced(
+    _ events: [(AgentEvent, EventProvider, String, EventSurface?, EventDetail?)],
+    uptime: Uptime = boot
+) -> MascotVisibleState {
+    reducer().reduce(
+        registry: surfacedRegistry(events),
+        overrides: .none,
+        chat: .none,
+        now: daytime,
+        uptime: uptime
+    )
+}
+
 private let claudeChat = ChatPresence(activities: [.claudeCode: .generating])
 private let claudeChatOpen = ChatPresence(activities: [.claudeCode: .open])
 private let claudeChatDone = ChatPresence(activities: [.claudeCode: .completed])
@@ -246,6 +281,114 @@ private let claudeChatDone = ChatPresence(activities: [.claudeCode: .completed])
     // A substring match would catch this; an allowlist does not.
     #expect(ChatApp.provider(forBundleIdentifier: "com.example.claude-notes") == nil)
     #expect(ChatApp.provider(forBundleIdentifier: nil) == nil)
+}
+
+@Test func onlyAppsWithACapturedMarkerAreWatchable() {
+    // The distinction the `Descriptor` type exists to make: an app can be known
+    // and probed without being watched. ChatGPT is listed and permanently
+    // unwatched — the ChatGPT desktop app is the Codex app, so its turns already
+    // arrive as real hook events, which outrank and outclass a "probably
+    // thinking" guess. Capturing a marker for it would add a weaker second
+    // signal that the ladder would never show.
+    let claude = ChatApp.descriptor(forBundleIdentifier: "com.anthropic.claudefordesktop")
+    #expect(claude?.streamingMarker == "Currently streaming message")
+    #expect(claude?.streamingSubrole == "AXDocumentArticle")
+    #expect(claude?.isWatchable == true)
+
+    let chatGPT = ChatApp.descriptor(forBundleIdentifier: "com.openai.codex")
+    #expect(chatGPT?.provider == .codex)
+    #expect(chatGPT?.streamingMarker == nil)
+    #expect(chatGPT?.isWatchable == false)
+
+    #expect(ChatApp.watchable.map(\.provider) == [.claudeCode])
+}
+
+// MARK: - Event surface
+
+@Test func aTurnDrivenFromADesktopChatThinksRatherThanTypes() {
+    // The ChatGPT desktop app is the Codex app, so this arrives as an ordinary
+    // codex `active` event. Owner rule, 2026-08-11: the chat interface thinks.
+    let visible = reduceSurfaced([(.active, .codex, "chat", .desktopChat, nil)])
+    #expect(visible.state == .ideating)
+    #expect(visible.providers == [.codex])
+}
+
+@Test func anAgentRunInsideTheChatAppTypesRatherThanThinks() {
+    // The owner's correction, watched on screen: surface alone made Codex agent
+    // runs think along with the chat, because the ChatGPT app hosts both behind
+    // one binary and one process tree. Tool traffic is what separates them.
+    let visible = reduceSurfaced([
+        (.active, .codex, "agent", .desktopChat, nil),
+        (.active, .codex, "agent", .desktopChat, .tool),
+    ])
+    #expect(visible.state == .working)
+}
+
+@Test func aNewPromptEndsTheAgentRunAndReturnsToThinking() {
+    // Turn-scoped, not session-scoped. One conversation alternates between
+    // asking a question and asking for work; a sticky flag would leave the pet
+    // typing at a chat for the rest of the session.
+    let visible = reduceSurfaced([
+        (.active, .codex, "mixed", .desktopChat, .tool),
+        (.active, .codex, "mixed", .desktopChat, nil),
+    ])
+    #expect(visible.state == .ideating)
+}
+
+@Test func aCommandLineRunTypesBeforeItReachesAnyTool() {
+    // The surface half of the rule earns its place here: a terminal turn is
+    // agent work from the prompt onward, so it must not think during the gap
+    // before its first tool call.
+    #expect(reduceSurfaced([(.active, .codex, "cli", .commandLine, nil)]).state == .working)
+}
+
+@Test func aTurnDrivenFromACommandLineStillTypes() {
+    #expect(reduceSurfaced([(.active, .codex, "cli", .commandLine, nil)]).state == .working)
+}
+
+@Test func aTurnWithNoSurfaceStillTypes() {
+    // The default must be the behavior Dock Pet had before surfaces existed: an
+    // older helper, or a provider whose origin could not be determined, must not
+    // silently turn agent work into a Thinker pose.
+    #expect(reduceSurfaced([(.active, .codex, "unknown", nil, nil)]).state == .working)
+    #expect(reduceSurfaced([(.active, .claudeCode, "cc", nil, nil)]).state == .working)
+}
+
+@Test func aTerminalRunOutranksAChatTurnOnTheSameMascot() {
+    // Both are `.codex` and both drive the navy mascot. Real agent work at a
+    // command line is the stronger claim, which is why the chat turn shares the
+    // weaker chat-ideating rung instead of competing at the working one.
+    let visible = reduceSurfaced([
+        (.active, .codex, "chat", .desktopChat, nil),
+        (.active, .codex, "cli", .commandLine, nil),
+    ])
+    #expect(visible.state == .working)
+    #expect(visible.providers == [.codex])
+}
+
+@Test func aFinishedChatTurnStillGetsItsSuccessReaction() {
+    // Completion is unchanged by surface: the fist pump is the same for a chat
+    // turn as for an agent run, which is what the owner already watched happen.
+    #expect(reduceSurfaced([(.completed, .codex, "chat", .desktopChat, nil)]).state == .success)
+}
+
+@Test func aLaterHookWithNoSurfaceDoesNotEraseTheOriginalOne() {
+    // Only the first hook of a turn may be able to see the app in its ancestry.
+    // If a later one writing `nil` could clear it, the pose would flip from
+    // thinking to typing partway through a single chat turn.
+    let visible = reduceSurfaced([
+        (.started, .codex, "chat", .desktopChat, nil),
+        (.active, .codex, "chat", nil, nil),
+    ])
+    #expect(visible.state == .ideating)
+}
+
+@Test func everyChatAppHasADistinctIdentifierAndProvider() {
+    // Two descriptors sharing a provider would give one mascot two sources of
+    // chat truth; two sharing an identifier would make the lookup order matter.
+    #expect(Set(ChatApp.all.map(\.bundleIdentifier)).count == ChatApp.all.count)
+    #expect(Set(ChatApp.all.map(\.provider)).count == ChatApp.all.count)
+    #expect(ChatApp.identifiers.count == ChatApp.all.count)
 }
 
 // MARK: - Priority order

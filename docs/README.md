@@ -1,7 +1,7 @@
-# Dock Pet documentation
+# PokeDesk documentation
 
 These are the *engineering* documents. If you arrived here wanting to install
-and use Dock Pet, start with the top-level [`../README.md`](../README.md)
+and use PokeDesk, start with the top-level [`../README.md`](../README.md)
 instead — it covers requirements, install, agent hook setup, privacy, and
 troubleshooting. [`../CONTRIBUTING.md`](../CONTRIBUTING.md) covers the
 invariants a change has to respect.
