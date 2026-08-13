@@ -219,7 +219,7 @@ private let realisticToolPayload = """
 
     #expect(Set(hooks.keys) == Set(HookConfiguration.events(for: .claudeCode)))
     #expect(snippet.contains(path))
-    #expect(snippet.contains("--provider\", \"claude-code"))
+    #expect(snippet.contains("--provider claude-code"))
 }
 
 @Test func codexOmitsTheHookItDoesNotHave() throws {
@@ -231,16 +231,26 @@ private let realisticToolPayload = """
     #expect(hooks.keys.contains("Stop"))
 }
 
-@Test func codexPutsHookModeInTheCommandRatherThanAnUnsupportedArgsField() throws {
+/// Covers **both** providers, because covering only Codex is what let the bug
+/// ship twice: neither one supports an `args` field, and a helper launched
+/// without `--hook --provider` exits 64 on every hook while the mascot sits
+/// still in a session that is plainly working.
+@Test(arguments: [EventProvider.claudeCode, EventProvider.codex])
+func hookModeGoesInTheCommandRatherThanAnUnsupportedArgsField(
+    provider: EventProvider
+) throws {
     let path = "/Applications/Dock Pet.app/Contents/MacOS/dockpet-event"
-    let snippet = HookConfiguration.snippet(for: .codex, helperPath: path)
+    let snippet = HookConfiguration.snippet(for: provider, helperPath: path)
     let parsed = try JSONSerialization.jsonObject(with: Data(snippet.utf8))
     let hooks = try #require((parsed as? [String: Any])?["hooks"] as? [String: Any])
     let groups = try #require(hooks["UserPromptSubmit"] as? [[String: Any]])
     let handlers = try #require(groups.first?["hooks"] as? [[String: Any]])
     let handler = try #require(handlers.first)
 
-    #expect(handler["command"] as? String == "'\(path)' --hook --provider codex")
+    #expect(
+        handler["command"] as? String
+            == "'\(path)' --hook --provider \(provider.rawValue)"
+    )
     #expect(handler["args"] == nil)
 }
 

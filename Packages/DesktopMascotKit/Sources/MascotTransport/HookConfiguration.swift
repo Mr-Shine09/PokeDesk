@@ -47,24 +47,21 @@ public enum HookConfiguration {
     /// the mapping lives in the helper rather than in eight shell snippets.
     public static func snippet(for provider: EventProvider, helperPath: String) -> String {
         let handlers = events(for: provider).map { event in
-            let command: String
-            let arguments: String
-            switch provider {
-            case .claudeCode:
-                // Claude Code models argv separately from the executable.
-                command = quoted(helperPath)
-                arguments = "\n                    \"args\": [\"--hook\", \"--provider\", \"\(provider.rawValue)\"],"
-            case .codex:
-                // Codex command hooks accept one shell command string and do
-                // not define Claude Code's separate `args` field. Keeping the
-                // flags there caused Codex to launch the helper with no mode,
-                // so every hook exited with a usage error and the mascot stayed
-                // offline. Shell-quote the app path because it contains a space.
-                command = quoted(
-                    "\(shellQuoted(helperPath)) --hook --provider \(provider.rawValue)"
-                )
-                arguments = ""
-            }
+            // Neither provider defines an `args` field on a command hook: both
+            // take one shell command string and ignore every other key. The
+            // flags belong in `command`, and the app path is shell-quoted
+            // because it contains a space.
+            //
+            // This was found and fixed for Codex first, then left standing for
+            // Claude Code on the belief that it "models argv separately from
+            // the executable". It does not — an `args` array there is dropped
+            // silently, so the helper launched with no mode, exited 64 on every
+            // hook, and the mascot stayed offline in every session. The same
+            // bug, shipped twice, because one provider's fix was treated as
+            // that provider's quirk rather than the rule.
+            let command = quoted(
+                "\(shellQuoted(helperPath)) --hook --provider \(provider.rawValue)"
+            )
             // Codex caps SessionEnd at three seconds. Other hooks retain the
             // short five-second ceiling used by the existing Claude adapter.
             let timeout = provider == .codex && event == "SessionEnd" ? 3 : 5
@@ -75,7 +72,7 @@ public enum HookConfiguration {
                     "hooks": [
                       {
                         "type": "command",
-                        "command": \(command),\(arguments)
+                        "command": \(command),
                         "timeout": \(timeout)
                       }
                     ]
