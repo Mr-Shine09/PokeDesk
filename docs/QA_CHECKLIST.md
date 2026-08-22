@@ -123,16 +123,18 @@ still unticked is an edge case nobody has exercised, not a known failure.
 
 ## Sound acceptance
 
-Owner heard all four cues on 2026-08-01 and approved them. The summon and
+Owner heard the first four cues on 2026-08-01 and approved them. The summon and
 dismiss cues were heard first; the reaction cues (success and failure) were
-confirmed working from the installed build later the same day.
+confirmed working from the installed build later the same day. **A fifth cue,
+`waiting`, was added 2026-08-21 and has not been heard by the owner** — see its
+own section below.
 
 - [x] Summon plays its rising cue as the portal opens.
 - [x] Dismiss plays its poof cue on the burst, not at the start of the seal.
 - [ ] The summon cue is distinguishable from the success cue, which is also a rising run.
 - [ ] Neither transition cue is startling at system volume.
 - [ ] Under Reduce Motion both cues still play, even though the visuals are reduced.
-- [ ] The single Sounds toggle silences all four cues, and the choice survives relaunch.
+- [ ] The single Sounds toggle silences all five cues, and the choice survives relaunch.
 - [ ] A previously silenced install stays silenced after this update.
 
 ## App icon acceptance
@@ -154,6 +156,39 @@ icon; the current build shows the mascot headshot.
 - [ ] Back-to-back turns restart the cue rather than overlapping into a drone.
 - [ ] Reaction Sounds off silences both, and the choice survives relaunch.
 - [ ] A dismissed mascot makes no sound.
+
+## Waiting cue acceptance
+
+**Added 2026-08-21. The owner heard it and approved it the same day** — from
+Preview State, on the installed build, after the length was raised to 4.66s at
+their request. That approval covers **the sound itself**: that it plays, and
+that it is right. It does **not** cover any row below about *when* it fires,
+which is a separate claim and still unwalked.
+
+**Preview State → Waiting** plays the cue without an agent and is the fastest
+way to hear it, but it only proves the wiring. The rows about *when* it fires
+need the real thing, produced the way `waiting` was produced on 2026-08-09: a
+real Claude Code session in **Manual** permission mode, asked to edit **a file
+that exists**. Auto mode may never prompt, and a missing file is reported rather
+than asked about — either turns a real failure into "nothing happened".
+
+The cue runs **4.66 seconds** — four knocks tapering to a stop — at owner
+request, after a 0.71-second first cut was judged too easy to miss. That length
+is what the last two rows below exist for: a cue this long can still be playing
+when the state it announces is over.
+
+- [x] Preview State → Waiting plays the knock. *(owner, 2026-08-21.)*
+- [x] The cue is approved as a sound — right character, right length. *(owner, 2026-08-21, after the 0.71s first cut was raised to 4.66s at their request: "Nice it work".)*
+- [ ] A permission prompt plays the knock, once, as the mascot turns to wait.
+- [ ] The knock is not mistaken for the success cue when heard from another window.
+- [ ] The prompt sitting unanswered for a minute produces no second knock.
+- [ ] Answering and hitting a second prompt in the same turn knocks again.
+- [ ] Four and a half seconds reads as long enough to notice and short enough not to nag.
+- [ ] The knock is audible over a laptop speaker without being startling.
+- [ ] Answering the prompt within a second cuts the knock off rather than letting it finish.
+- [ ] Dismissing the mascot mid-knock silences it at once.
+- [ ] A dismissed mascot stays silent when its agent starts waiting.
+- [ ] The Sounds toggle silences it along with the other four.
 
 ## Window/display matrix
 

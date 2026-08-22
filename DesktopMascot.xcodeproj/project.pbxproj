@@ -10,6 +10,7 @@
 		0A3053C7B6F222316337ACD3 /* EventHelperLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08C465D303E5B8C09D23D596 /* EventHelperLocation.swift */; };
 		1BEF9E2C39FC7E61326C3549 /* MenuBarContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0860DC47188B80AA1AE618B /* MenuBarContent.swift */; };
 		21EBACB22CFA0C5F13FBBBDE /* failure.wav in Resources */ = {isa = PBXBuildFile; fileRef = 3D965F73A2A6BEB648881F66 /* failure.wav */; };
+		2806561CA46793697D7313ED /* waiting.wav in Resources */ = {isa = PBXBuildFile; fileRef = CB9C2BF060779D0B82D49006 /* waiting.wav */; };
 		284B8D635FC1CED126FCF813 /* AppResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16245A1009483229670E5018 /* AppResources.swift */; };
 		287C9188AD7A02B159CCEAEA /* DesktopMascotApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41EE1C1DD5A7A2FCDDF08B3C /* DesktopMascotApp.swift */; };
 		2A023175CF91D2371E1CE3E0 /* MascotSoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AFD72CF5D8CE0ABBD0F70D /* MascotSoundPlayer.swift */; };
@@ -86,6 +87,7 @@
 		B5E3954FDA9E173DE5E21092 /* ChatAccessibilityProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAccessibilityProbe.swift; sourceTree = "<group>"; };
 		C0860DC47188B80AA1AE618B /* MenuBarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarContent.swift; sourceTree = "<group>"; };
 		C153EEF2060303481AD38106 /* mascot-atlas-codex@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "mascot-atlas-codex@2x.png"; sourceTree = "<group>"; };
+		CB9C2BF060779D0B82D49006 /* waiting.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = waiting.wav; sourceTree = "<group>"; };
 		CFE96CD5AC26FCA94226F20E /* MascotInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MascotInstance.swift; sourceTree = "<group>"; };
 		EBB02BFF34AC70D56636144E /* DesktopMascotKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DesktopMascotKit; path = Packages/DesktopMascotKit; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -211,6 +213,7 @@
 				3D965F73A2A6BEB648881F66 /* failure.wav */,
 				56D46B35AB9733A3AA28187B /* success.wav */,
 				1391FF915BC38459B2C8F191 /* summon.wav */,
+				CB9C2BF060779D0B82D49006 /* waiting.wav */,
 			);
 			path = audio;
 			sourceTree = "<group>";
@@ -326,6 +329,7 @@
 				74712B8AF062BC80039ACD7C /* mascot-atlas@2x.png in Resources */,
 				A09068AC324F2595CD23D860 /* success.wav in Resources */,
 				9D2EDFC6DFA1813498EA19CE /* summon.wav in Resources */,
+				2806561CA46793697D7313ED /* waiting.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

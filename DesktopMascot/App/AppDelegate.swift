@@ -287,9 +287,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     /// Plays at most one reaction cue per window, however many mascots reacted.
     ///
-    /// Owner decision, 2026-08-01. Both mascots share the same two WAVs, so two
-    /// of them entering `success` milliseconds apart would phase against each
-    /// other and read as a glitch rather than as two agents finishing.
+    /// Owner decision, 2026-08-01. Both mascots share the same reaction WAVs, so
+    /// two of them entering `success` milliseconds apart would phase against
+    /// each other and read as a glitch rather than as two agents finishing. The
+    /// window is keyed by state, so one agent finishing while the other stops
+    /// for a prompt still produces both cues.
     private var lastReactionCueAt: [MascotState: TimeInterval] = [:]
     private static let reactionCueCoalescingWindow: TimeInterval = 0.6
 
@@ -341,6 +343,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // summoned set updates immediately regardless, so the menu never offers
         // to dismiss a mascot that is already leaving.
         summoned.remove(provider)
+        // A dismissed mascot makes no sound, and the four-and-a-half-second
+        // waiting knock is the one cue that could still be running when the
+        // user dismisses the pet that started it.
+        sounds.stop(.waiting)
         diagnostics = "Dismissing \(mascot.displayName) — hand sign and smoke poof"
         mascot.dismiss { [weak self] in
             self?.refreshDiagnostics()

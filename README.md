@@ -133,7 +133,7 @@ The states the pet can show, and when you see them:
 | --- | --- | --- |
 | Working | Claude Code or Codex is running a turn — you sent a prompt, or the agent is using tools | <img src="docs/images/state-working.png" alt="The mascot sitting at a small computer, typing" height="130"> |
 | Ideating | You set it by hand from the menu, or the Claude desktop app is composing a reply | <img src="docs/images/state-ideating.png" alt="The mascot in a thinker pose under a thought cloud" height="130"> |
-| Waiting | The turn cannot continue without you — a permission request or a question | <img src="docs/images/state-waiting.png" alt="The mascot standing and raising a hand under a clock" height="130"> |
+| Waiting | The turn cannot continue without you — a permission request or a question. The one state with its own chime, so you notice it from another window | <img src="docs/images/state-waiting.png" alt="The mascot standing and raising a hand under a clock" height="130"> |
 | Success | A turn finished. This says the turn ended, not that everything inside it worked | <img src="docs/images/state-success.png" alt="The mascot doing a fist pump with sparkles overhead" height="130"> |
 | Failure | A turn ended in an error — the only turn-level failure either provider reports | <img src="docs/images/state-failure.png" alt="The mascot stumbling dizzily under a broken light bulb" height="130"> |
 | Chilling / offline | No agent is running. The pet strolls the bottom of your screen and dozes between walks | <img src="docs/images/state-offline.png" alt="The mascot walking along the bottom of the screen" height="130"> |
@@ -168,9 +168,11 @@ matters because the agent hooks you configure below point at an absolute path.
 > installed. Everywhere you see `Dock Pet.app` or `dockpet-event` below, that is
 > current and correct.
 
-**On signing:** the script uses a real Developer certificate if it finds one in
+**On signing:** the script uses a Developer ID certificate if it finds one in
 your keychain and falls back to ad-hoc signing otherwise. Ad-hoc is fine — the
-app is trusted because *you* built it on *this* machine. It also means the app
+app is trusted because *you* built it on *this* machine. It will not use an
+"Apple Development" certificate: those cannot satisfy Gatekeeper anyway, and a
+revoked one makes macOS delete the app as malware on first launch. It also means the app
 cannot be copied to someone else's Mac; they need to build their own. There is
 no notarized build because notarization requires a paid Apple Developer Program
 certificate.
@@ -244,7 +246,7 @@ Click the menu bar paw print:
 | **Manual Ideating** | Forces the thinking pose — for ordinary chats that emit no hooks |
 | **Think While Claude Is Answering** | Makes the Claude mascot think while the Claude desktop app is producing a response, and fist-pump when it lands. Needs Accessibility permission; see [Privacy](#privacy) for exactly what it reads |
 | **Chat Detection (Experimental)** | Grants the permission, reports what the detector currently sees, and writes a diagnostic report. Temporary, while the feature is being proven |
-| **Sounds** | Mutes all four cues (success, failure, summon, dismiss) |
+| **Sounds** | Mutes all five cues (success, failure, waiting, summon, dismiss) |
 | **⟨mascot⟩ Stays in One Place** | One entry per mascot, next to its Summon. Checked, that pet stops strolling and stays exactly where it is, still animating in place — drag it somewhere first and it stays there, across relaunches. Unchecked (the default), it roams. The two mascots are independent |
 | **Reposition on Current Display** | Returns the pet to the default bottom lane |
 | **Sleep Schedule** | Sets the hours the pet sleeps, or switches scheduled sleep off entirely |

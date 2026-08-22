@@ -113,9 +113,11 @@ The script builds a Release configuration, signs it, and installs it to
 `~/Applications/Dock Pet.app`. That path is durable across reboots, which
 matters because the agent hooks you configure below point at an absolute path.
 
-**On signing:** the script uses a real Developer certificate if it finds one in
+**On signing:** the script uses a Developer ID certificate if it finds one in
 your keychain and falls back to ad-hoc signing otherwise. Ad-hoc is fine — the
-app is trusted because *you* built it on *this* machine. It also means the app
+app is trusted because *you* built it on *this* machine. It will not use an
+"Apple Development" certificate: those cannot satisfy Gatekeeper anyway, and a
+revoked one makes macOS delete the app as malware on first launch. It also means the app
 cannot be copied to someone else's Mac; they need to build their own. There is
 no notarized build because notarization requires a paid Apple Developer Program
 certificate.
@@ -189,7 +191,7 @@ Click the menu bar paw print:
 | **Manual Ideating** | Forces the thinking pose — for ordinary chats that emit no hooks |
 | **Think While Claude Is Answering** | Makes the Claude mascot think while the Claude desktop app is producing a response, and fist-pump when it lands. Needs Accessibility permission; see [Privacy](#privacy) for exactly what it reads |
 | **Chat Detection (Experimental)** | Grants the permission, reports what the detector currently sees, and writes a diagnostic report. Temporary, while the feature is being proven |
-| **Sounds** | Mutes all four cues (success, failure, summon, dismiss) |
+| **Sounds** | Mutes all five cues (success, failure, waiting, summon, dismiss) |
 | **⟨mascot⟩ Stays in One Place** | One entry per mascot, next to its Summon. Checked, that pet stops strolling and stays exactly where it is, still animating in place — drag it somewhere first and it stays there, across relaunches. Unchecked (the default), it roams. The two mascots are independent |
 | **Reposition on Current Display** | Returns the pet to the default bottom lane |
 | **Sleep Schedule** | Sets the hours the pet sleeps, or switches scheduled sleep off entirely |

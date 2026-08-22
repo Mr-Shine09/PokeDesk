@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Dock Pet's success and failure cues as deterministic chiptune WAVs.
+"""Generate Dock Pet's five cues as deterministic chiptune WAVs.
 
 Why synthesis rather than sourced audio: the mascot is authored pixel by pixel
 from committed tooling, and its sound should come from the same place. Recorded
@@ -13,7 +13,8 @@ belongs to, and they stay legible at low volume over a laptop speaker.
 
     python3 tools/author_sound_effects.py
 
-Writes art/audio/success.wav, failure.wav, summon.wav, and dismiss.wav.
+Writes art/audio/success.wav, failure.wav, waiting.wav, summon.wav, and
+dismiss.wav.
 """
 
 from __future__ import annotations
@@ -85,6 +86,47 @@ def failure_cue() -> list[float]:
         # makes the cue sound wrong on purpose.
         detuned = square(note(name) * 1.012, duration, duty=0.5)
         samples += [(a + b) / 2 for a, b in zip(base, detuned)]
+    return samples
+
+
+def waiting_cue() -> list[float]:
+    """A doorbell rung four times over about four and a half seconds.
+
+    Told apart from `success` by rhythm rather than by pitch, which is what
+    survives being heard from another window. `success` and `summon` are both
+    rising runs, so this one falls instead — a descending fourth — and knocks
+    twice rather than running up a scale.
+
+    **Length is the feature, at owner request (2026-08-21).** The first version
+    was 0.7 seconds and was easy to miss, which defeats the only thing this cue
+    exists to do. So the same double knock repeats four times with a rest
+    between, giving roughly four and a half seconds of chances to notice it.
+    Each ring is quieter than the last, so it reads as someone knocking and
+    then giving up rather than as an alarm escalating. **Do not make the tail
+    louder, and do not remove the taper** — a flat repeat at full volume is the
+    difference between a pet asking for you and a smoke detector.
+
+    It sits well above `failure`, the other descending cue, and stays clean
+    where that one beats and buzzes, so the two do not trade places when heard
+    from across a room.
+    """
+    knock: list[float] = []
+    knock += square(note("B5"), 0.085, duty=0.5)
+    knock += square(note("F#5"), 0.22, duty=0.5)
+    # The repeat inside a ring is the recognisable half of the cue, so it has to
+    # be clearly the same knock again: same notes, quieter, after a gap long
+    # enough to hear as a gap rather than as a third note.
+    ring = knock + silence(0.085) + [0.8 * value for value in knock]
+
+    # Long enough that each ring is plainly a separate knock at the door. Much
+    # shorter and the four rings blur into one continuous rattle, which is the
+    # alarm this cue is trying not to be.
+    rest = silence(0.62)
+    samples: list[float] = []
+    for index, gain in enumerate((1.0, 0.86, 0.72, 0.58)):
+        if index:
+            samples += rest
+        samples += [gain * value for value in ring]
     return samples
 
 
@@ -164,6 +206,7 @@ def main() -> None:
     arguments = parser.parse_args()
     write_wav(arguments.output_root / "success.wav", success_cue() + silence(0.02))
     write_wav(arguments.output_root / "failure.wav", failure_cue() + silence(0.02))
+    write_wav(arguments.output_root / "waiting.wav", waiting_cue() + silence(0.02))
     write_wav(arguments.output_root / "summon.wav", summon_cue() + silence(0.02))
     write_wav(arguments.output_root / "dismiss.wav", dismiss_cue() + silence(0.02))
 

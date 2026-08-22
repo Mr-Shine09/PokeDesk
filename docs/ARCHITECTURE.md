@@ -129,10 +129,11 @@ field changes behavior.
 - Re-summoning during a dismiss cancels it and the pending hide never runs. A dismiss that has been cancelled must not hide the panel afterwards.
 - Quit plays the same farewell when a mascot is on screen, but never at the cost of quitting. A second Quit terminates immediately, an unsummoned mascot skips the transition, and once quitting has started a summon cannot cancel it.
 - The smoke is a second sprite layer over the mascot (`poof`, atlas row 15) rather than a pose, so the character row and the effect row advance independently.
-- Cues exist for exactly four moments: the two agent reactions, and the two transitions the user triggers. One toggle silences all of them.
+- Cues exist for exactly five moments: the two agent reactions, the moment a turn stops and needs a human (`waiting`), and the two transitions the user triggers. One toggle silences all of them.
 - Dragging is always available, plays hanging, and is a placement gesture only — it does not change roaming.
 - Unticking Stay in One Place repositions into the current display's safe lane only when the user has not placed the mascot themselves.
-- The two reaction cues fire only while summoned and only when a state reaches the screen, not when it is reduced. The two transition cues need no visibility gate: the user asked for the transition and is watching it.
+- The three state cues — `success`, `failure`, and `waiting` — fire only while summoned and only when a state reaches the screen, not when it is reduced. The two transition cues need no visibility gate: the user asked for the transition and is watching it.
+- `waiting` is a long-lived state with a cue, which the other two are not. It works because `adopt` calls `onStateAppeared` only when the displayed state actually changes, so the cue marks the *edge* into waiting and stays silent for however long the prompt goes unanswered. Anything that made that callback re-fire on an unchanged state would turn this cue into a repeating alarm.
 - Screen, scale, Dock orientation, and wake changes trigger placement reconciliation.
 - Reduced Motion work must replace motion with stable/fade behavior, not merely speed up or shrink the same loop.
 
