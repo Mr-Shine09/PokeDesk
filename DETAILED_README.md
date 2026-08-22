@@ -70,7 +70,7 @@ The states the pet can show:
 | --- | --- |
 | Working | Sits at a small computer and types |
 | Ideating | Thinker pose with a looping thought cloud. Set by hand from the menu, or automatically while the Claude or ChatGPT desktop app is frontmost |
-| Waiting | Stops, turns toward you, and raises a hand |
+| Waiting | Stops, turns toward you, and raises a hand. The one state with its own chime |
 | Success | Sparkling eyes and one quick fist pump |
 | Failure | A short confused, dizzy stumble |
 | Chilling / offline | Strolls along the bottom of the screen |
