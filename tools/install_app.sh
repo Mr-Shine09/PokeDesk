@@ -33,23 +33,29 @@ xcodebuild \
 
 [ -d "$BUILT_APP" ] || { echo "build produced no app at $BUILT_APP" >&2; exit 1; }
 
-# Prefer a real identity so the install survives Gatekeeper's local checks, but
-# ad-hoc is enough for a self-built app on the machine that built it.
-# Selected by certificate hash rather than name: a keychain routinely holds
-# several certificates with identical common names, and passing the name then
-# fails as "ambiguous" instead of picking one.
+# Prefer a Developer ID identity, because that is the only kind Gatekeeper can
+# ever accept for a distributed app; ad-hoc is the correct answer for everything
+# else. Selected by certificate hash rather than name: a keychain routinely
+# holds several certificates with identical common names, and passing the name
+# then fails as "ambiguous" instead of picking one.
+#
+# **"Apple Development" is deliberately NOT a fallback.** It was one until
+# 2026-08-21, when it cost this project an install: the keychain held three
+# same-named Apple Development certificates, `awk` picked the first, and that
+# one had been REVOKED. macOS does not treat a revoked signature as merely
+# untrusted — it treats it as malware, moves the app to the Trash the moment it
+# launches, and says the app will damage your computer. An Apple Development
+# certificate buys nothing here even when it is valid (Gatekeeper wants
+# Developer ID plus notarization), so the downside was unbounded and the upside
+# was zero.
 IDENTITY="${CODESIGN_IDENTITY:-}"
 if [ -z "$IDENTITY" ]; then
   IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
     | awk '/Developer ID Application/ {print $2; exit}')"
 fi
 if [ -z "$IDENTITY" ]; then
-  IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
-    | awk '/Apple Development/ {print $2; exit}')"
-fi
-if [ -z "$IDENTITY" ]; then
   IDENTITY="-"
-  say "No signing identity found; signing ad-hoc"
+  say "No Developer ID identity found; signing ad-hoc"
 else
   say "Signing with: $IDENTITY"
 fi
@@ -75,6 +81,25 @@ if ! sign_with "$IDENTITY"; then
   sign_with "$IDENTITY"
 fi
 codesign --verify --deep --strict "$BUILT_APP"
+
+# `codesign --verify` proves the seal is intact and says nothing about whether
+# the certificate behind it is still trusted; `security find-identity -v` calls
+# a revoked certificate "valid" for the same reason, because neither performs
+# the online revocation check that Gatekeeper does. Only `spctl` asks that
+# question. Ad-hoc has no certificate and so cannot be revoked, which is why it
+# is the safe fallback rather than a degraded one.
+if [ "$IDENTITY" != "-" ] && spctl -a -t exec "$BUILT_APP" 2>&1 | grep -q CSSMERR_TP_CERT_REVOKED; then
+  say "That certificate is REVOKED — macOS would delete the app as malware. Re-signing ad-hoc"
+  IDENTITY="-"
+  sign_with "$IDENTITY"
+  codesign --verify --deep --strict "$BUILT_APP"
+fi
+
+# Never install a bundle macOS will treat as malware, whatever produced it.
+if spctl -a -t exec "$BUILT_APP" 2>&1 | grep -q CSSMERR_TP_CERT_REVOKED; then
+  echo "refusing to install: the signature is still from a revoked certificate" >&2
+  exit 1
+fi
 
 say "Installing to $DESTINATION"
 mkdir -p "$DESTINATION"

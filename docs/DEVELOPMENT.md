@@ -140,11 +140,26 @@ Builds Release, signs the nested helper and then the bundle, and installs to
 `~/Applications/Dock Pet.app`. That path survives reboots, unlike the DerivedData
 build, so provider hooks configured against it keep working.
 
-The script signs with a real identity when it can and falls back to ad-hoc
-otherwise. `codesign` cannot reach a private key from a non-interactive shell
-(`errSecInternalComponent`), so run the script from an interactive terminal if
-you want the Apple Development identity used. Ad-hoc is sufficient for a
-self-built local app; it is **not** sufficient for distribution.
+The script signs with a **Developer ID** identity when it finds one and ad-hoc
+otherwise. Ad-hoc is sufficient for a self-built local app; it is **not**
+sufficient for distribution.
+
+**It deliberately will not use an "Apple Development" certificate**, which it
+did until 2026-08-21. That day it picked one of three same-named Apple
+Development certificates in the keychain, the first happened to be **revoked**,
+and macOS deleted the installed app on launch as malware. A revoked signature is
+not a weaker signature — it is a hard block, and ad-hoc has no certificate to
+revoke. Note the trap that made it hard to see: `security find-identity -v`
+prints a revoked certificate as "valid", and `codesign --verify` passes on it,
+because neither does the online revocation check. `spctl -a -t exec` is the only
+one of the three that answers the question, and the install script now runs it
+and refuses to install a bundle that fails it.
+
+Earlier installs escaped this only by accident: `codesign` cannot reach a
+private key from a non-interactive shell (`errSecInternalComponent`), so the
+script kept falling back to ad-hoc. Running it from an interactive terminal —
+and answering the keychain prompt — is what finally let the bad certificate
+through.
 
 Notarization needs a `Developer ID Application` certificate, which this machine
 does not have. Distribution remains open work under issue #13.
